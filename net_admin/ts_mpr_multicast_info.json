@@ -1,0 +1,138 @@
+{
+    "NXTA-10": {
+      "multicast_group_count": 2,
+      "data": [
+        {
+          "type": "order_execution",
+          "multicast_group": "239.29.30.41",
+          "source_ip_01": "177.21.180.18",
+          "source_ip_02": "177.21.180.19"
+        },
+        {
+          "type": "quote",
+          "multicast_group": "239.29.30.42",
+          "source_ip_01": "177.21.180.18",
+          "source_ip_02": "177.21.180.19"
+        }
+      ]
+    },
+    "NXTA-3": {
+      "multicast_group_count": 1,
+      "data": [
+        {
+          "type": "order_execution, quote",
+          "multicast_group": "239.29.30.121",
+          "source_ip_01": "177.21.180.7",
+          "source_ip_02": "177.21.180.8"
+        }
+      ]
+    },
+    "NXTA-5": {
+      "multicast_group_count": 1,
+      "data": [
+        {
+          "type": "order_execution, quote",
+          "multicast_group": "239.29.30.81",
+          "source_ip_01": "177.21.180.5",
+          "source_ip_02": "177.21.180.6"
+        }
+      ]
+    },
+    "NXTA-COM": {
+      "multicast_group_count": 4,
+      "data": [
+        {
+          "type": "order_execution",
+          "multicast_group": "239.29.30.1",
+          "source_ip_01": "177.21.180.18",
+          "source_ip_02": "177.21.180.19"
+        },
+        {
+          "type": "quote",
+          "multicast_group": "239.29.30.2",
+          "source_ip_01": "177.21.180.18",
+          "source_ip_02": "177.21.180.19"
+        },
+        {
+          "type": "market_operation\t",
+          "multicast_group": "239.29.30.18",
+          "source_ip_01": "177.21.180.18",
+          "source_ip_02": "177.21.180.19"
+        },
+        {
+          "type": "statistics",
+          "multicast_group": "239.29.30.19",
+          "source_ip_01": "177.21.180.18",
+          "source_ip_02": "177.21.180.19"
+        }
+      ]
+    },
+    "NXTB-10": {
+      "multicast_group_count": 2,
+      "data": [
+        {
+          "type": "order_execution",
+          "multicast_group": "239.29.30.61",
+          "source_ip_01": "177.21.180.101",
+          "source_ip_02": "177.21.180.102"
+        },
+        {
+          "type": "quote",
+          "multicast_group": "239.29.30.62",
+          "source_ip_01": "177.21.180.101",
+          "source_ip_02": "177.21.180.102"
+        }
+      ]
+    },
+    "NXTB-3": {
+      "multicast_group_count": 1,
+      "data": [
+        {
+          "type": "order_execution, quote",
+          "multicast_group": "239.29.30.141",
+          "source_ip_01": "177.21.180.107",
+          "source_ip_02": "177.21.180.108"
+        }
+      ]
+    },
+    "NXTB-5": {
+      "multicast_group_count": 1,
+      "data": [
+        {
+          "type": "order_execution, quote",
+          "multicast_group": "239.29.30.101",
+          "source_ip_01": "177.21.180.105",
+          "source_ip_02": "177.21.180.106"
+        }
+      ]
+    },
+    "NXTB-COM": {
+      "multicast_group_count": 4,
+      "data": [
+        {
+          "type": "order_execution",
+          "multicast_group": "239.29.30.21",
+          "source_ip_01": "177.21.180.101",
+          "source_ip_02": "177.21.180.102"
+        },
+        {
+          "type": "quote",
+          "multicast_group": "239.29.30.22",
+          "source_ip_01": "177.21.180.101",
+          "source_ip_02": "177.21.180.102"
+        },
+        {
+          "type": "market_operation",
+          "multicast_group": "239.29.30.38",
+          "source_ip_01": "177.21.180.101",
+          "source_ip_02": "177.21.180.102"
+        },
+        {
+          "type": "statistics",
+          "multicast_group": "239.29.30.39",
+          "source_ip_01": "177.21.180.101",
+          "source_ip_02": "177.21.180.102"
+        }
+      ]
+    }
+  }

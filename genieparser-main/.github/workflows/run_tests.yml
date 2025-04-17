@@ -1,0 +1,47 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Run Tests
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyats[full]
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip uninstall genie.libs.parser -y
+
+    - name: Make develop
+      run: |
+        make develop
+        make json
+        git status
+        git diff
+
+    - name: Folder based testing
+      run: |
+        cd tests
+        pyats run job folder_parsing_job.py --no-mail --no-archive
+
+    - name: Unittest based testing
+      run: |
+        cd tests
+        python -m unittest

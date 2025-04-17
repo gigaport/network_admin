@@ -1,0 +1,17 @@
+interface TenGigabitEthernet1/0/3
+ description SPAN-ERSPAN-v6_VACl-CISF-ixia-8.1
+ switchport access vlan 122
+ switchport mode access
+ switchport port-security maximum 20
+ switchport port-security
+ device-tracking attach-policy IPDT_MAX_10
+ ip flow monitor monitor_ipv4_in sampler k12_sampler input
+ load-interval 30
+ datalink flow monitor monitor_l2_in sampler k12_sampler input
+ ipv6 flow monitor monitor_ipv6_in sampler k12_sampler input
+ storm-control broadcast level 5.00 1.00
+ storm-control multicast level 5.00 1.00
+ storm-control action shutdown
+ no keepalive
+ spanning-tree portfast
+end

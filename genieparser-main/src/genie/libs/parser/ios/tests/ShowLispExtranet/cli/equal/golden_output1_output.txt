@@ -1,0 +1,9 @@
+LISP Extranet policy table
+Home Instance ID: 101
+Prov/Sub    Source      InstID     EID prefix
+Provider    Dynamic     103        88.88.88.0/24
+Provider    Dynamic     103        100.100.100.0/24
+Provider    Dynamic     103        200.200.200.0/24
+Subscriber  Dynamic     101        192.168.0.1/32
+Subscriber  Dynamic     101        192.168.9.1/32
+Total entries: 5

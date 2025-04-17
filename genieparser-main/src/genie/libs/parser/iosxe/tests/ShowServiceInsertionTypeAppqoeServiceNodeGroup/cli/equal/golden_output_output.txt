@@ -1,0 +1,18 @@
+Service Node Group name         : SNG-APPQOE
+    Service Context             : appqoe/1
+    Member Service Node count   : 1
+
+
+Service Node (SN)                   : 192.168.2.2
+Auto discovered                     : No
+SN belongs to SNG                   : SNG-APPQOE
+Current status of SN                : Alive
+System IP                           : 30.0.0.30
+Site ID                             : 30
+Time current status was reached               : Mon Aug 23 12:01:22 2021
+
+Cluster protocol VPATH version                : 1 (Bitmap recvd: 1)
+Cluster protocol incarnation number           : 1
+Cluster protocol last sent sequence number    : 1631617607
+Cluster protocol last received sequence number: 666958
+Cluster protocol last received ack number     : 1631617606

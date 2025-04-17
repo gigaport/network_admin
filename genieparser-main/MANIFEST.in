@@ -1,0 +1,10 @@
+include *.rst
+include src/genie/libs/parser/parsers.json
+include *.json
+
+recursive-include src *.py *.html *.json
+
+global-exclude *.dll
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.so

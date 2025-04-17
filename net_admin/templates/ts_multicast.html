@@ -1,0 +1,291 @@
+{% extends 'components/base.html' %}
+{% load static %}
+
+  <!-- {% block styles %}
+
+  {% endblock %} -->
+
+    {% block content %}
+      <div class="content">
+        <nav class="mb-3" aria-label="breadcrumb">
+          <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="#!">네트워크 모니터링</a></li>
+            <li class="breadcrumb-item"><a href="#!">Network Status Check</a></li>
+            <li class="breadcrumb-item active">[테스트]멀티캐스트_시세</li>
+          </ol>
+        </nav>
+        <div class="mb-9">
+          <div class="row g-3 mb-4">
+            <div class="col-auto">
+              <h2 class="mb-0">[테스트]멀티캐스트_시세</h2>
+            </div>
+          </div>
+          <ul class="nav nav-links mb-3 mb-lg-2 mx-n3">
+            <li class="nav-item"><a class="nav-link active" aria-current="page" href="#"><span>All </span><span class="text-body-tertiary fw-semibold">(30)</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#"><span>정상확인 </span><span class="text-body-tertiary fw-semibold">(28)</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#"><span>확인필요 </span><span class="text-body-tertiary fw-semibold">(2)</span></a></li>
+          </ul>
+          <div id="orderTable" data-list='{"valueNames":["member_no","member_code","member_name","device_name","device_os","products","pim_rp","product_cnt","mroute_cnt","oif_cnt","min_uptime","bfd_nbr","rpf_nbr","org_output","check_result"]}'>
+            <div class="mb-4">
+              <div class="row g-3">
+                <div class="col-auto">
+                  <div class="search-box">
+                    <form class="position-relative">
+                      <input class="form-control search-input search" type="search" placeholder="Search..." aria-label="Search" id="search_mroute" />
+                      <span class="fas fa-search search-box-icon"></span>
+
+                    </form>
+                  </div>
+                </div>
+                <!-- <div class="col-auto scrollbar overflow-hidden-y flex-grow-1">
+                  <div class="btn-group position-static" role="group">
+                    <div class="btn-group position-static text-nowrap" role="group">
+                      <button class="btn btn-phoenix-secondary px-7 flex-shrink-0" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                        체크결과<span class="fas fa-angle-down ms-2"></span></button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#">확인필요</a></li>
+                        <li><a class="dropdown-item" href="#">정상확인</a></li>
+                      </ul>
+                    </div>
+                    <div class="btn-group position-static text-nowrap" role="group">
+                      <button class="btn btn-sm btn-phoenix-secondary px-7 flex-shrink-0" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
+                        시세상품<span class="fas fa-angle-down ms-2"></span></button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#">NXTA-10,NXTA-COM</a></li>
+                        <li><a class="dropdown-item" href="#">NXTA-10,NXTA-COM,NXTB-10,NXTB-COM</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div> -->
+                <!-- <div class="col-auto">
+                  <button class="btn btn-link text-body me-4 px-0"><span class="fa-solid fa-file-export fs-9 me-2"></span>Export</button>
+                  <button class="btn btn-primary"><span class="fas fa-plus me-2"></span>Add order</button>
+                </div> -->
+              </div>
+            </div>
+            <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis border-top border-bottom border-translucent position-relative top-1">
+              <div class="table-responsive scrollbar mx-n1 px-1">
+                <table class="table table-sm fs-9 mb-0" id="multicast_table">
+                  <thead>
+                    <tr>
+                      <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="member_no" style="width:5%;">회원사NO</th>
+                      <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="member_code" style="width:5%;">회원사코드</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="member_name" style="width:5%;">회원사명</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="device_name" style="width:5%;">장비명</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="device_name" style="width:5%;">장비OS</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="product" style="width:15%;">신청한 시세상품</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="pim_rp" style="width:10%;">PIM-RP</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="product_cnt" style="width:5%;">정상그룹개수</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="mroute_cnt" style="width:5%;">MROUTE개수</th>
+                      <th class="sort align-middle text-center" scope="col" data-sort="oif_cnt" style="width:5%">OIF개수</th>
+                      <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="min_uptime" style="width:10%;">MIN UPTIME</th>
+                      <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="bfd_nbr" style="width:10%;">BFD NBR</th>
+                      <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="rpf_nbr" style="width:10%;">RPF NBR</th>
+                      <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="org_output" style="width:5%;">명렁어결과</th>
+                      <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="check_result" style="width:5%;">체크결과</th>
+                    </tr>
+                  </thead>
+                  <tbody class="list" id="order-table-body">
+                  </tbody>
+                </table>
+              </div>
+              <div class="row align-items-center justify-content-between py-2 pe-0 fs-9">
+                <div class="col-auto d-flex">
+                  <p class="mb-0 d-none d-sm-block me-3 fw-semibold text-body" data-list-info="data-list-info"></p><a class="fw-semibold" href="#!" data-list-view="*">View all<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a><a class="fw-semibold d-none" href="#!" data-list-view="less">View Less<span class="fas fa-angle-right ms-1" data-fa-transform="down-1"></span></a>
+                </div>
+                <div class="col-auto d-flex">
+                  <button class="page-link" data-list-pagination="prev"><span class="fas fa-chevron-left"></span></button>
+                  <ul class="mb-0 pagination"></ul>
+                  <button class="page-link pe-0" data-list-pagination="next"><span class="fas fa-chevron-right"></span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer class="footer position-absolute">
+          <div class="row g-0 justify-content-between align-items-center h-100">
+            <div class="col-12 col-sm-auto text-center">
+              <p class="mb-0 mt-2 mt-sm-0 text-body">Nextrade Network Admin<span class="d-none d-sm-inline-block"></span><span class="d-none d-sm-inline-block mx-1">|</span><br class="d-sm-none" />2025 &copy;<a class="mx-1" href="">RWS</a></p>
+            </div>
+            <div class="col-12 col-sm-auto text-center">
+              <p class="mb-0 text-body-tertiary text-opacity-85">v1.22.0</p>
+            </div>
+          </div>
+        </footer>
+      </div>
+      <div class="modal fade" id="searchBoxModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-phoenix-modal="data-phoenix-modal" style="--phoenix-backdrop-opacity: 1;">
+        <div class="modal-dialog">
+          <div class="modal-content mt-15 rounded-pill">
+            <div class="modal-body p-0">
+              <div class="search-box navbar-top-search-box" data-list='{"valueNames":["title"]}' style="width: auto;">
+                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
+                  <input class="form-control search-input fuzzy-search rounded-pill form-control-lg" type="search" placeholder="Search..." aria-label="Search" />
+                  <span class="fas fa-search search-box-icon"></span>
+
+                </form>
+                <div class="btn-close position-absolute end-0 top-50 translate-middle cursor-pointer shadow-none" data-bs-dismiss="search">
+                  <button class="btn btn-link p-0" aria-label="Close"></button>
+                </div>
+                <div class="dropdown-menu border start-0 py-0 overflow-hidden w-100">
+                  <div class="scrollbar-overlay" style="max-height: 30rem;">
+                    <div class="list pb-3">
+                      <h6 class="dropdown-header text-body-highlight fs-10 py-2">24 <span class="text-body-quaternary">results</span></h6>
+                      <hr class="my-0" />
+                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Recently Searched </h6>
+                      <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
+                          <div class="d-flex align-items-center">
+
+                            <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-clock-rotate-left" data-fa-transform="shrink-2"></span> Store Macbook</div>
+                          </div>
+                        </a>
+                        <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
+                          <div class="d-flex align-items-center">
+
+                            <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-clock-rotate-left" data-fa-transform="shrink-2"></span> MacBook Air - 13″</div>
+                          </div>
+                        </a>
+
+                      </div>
+                      <hr class="my-0" />
+                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Products</h6>
+                      <div class="py-2"><a class="dropdown-item py-2 d-flex align-items-center" href="apps/e-commerce/landing/product-details.html">
+                          <div class="file-thumbnail me-2"><img class="h-100 w-100 object-fit-cover rounded-3" src="{% static 'assets/img/products/60x60/3.png" alt="" /></div>
+                          <div class="flex-1">
+                            <h6 class="mb-0 text-body-highlight title">MacBook Air - 13″</h6>
+                            <p class="fs-10 mb-0 d-flex text-body-tertiary"><span class="fw-medium text-body-tertiary text-opactity-85">8GB Memory - 1.6GHz - 128GB Storage</span></p>
+                          </div>
+                        </a>
+                        <a class="dropdown-item py-2 d-flex align-items-center" href="apps/e-commerce/landing/product-details.html">
+                          <div class="file-thumbnail me-2"><img class="img-fluid" src="{% static 'assets/img/products/60x60/3.png" alt="" /></div>
+                          <div class="flex-1">
+                            <h6 class="mb-0 text-body-highlight title">MacBook Pro - 13″</h6>
+                            <p class="fs-10 mb-0 d-flex text-body-tertiary"><span class="fw-medium text-body-tertiary text-opactity-85">30 Sep at 12:30 PM</span></p>
+                          </div>
+                        </a>
+
+                      </div>
+                      <hr class="my-0" />
+                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Quick Links</h6>
+                      <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
+                          <div class="d-flex align-items-center">
+
+                            <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-link text-body" data-fa-transform="shrink-2"></span> Support MacBook House</div>
+                          </div>
+                        </a>
+                        <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
+                          <div class="d-flex align-items-center">
+
+                            <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-link text-body" data-fa-transform="shrink-2"></span> Store MacBook″</div>
+                          </div>
+                        </a>
+
+                      </div>
+                      <hr class="my-0" />
+                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Files</h6>
+                      <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
+                          <div class="d-flex align-items-center">
+
+                            <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-file-zipper text-body" data-fa-transform="shrink-2"></span> Library MacBook folder.rar</div>
+                          </div>
+                        </a>
+                        <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
+                          <div class="d-flex align-items-center">
+
+                            <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-file-lines text-body" data-fa-transform="shrink-2"></span> Feature MacBook extensions.txt</div>
+                          </div>
+                        </a>
+                        <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
+                          <div class="d-flex align-items-center">
+
+                            <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-image text-body" data-fa-transform="shrink-2"></span> MacBook Pro_13.jpg</div>
+                          </div>
+                        </a>
+
+                      </div>
+                      <hr class="my-0" />
+                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Members</h6>
+                      <div class="py-2"><a class="dropdown-item py-2 d-flex align-items-center" href="pages/members.html">
+                          <div class="avatar avatar-l status-online  me-2 text-body">
+                            <img class="rounded-circle " src="{% static 'assets/img/team/40x40/10.webp" alt="" />
+
+                          </div>
+                          <div class="flex-1">
+                            <h6 class="mb-0 text-body-highlight title">Carry Anna</h6>
+                            <p class="fs-10 mb-0 d-flex text-body-tertiary">anna@technext.it</p>
+                          </div>
+                        </a>
+                        <a class="dropdown-item py-2 d-flex align-items-center" href="pages/members.html' %}">
+                          <div class="avatar avatar-l  me-2 text-body">
+                            <img class="rounded-circle " src="{% static 'assets/img/team/40x40/12.webp' %}" alt="" />
+
+                          </div>
+                          <div class="flex-1">
+                            <h6 class="mb-0 text-body-highlight title">John Smith</h6>
+                            <p class="fs-10 mb-0 d-flex text-body-tertiary">smith@technext.it</p>
+                          </div>
+                        </a>
+
+                      </div>
+                      <hr class="my-0" />
+                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Related Searches</h6>
+                      <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html' %}">
+                          <div class="d-flex align-items-center">
+
+                            <div class="fw-normal text-body-highlight title"><span class="fa-brands fa-firefox-browser text-body" data-fa-transform="shrink-2"></span> Search in the Web MacBook</div>
+                          </div>
+                        </a>
+                        <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html' %}">
+                          <div class="d-flex align-items-center">
+
+                            <div class="fw-normal text-body-highlight title"> <span class="fa-brands fa-chrome text-body" data-fa-transform="shrink-2"></span> Store MacBook″</div>
+                          </div>
+                        </a>
+
+                      </div>
+                    </div>
+                    <div class="text-center">
+                      <p class="fallback fw-bold fs-7 d-none">No Result Found.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" id="modal_mroute" tabindex="-1" aria-labelledby="modal_mroute" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="modal_title">Modal title</h5>
+              <button class="btn btn-close p-1" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p class="text-primary lh-lg mb-0"></p>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-primary" type="button" data-bs-dismiss="modal">Okay</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="back_data" data-submenu="{{ sub_menu|escapejs }}"></div>
+    {% endblock %}
+    
+
+    {% block scripts %}
+    <!-- ===============================================-->
+    <!--    JavaScripts-->
+    <!-- ===============================================-->
+    <script src="{% static 'vendors/popper/popper.min.js' %}"></script>
+    <script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
+    <script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
+    <script src="{% static 'vendors/is/is.min.js' %}"></script>
+    <script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
+    <script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
+    <script src="{% static 'vendors/list.js/list.min.js' %}"></script>
+    <script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
+    <script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
+    <script src="{% static 'assets/js/phoenix.js' %}"></script>
+    <script src="{% static 'assets/js/net_admin/multicast.js' %}"></script>
+    {% endblock %}

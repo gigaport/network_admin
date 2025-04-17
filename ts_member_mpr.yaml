@@ -1,0 +1,269 @@
+testbed:
+  name: NxtNetwork
+  credentials:
+    default:
+      username: "125003"
+      password: Swr278577@
+
+devices:
+  PTKY_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.1.1.51
+    custom:
+      groups: ["test"]
+  PTSH_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.2.1.51
+    custom:
+      groups: ["test"]
+  PTKR_MPR_L3_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.3.1.23
+    custom:
+      groups: ["test"]
+  PTKR_MPR_L3_02:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.3.2.23
+    custom:
+      groups: ["test"]
+  PTDS_MPR_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.4.1.23
+    custom:
+      groups: ["test"]
+  PTMR_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.5.1.51
+    custom:
+      groups: ["test"]
+  PTSY_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.6.1.51
+    custom:
+      groups: ["test"]
+  PTEU_MPR_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.8.1.23
+    custom:
+      groups: ["test"]
+  PTME_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.10.1.51
+    custom:
+      groups: ["test"]
+  PTNH_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.12.1.51
+    custom:
+      groups: ["test"]
+  PTNH_MPR_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.12.2.23
+    custom:
+      groups: ["test"]
+  PTKB_MPR_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.17.1.23
+    custom:
+      groups: ["test"]
+  PTKB_MPR_L3_02:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.17.2.23
+    custom:
+      groups: ["test"]
+  RTHW_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.21.9.51
+    custom:
+      groups: ["test"]
+  PTHD_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.22.1.51
+    custom:
+      groups: ["test"]
+  RTYU_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.24.9.51
+    custom:
+      groups: ["test"]
+  PTSK_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.25.1.51
+    custom:
+      groups: ["test"]
+  PTSS_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.30.1.51
+    custom:
+      groups: ["test"]
+  PTDB_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.31.1.51
+    custom:
+      groups: ["test"]
+  PTIM_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.46.1.51
+    custom:
+      groups: ["test"]
+  PTKW_MPR_L3_02:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.50.3.23
+    custom:
+      groups: ["test"]
+  PTHN_MPR_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.56.2.23
+    custom:
+      groups: ["test"]
+  PTLS_MPR_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.63.1.23
+    custom:
+      groups: ["test"]
+  RRKA_COM_L3_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.69.9.41
+    custom:
+      groups: ["test"]
+  PTDO_COM_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.71.1.51
+    custom:
+      groups: ["test"]
+  PTDO_MPR_L3_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.71.2.23
+    custom:
+      groups: ["test"]
+  PTTS_COM_L3_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.77.1.51
+    custom:
+      groups: ["test"]
+  RTTS_MPR_L3_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.77.9.23
+    custom:
+      groups: ["test"]
+  PTPB_COM_L3_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.101.1.51
+    custom:
+      groups: ["test"]

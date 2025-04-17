@@ -1,0 +1,33 @@
+=================================================
+Output for router lisp 0 instance-id 1
+=================================================
+LISP Site Registration Information
+* = Some locators are down or unreachable
+# = Some registrations are sourced by reliable transport
+
+Site Name      Last      Up     Who Last             Inst     EID Prefix
+               Register         Registered           ID
+Shire          never     no     --                   1        any-mac
+
+=================================================
+Output for router lisp 0 instance-id 101
+=================================================
+LISP Site Registration Information
+* = Some locators are down or unreachable
+# = Some registrations are sourced by reliable transport
+
+Site Name      Last      Up     Who Last             Inst     EID Prefix
+               Register         Registered           ID
+Shire          never     no     --                   101      any-mac
+               7w0d      yes#   11.11.11.11:65042    101      aabb.cc00.c901/48
+
+=================================================
+Output for router lisp 0 instance-id 102
+=================================================
+LISP Site Registration Information
+* = Some locators are down or unreachable
+# = Some registrations are sourced by reliable transport
+
+Site Name      Last      Up     Who Last             Inst     EID Prefix
+               Register         Registered           ID
+Shire          never     no     --                   102      any-mac

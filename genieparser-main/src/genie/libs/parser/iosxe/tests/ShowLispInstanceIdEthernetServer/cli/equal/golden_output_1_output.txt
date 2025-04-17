@@ -1,0 +1,8 @@
+LISP Site Registration Information
+* = Some locators are down or unreachable
+# = Some registrations are sourced by reliable transport
+
+Site Name      Last      Up     Who Last             Inst     EID Prefix
+               Register         Registered           ID
+Shire          never     no     --                   101      any-mac
+               7w0d      yes#   11.11.11.11:65042    101      aabb.cc00.c901/48
