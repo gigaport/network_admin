@@ -1,8 +1,20 @@
-
 *.pyc
 __pycache__/
 db.sqlite3
+.so
+.log
+.pot
 .env
+.venv
+*.bak
+
 /staticfiles
 /media
+venv/
+env/
+.venv/
+.ENV/
 
+*.sqlite3
+db.sqlite3
+gunicorn.sock
