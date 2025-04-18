@@ -59,7 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'nxt_nms.urls'
+ROOT_URLCONF = 'net_admin.urls'
 
 TEMPLATES = [
     {
@@ -77,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'nxt_nms.wsgi.application'
+WSGI_APPLICATION = 'net_admin.wsgi.application'
 
 
 # Database
