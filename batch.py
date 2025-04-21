@@ -1,4 +1,5 @@
-import json, logging, re, time, html, sys
+import json, logging, re, time, html, sys, asyncio, uvicorn
+from fastapi import FastAPI
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pprint import pprint
@@ -15,6 +16,11 @@ from genie.libs.parser.iosxe.show_pim import ShowPimNeighbor
 ## NXOS
 from genie.libs.parser.nxos.show_mcast import ShowIpMrouteVrfAll
 from genie.libs.parser.nxos.show_pim import ShowIpPimRp
+
+app = FastAPI()
+
+# 스레드풀 생성
+executor = ThreadPoolExecutor(max_workers=60)
 
 TODAY_STR = datetime.today().strftime('%Y-%m-%d')
 TS_DEVICES = load('ts_member_mpr.yaml')
@@ -78,7 +84,36 @@ def main():
 
     save_to_json(data, market_gubn)
 
-    
+
+@app.get("/collect/")
+async def collect_data():
+    targets = load('ts_member_mpr.yaml')
+
+    loop = asyncio.get_event_loop()
+    tasks = [
+        loop.run_in_executor(executor, proccess_data, device_info, device_name)
+        for device_name, device_info in targets.devices.items()
+    ]
+
+    results = await asyncio.gather(*tasks)
+    return results
+
+def proccess_data(device_info, device_name):
+    data: Dict = {"data":[]}
+
+    ## 명령어01, 명렁어02 결과를 LIST 타입으로 수신신
+    cmd_response_list:List = execute_command(device_info)
+
+    ## 멀티캐스트 관련 데이터 정제 시작 ##
+    print(f"device_info : {device_info}")
+    processed_data = process_multicast_info(cmd_response_list, device_info, device_name)
+    print(f"[06.PROCESSED_DATA] ==> {json.dumps(processed_data, indent=4, ensure_ascii=False)}")
+
+    data['data'].append(processed_data)
+
+    return data
+
+
 def process_multicast_info(cmd_response_list, device_info, device_name):
     print("[05.processing...]")
 
@@ -346,4 +381,5 @@ def parse_uptime(uptime:str):
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    uvicorn.run(app, host="0.0.0.0", port=5000)
