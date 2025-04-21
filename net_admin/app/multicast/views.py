@@ -11,7 +11,8 @@ from django.http import HttpResponse, Http404, QueryDict
 
 # TODAY_STR = localtime(now()).strftime('%Y-%m-%d')
 NOW = timezone.localtime()
-TODAY_STR = NOW.date()
+# TODAY_STR = NOW.date()
+TODAY_STR = datetime.today().strftime('%Y-%m-%d')
 
 def index (request): 
     org_path = request.path.strip('/')

@@ -89,7 +89,7 @@ DATABASES = {
         'NAME': 'nxt_nms_db',
         'USER': 'nextrade',
         'PASSWORD': 'Sprtmxm1@3',
-        'HOST': 'localhost',
+        'HOST': '172.30.32.200',
         'PORT': '5432',
     }
 }
