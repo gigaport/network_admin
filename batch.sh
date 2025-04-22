@@ -10,6 +10,7 @@ echo "start:batch.sh"
 
 pyenv activate venv
 
-python3 /home/sysmon/network_admin/batch.py >> /home/sysmon/network_admin/batch.log 2>&1
+cd /home/sysmon/network_admin
+python3 batch.py >> /home/sysmon/network_admin/batch.log 2>&1
 
 echo "end:batch.sh"
