@@ -121,7 +121,7 @@ def send_slack_message(message_info: Dict):
             attachments=[
                 {
                     "color": "danger",
-                    "title": "멀티캐스트 수신이상 발생",
+                    "title": f"대상회원사 : `{message_info['member_name']}`",
                     "text": (
                         f"*장비이름: {message_info['device_name']}*\n"
                         f"가입상품: `{message_info['products']}`\n"
