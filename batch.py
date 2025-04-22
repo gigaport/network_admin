@@ -131,6 +131,10 @@ def send_slack_message(message_info: Dict):
                         {
                             "type": "mrkdwn",
                             "text": f'장비이름: {message_info["device_name"]}'
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f': {message_info["products"]}'
                         }
                     ]
                 },
@@ -262,6 +266,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
                 "member_name": member_name,
                 "device_name": device_name,
                 "pim_rp": pim_rp,
+                "products": products,
                 "product_cnt": product_cnt,
                 "mroute_cnt": mroute_cnt,
                 "oif_cnt": oif_cnt,
