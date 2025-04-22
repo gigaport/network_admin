@@ -112,6 +112,7 @@ def main():
         save_to_json(result, data["market_gubn"])
 
 def send_slack_message(message_info: Dict):
+    print(message_info)
     channel = "C08DNHG3CR2"
     try:
         response = client.chat_postMessage(
