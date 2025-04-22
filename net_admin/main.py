@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 
-app = FastAPI()
+app = FastAPI(root_path="/api")
 
 @app.get("/")
-def read_root():
-    return("message : hello from FastAPI + Gunicorn")
+async def hello():
+    return("message :hello from FastAPI + Gunicorn")
+
+
+
