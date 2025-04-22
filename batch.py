@@ -113,11 +113,17 @@ def main():
 
 def send_slack_message(message_info: Dict):
     print(message_info)
+    if message_info['market_gubn'] == "pr":
+        market_gubn = "가동"
+    elif message_info['market_gubn'] == "ts":
+        market_gubn = "테스트"
+    elif message_info['market_gubn'] == "dr":
+        market_gubn = "DR"
     channel = "C08DNHG3CR2"
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f":alert:*{message_info['member_name']} 멀티캐스트수신 이상*:alert:",
+            text= f":alert: *({market_gubn}){message_info['member_name']} 멀티캐스트수신 이상* :alert:",
             attachments=[
                 {
                     "color": "danger",
@@ -201,7 +207,7 @@ def check_multicast_info(market_gubn, members_mroute):
         # print(f"[merge_members_info]\n{merge_members_info}\n\n")
         # print(f"[members_mroute['data']]\n{members_mroute['data']}")
 
-        response_data:List = create_member_sise_info(members_mroute['data'], merge_members_info)
+        response_data:List = create_member_sise_info(members_mroute['data'], merge_members_info, market_gubn)
 
 def openJsonFile(path):
     data = {}
@@ -228,7 +234,7 @@ def merge_multicast_group_count(members_info:Dict, ts_mpr_multicast_info:Dict):
 
     return members_info
 
-def create_member_sise_info(members_mroute:list, members_info:Dict):
+def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:str):
     result = []
     member_no = 0
     member_code = ""
@@ -287,6 +293,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
             type = "danger"
             icon = "fas fa-x-square"
             info = {
+                "market_gubn": market_gubn,
                 "member_name": member_name,
                 "device_name": device_name,
                 "pim_rp": pim_rp,
