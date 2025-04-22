@@ -139,7 +139,7 @@ def send_slack_message(message_info: Dict):
                 },
                 {
                     "type":"section",
-                    "field": [
+                    "fields": [
                         {
                             "type": "mrkdwn",
                             "text": "서비스 확인필요"
