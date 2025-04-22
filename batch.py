@@ -1,4 +1,4 @@
-import json, logging, re, time, html, sys, asyncio, uvicorn
+import json, logging, re, time, html, sys, asyncio, uvicorn, requests
 from fastapi import FastAPI
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -45,6 +45,17 @@ IOSXE_CMDS = [
     }
 ]
 
+API_URL = [
+    {
+        "market_gubn":"pr",
+        "url":"http://127.0.0.1:8000/api/collect/pr"
+    },
+    {
+        "market_gubn":"ts",
+        "url":"http://127.0.0.1:8000/api/collect/ts"
+    }
+]
+
 # ## netmiko connection info
 # connection_info = {
 #     "device_type": "cisco_xe",
@@ -55,34 +66,37 @@ IOSXE_CMDS = [
 # }
 
 def main():
-    market_gubn = sys.argv[1]
+    # market_gubn = sys.argv[1]
 
-    if market_gubn == "pr":
-        targets = load('pr_member_mpr.yaml')
-    elif market_gubn == "ts":
-        targets = load('ts_member_mpr.yaml')
+    # if market_gubn == "pr":
+    #     targets = load('pr_member_mpr.yaml')
+    # elif market_gubn == "ts":
+    #     targets = load('ts_member_mpr.yaml')
 
-    #############################
-    ## 멀티캐스트 정보 수집 메서드 ##
-    #############################
+    # #############################
+    # ## 멀티캐스트 정보 수집 메서드 ##
+    # #############################
 
-    data: Dict = {"data":[]}
+    # data: Dict = {"data":[]}
 
-    for device_name, device_info in targets.devices.items():
-        try:
-            ## 명령어01, 명렁어02 결과를 LIST 타입으로 수신신
-            cmd_response_list:List = execute_command(device_info)
+    # for device_name, device_info in targets.devices.items():
+    #     try:
+    #         ## 명령어01, 명렁어02 결과를 LIST 타입으로 수신신
+    #         cmd_response_list:List = execute_command(device_info)
 
-            ## 멀티캐스트 관련 데이터 정제 시작 ##
-            processed_data = process_multicast_info(cmd_response_list, device_info, device_name)
-            print(f"[06.PROCESSED_DATA] ==> {json.dumps(processed_data, indent=4, ensure_ascii=False)}")
+    #         ## 멀티캐스트 관련 데이터 정제 시작 ##
+    #         processed_data = process_multicast_info(cmd_response_list, device_info, device_name)
+    #         print(f"[06.PROCESSED_DATA] ==> {json.dumps(processed_data, indent=4, ensure_ascii=False)}")
 
-            data['data'].append(processed_data)
+    #         data['data'].append(processed_data)
 
-        except KeyError as e:
-            logging.error(f"Error while processing {device_name}: {e}")
+    #     except KeyError as e:
+    #         logging.error(f"Error while processing {device_name}: {e}")
 
-    save_to_json(data, market_gubn)
+    for data in API_URL:
+        response = requests.get(data["url"])
+        print(data["url"])
+        save_to_json(response.json(), data["market_gubn"])
 
 
 @app.get("/collect/")
@@ -381,5 +395,5 @@ def parse_uptime(uptime:str):
 
 
 if __name__ == "__main__":
-    # main()
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    main()
+    # uvicorn.run(app, host="0.0.0.0", port=5000)
