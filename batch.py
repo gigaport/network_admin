@@ -122,7 +122,10 @@ def send_slack_message(message_info: Dict):
                 {
                     "color": "danger",
                     "title": "멀티캐스트 수신이상 발생",
-                    "text": f"장비이름: {message_info['device_name']}",
+                    "text": (
+                        f"장비이름: {message_info['device_name']}\n"
+                        f"가입상품: {message_info['products']}\n"
+                    ),
                     "mrkdwn_in": ["text", "title"]
                 }
             ]
