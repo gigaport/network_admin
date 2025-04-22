@@ -1,4 +1,6 @@
 import json, logging, re, time, html, sys, asyncio, requests
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 from fastapi import FastAPI
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -21,6 +23,9 @@ from genie.libs.parser.nxos.show_pim import ShowIpPimRp
 
 # 스레드풀 생성
 executor = ThreadPoolExecutor(max_workers=60)
+
+slack_token = "***REMOVED***8455397334246-8462358192034-3F7aPVe7I0Jg686HyXzBtDU0"
+client = WebClient(token=slack_token)
 
 TODAY_STR = datetime.today().strftime('%Y-%m-%d')
 TS_DEVICES = load('ts_member_mpr.yaml')
@@ -100,10 +105,194 @@ def main():
 
         result = {"data": [item["data"] for item in response_json]}
 
+        ## 확인필요 결과가 있을경우 슬랙으로 메세지 전송
+        check_multicast_info(data["market_gubn"], result)
+
         print(data["url"])
         save_to_json(result, data["market_gubn"])
 
+def send_slack_message(message_info: Dict):
+    channel = "C08DNHG3CR2"
+    try:
+        response = client.chat_postMessage(
+            channel=channel,  # 예: "#general" 또는 "C12345678"
+            block=[
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"{message_info["member_name"]} 멀티캐스트수신 이상"
+                    }
+                },
+                {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "mrkdwn",
+                            "text": f"장비이름: {message_info["device_name"]}"
+                        }
+                    ]
+                },
+                {
+                    "type":"divider"
+                },
+                {
+                    "type":"section",
+                    "field": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "서비스 확인필요"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "추가내용용"
+                        }
+                    ]
+                }
+            ]
+        )
+        print("메시지 전송 성공:", response["ts"])
 
+    except SlackApiError as e:
+        print("메시지 전송 실패:", e.response["error"])
+
+
+def check_multicast_info(market_gubn, members_mroute):
+    path = f"./net_admin/members_info.json"
+    members_info:Dict = openJsonFile(path)
+
+    path = f"./{market_gubn}_mpr_multicast_info.json"
+    mpr_multicast_info:Dict = openJsonFile(path)
+
+    ## 데이터 유무 검증
+    if members_mroute and members_info and mpr_multicast_info:
+    ## 01. member_info <- 시세 멀티캐스트그룹 수신 개수 삽입
+    ## 02. member_mroute <- member_info 정보 삽입
+        merge_members_info = merge_multicast_group_count(members_info, mpr_multicast_info)
+        print(f"[merge_members_info]\n{merge_members_info}\n\n")
+        print(f"[members_mroute['data']]\n{members_mroute['data']}")
+
+        response_data:List = create_member_sise_info(members_mroute['data'], merge_members_info)
+
+def openJsonFile(path):
+    data = {}
+    try:
+        with open(path, 'rt', encoding='UTF8') as json_file:
+            data = json.load(json_file)
+    except FileNotFoundError:
+        print(f"파일이 존재하지 않습니다: {path}")
+    except json.JSONDecodeError:
+        print(f"JSON 형식이 잘못되었습니다.: {path}")
+
+    return data
+
+def merge_multicast_group_count(members_info:Dict, ts_mpr_multicast_info:Dict):
+    for key, member in members_info.items():
+        products = member.get("member_products", [])
+        total = 0
+
+        for product in products:
+            if product in ts_mpr_multicast_info:
+                total += ts_mpr_multicast_info[product].get("multicast_group_count", 0)
+
+        member["multicast_group_count"] = total
+
+    return members_info
+
+def create_member_sise_info(members_mroute:list, members_info:Dict):
+    result = []
+    member_no = 0
+    member_code = ""
+    member_name = ""
+    device_name = ""
+    device_os = ""
+    products = ""
+    pim_rp = ""
+    product_cnt = 0
+    mroute_cnt = 0
+    oif_cnt = 0
+    min_update = ""
+    bfd_nbr = ""
+    rpf_nbr = ""
+    org_output = ""
+    check_result = ""
+    type = ""
+    icon = ""
+
+
+    for idx, device in enumerate(members_mroute):
+        if device['device_os'] == 'iosxe':
+            device_os_key = ''
+        elif device['device_os'] == 'nxos':
+            device_os_key = 'default'
+        
+        device_name = device['device_name']
+        device_os = device['device_os']
+        pim_rp = device['rp_addresses']
+        org_output = device['mroute'][0]['org_output'] ## show ip mroute 정보만 표기하기 위함 show ip pim neighbor는 X
+
+        # print(f"[multicast_group] : {device['mroute']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']}")
+        # multicast_group = device['mroute']['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']
+    
+        mroute_cnt = device['valid_source_address_count'] if 'valid_source_address_count' in device else 0
+        oif_cnt = device['valid_oif_count'] if 'valid_oif_count' in device else 0
+        min_update = device['min_uptime'] if 'min_uptime' in device else '확인필요'
+        rpf_nbr = device['rpf_nbrs'] if 'rpf_nbrs' in device else '확인필요'
+
+        second_octet = device['mgmt_ip'].split(".")[1] # IP두번째 자리 코드값 추출
+        if second_octet in members_info:
+            member_no = second_octet
+            member_code = members_info[second_octet]['member_code']
+            member_name = members_info[second_octet]['member_name']
+            products = members_info[second_octet]['member_products']
+            product_cnt = members_info[second_octet]['multicast_group_count']
+
+        ## 멀티캐스트 시세 정상 확인
+        ## 시세상품 멀티캐스트 그룹 카운트 == 장비 mroute 카운트 == vlan 1100 OIF 카운트 비교
+        if product_cnt == mroute_cnt == oif_cnt:
+            check_result = '정상확인'
+            type = "success"
+            icon = "fas fa-check"
+        else:
+            check_result = '확인필요'
+            type = "danger"
+            icon = "fas fa-x-square"
+            info = {
+                "member_name": member_name,
+                "device_name": device_name,
+                "pim_rp": pim_rp,
+                "product_cnt": product_cnt,
+                "mroute_cnt": mroute_cnt,
+                "oif_cnt": oif_cnt,
+                "rpf_nbr": rpf_nbr,
+                "check_result": check_result
+            }
+            send_slack_message(info)
+
+        temp = {
+            "id" : idx+1,
+            "member_no": member_no,
+            "member_code": member_code,
+            "member_name": member_name,
+            "device_name": device_name,
+            "device_os": device_os,
+            "products": products,
+            "pim_rp": pim_rp,
+            "product_cnt": product_cnt,
+            "mroute_cnt": mroute_cnt,
+            "oif_cnt": oif_cnt,
+            "min_update": min_update,
+            "bfd_nbr": bfd_nbr,
+            "rpf_nbr": rpf_nbr,
+            "org_output": org_output,
+            "check_result": check_result,
+            "check_result_badge": { "type": type, "icon": icon }
+        }
+
+        result.append(temp)
+
+    # print(result)
+    return result
 # @app.get("/collect/")
 # async def collect_data():
 #     targets = load('ts_member_mpr.yaml')
