@@ -1,4 +1,4 @@
-import json, logging, re, time, html, sys, asyncio, uvicorn, requests
+import json, logging, re, time, html, sys, asyncio, requests
 from fastapi import FastAPI
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -17,7 +17,7 @@ from genie.libs.parser.iosxe.show_pim import ShowPimNeighbor
 from genie.libs.parser.nxos.show_mcast import ShowIpMrouteVrfAll
 from genie.libs.parser.nxos.show_pim import ShowIpPimRp
 
-app = FastAPI()
+# app = FastAPI()
 
 # 스레드풀 생성
 executor = ThreadPoolExecutor(max_workers=60)
