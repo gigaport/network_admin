@@ -94,6 +94,7 @@ def main():
     #         logging.error(f"Error while processing {device_name}: {e}")
 
     for data in API_URL:
+        print("START_batch_proccess")
         response = requests.get(data["url"])
         print(data["url"])
         save_to_json(response.json(), data["market_gubn"])
