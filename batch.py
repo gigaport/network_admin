@@ -122,7 +122,7 @@ def send_slack_message(message_info: Dict):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"{message_info['member_name']} 멀티캐스트수신 이상"
+                        "text": f":alert:*{message_info['member_name']} 멀티캐스트수신 이상*:alert:"
                     }
                 },
                 {
@@ -130,29 +130,36 @@ def send_slack_message(message_info: Dict):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f'장비이름: {message_info["device_name"]}'
+                            "text": f"장비이름: {message_info['device_name']}"
                         },
                         {
                             "type": "mrkdwn",
-                            "text": f': {message_info["products"]}'
-                        }
+                            "text": f"가입상품: {message_info['products']}"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"PIM_RP: {message_info['pim_rp']}"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"기준 mroute: {message_info['product_cnt']}"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"헌재 mroute: {message_info['mroute_cnt']}"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"헌재 oif_cnt: {message_info['oif_cnt']}"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"RPF_NBR: {message_info['rpf_nbr']}"
+                        },
                     ]
                 },
                 {
                     "type":"divider"
-                },
-                {
-                    "type":"section",
-                    "fields": [
-                        {
-                            "type": "mrkdwn",
-                            "text": "서비스 확인필요"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": "추가내용용"
-                        }
-                    ]
                 }
             ]
         )
