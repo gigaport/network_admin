@@ -8,6 +8,7 @@ db.sqlite3
 .venv
 *.bak
 *.json
+.json
 
 /staticfiles
 /media
@@ -15,7 +16,7 @@ venv/
 env/
 .venv/
 .ENV/
-
+/data
 *.sqlite3
 db.sqlite3
 gunicorn.sock
