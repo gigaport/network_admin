@@ -4,265 +4,303 @@
     "member_name": "FIMS",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10, NXTA-COM"]
+    "member_products": ["NXTA-10, NXTA-COM"],
+    "member_exception": "False"
   },
   "1": {
     "member_code": "KY",
     "member_name": "교보증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "2": {
     "member_code": "SH",
     "member_name": "신한투자증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"],
+    "member_exception": "False"
   },
   "3": {
     "member_code": "KR",
     "member_name": "한국투자증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"],
+    "member_exception": "False"
   },
   "4": {
     "member_code": "DS",
     "member_name": "대신증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "5": {
     "member_code": "MR",
     "member_name": "미래에셋증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "6": {
     "member_code": "SY",
     "member_name": "신영증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "8": {
     "member_code": "EU",
     "member_name": "유진투자증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "9": {
     "member_code": "HY",
     "member_name": "한양증권",
     "member_gubn": "member",
     "member_acc_db": "pb",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "10": {
     "member_code": "ME",
     "member_name": "메리츠증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "12": {
     "member_code": "NH",
     "member_name": "NH투자증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "13": {
     "member_code": "BK",
     "member_name": "부국증권",
     "member_gubn": "member",
     "member_acc_db": "pb",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "17": {
     "member_code": "KB",
     "member_name": "KB증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "21": {
     "member_code": "HW",
     "member_name": "한화투자증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "22": {
     "member_code": "HD",
     "member_name": "현대차증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "24": {
     "member_code": "YU",
     "member_name": "유안타증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "25": {
     "member_code": "SK",
     "member_name": "SK증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "30": {
     "member_code": "SS",
     "member_name": "삼성증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "31": {
     "member_code": "DB",
     "member_name": "DB금융투자",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "46": {
     "member_code": "IM",
     "member_name": "IM증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "50": {
     "member_code": "KW",
     "member_name": "키움증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "52": {
     "member_code": "LD",
     "member_name": "리딩투자증권",
     "member_gubn": "member",
     "member_acc_db": "pb",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "56": {
     "member_code": "HN",
     "member_name": "하나증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "63": {
     "member_code": "LS",
     "member_name": "LS증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "68": {
     "member_code": "IB",
     "member_name": "IBK투자증권",
     "member_gubn": "member",
     "member_acc_db": "pb",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "69": {
     "member_code": "KA",
     "member_name": "카카오페이증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "71": {
     "member_code": "DO",
     "member_name": "다올투자증권",
     "member_gubn": "member",
     "member_acc_db": "pb",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "72": {
     "member_code": "CP",
     "member_name": "케이프투자증권",
     "member_gubn": "member",
     "member_acc_db": "pb",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "77": {
     "member_code": "TS",
     "member_name": "토스증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "True"
   },
   "79": {
     "member_code": "WR",
     "member_name": "우리투자증권",
     "member_gubn": "member",
     "member_acc_db": "pb",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "86": {
     "member_code": "BN",
     "member_name": "BNK투자증권",
     "member_gubn": "member",
     "member_acc_db": "pb",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "101": {
     "member_code": "PB",
     "member_name": "PowerBase",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "201": {
     "member_code": "TM",
     "member_name": "e토마토",
     "member_gubn": "info",
     "member_acc_db": "",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "202": {
     "member_code": "YN",
     "member_name": "연합인포맥스",
     "member_gubn": "info",
     "member_acc_db": "",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "203": {
     "member_code": "BL",
     "member_name": "Bloomberg",
     "member_gubn": "info",
     "member_acc_db": "",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "204": {
     "member_code": "IPC",
     "member_name": "IPC",
     "member_gubn": "info",
     "member_acc_db": "",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "205": {
     "member_code": "KG",
     "member_name": "KG제로인",
     "member_gubn": "info",
     "member_acc_db": "",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   },
   "206": {
     "member_code": "ICE",
     "member_name": "ICE",
     "member_gubn": "info",
     "member_acc_db": "",
-    "member_products": ["NXTA-10", "NXTA-COM"]
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_exception": "False"
   }
 }
