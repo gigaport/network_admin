@@ -100,299 +100,299 @@ def main():
         save_to_json(response.json(), data["market_gubn"])
 
 
-@app.get("/collect/")
-async def collect_data():
-    targets = load('ts_member_mpr.yaml')
+# @app.get("/collect/")
+# async def collect_data():
+#     targets = load('ts_member_mpr.yaml')
 
-    loop = asyncio.get_event_loop()
-    tasks = [
-        loop.run_in_executor(executor, proccess_data, device_info, device_name)
-        for device_name, device_info in targets.devices.items()
-    ]
+#     loop = asyncio.get_event_loop()
+#     tasks = [
+#         loop.run_in_executor(executor, proccess_data, device_info, device_name)
+#         for device_name, device_info in targets.devices.items()
+#     ]
 
-    results = await asyncio.gather(*tasks)
-    return results
+#     results = await asyncio.gather(*tasks)
+#     return results
 
-def proccess_data(device_info, device_name):
-    data: Dict = {"data":[]}
+# def proccess_data(device_info, device_name):
+#     data: Dict = {"data":[]}
 
-    ## 명령어01, 명렁어02 결과를 LIST 타입으로 수신신
-    cmd_response_list:List = execute_command(device_info)
+#     ## 명령어01, 명렁어02 결과를 LIST 타입으로 수신신
+#     cmd_response_list:List = execute_command(device_info)
 
-    ## 멀티캐스트 관련 데이터 정제 시작 ##
-    print(f"device_info : {device_info}")
-    processed_data = process_multicast_info(cmd_response_list, device_info, device_name)
-    print(f"[06.PROCESSED_DATA] ==> {json.dumps(processed_data, indent=4, ensure_ascii=False)}")
+#     ## 멀티캐스트 관련 데이터 정제 시작 ##
+#     print(f"device_info : {device_info}")
+#     processed_data = process_multicast_info(cmd_response_list, device_info, device_name)
+#     print(f"[06.PROCESSED_DATA] ==> {json.dumps(processed_data, indent=4, ensure_ascii=False)}")
 
-    data['data'].append(processed_data)
+#     data['data'].append(processed_data)
 
-    return data
+#     return data
 
 
-def process_multicast_info(cmd_response_list, device_info, device_name):
-    print("[05.processing...]")
+# def process_multicast_info(cmd_response_list, device_info, device_name):
+#     print("[05.processing...]")
 
-    ## cisco pyats return key값이 os마다 다름 별도 처리 필요
-    if device_info.os == 'iosxe':
-        device_os_key = ''
-    elif device_info.os == 'nxos':
-        device_os_key = 'default'
+#     ## cisco pyats return key값이 os마다 다름 별도 처리 필요
+#     if device_info.os == 'iosxe':
+#         device_os_key = ''
+#     elif device_info.os == 'nxos':
+#         device_os_key = 'default'
 
-    valid_source_address_count = 0
-    valid_oif_count = 0
-    min_uptime = '확인필요'
-    rpf_nbrs = '확인필요'
-    rp_addresses = []
+#     valid_source_address_count = 0
+#     valid_oif_count = 0
+#     min_uptime = '확인필요'
+#     rpf_nbrs = '확인필요'
+#     rp_addresses = []
 
-    result = {}
-    for data in cmd_response_list:
-        if data['cmd'] == 'show_ip_mroute_source-tree' or data['cmd'] == 'show_ip_mroute':
-            print("[06.PROCESSING SHOW IP MROUTE]\n\n")
+#     result = {}
+#     for data in cmd_response_list:
+#         if data['cmd'] == 'show_ip_mroute_source-tree' or data['cmd'] == 'show_ip_mroute':
+#             print("[06.PROCESSING SHOW IP MROUTE]\n\n")
 
-            ## show ip mroute에 대한 테이블이 있을경우만 진행
-            if data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']:
-                multicast_group = data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']
+#             ## show ip mroute에 대한 테이블이 있을경우만 진행
+#             if data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']:
+#                 multicast_group = data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']
 
-                ## 유요한 (S,G) 및 VLAN 1100 개수를 계산하여 기존 데이터에 삽입
-                valid_source_address_count = count_valid_source_address(multicast_group)
+#                 ## 유요한 (S,G) 및 VLAN 1100 개수를 계산하여 기존 데이터에 삽입
+#                 valid_source_address_count = count_valid_source_address(multicast_group)
 
-                #####################==>> RP Address os별 삽입 기준 정리 해야됨!!!!!
-                valid_multicast_data = count_valid_oif_and_get_min_uptime(multicast_group, device_info.os)
+#                 #####################==>> RP Address os별 삽입 기준 정리 해야됨!!!!!
+#                 valid_multicast_data = count_valid_oif_and_get_min_uptime(multicast_group, device_info.os)
 
-                print(f"[valid count] : {valid_source_address_count}\n")
-                if not valid_multicast_data:
-                    print('비어있음')
-                else:
-                    print(f"[vaild_multicast_data] => {valid_multicast_data}")
-                    valid_source_address_count = valid_source_address_count
-                    valid_oif_count = valid_multicast_data['valid_oif_count']
-                    min_uptime = valid_multicast_data['min_uptime']
-                    rpf_nbrs = valid_multicast_data['rpf_nbrs']
+#                 print(f"[valid count] : {valid_source_address_count}\n")
+#                 if not valid_multicast_data:
+#                     print('비어있음')
+#                 else:
+#                     print(f"[vaild_multicast_data] => {valid_multicast_data}")
+#                     valid_source_address_count = valid_source_address_count
+#                     valid_oif_count = valid_multicast_data['valid_oif_count']
+#                     min_uptime = valid_multicast_data['min_uptime']
+#                     rpf_nbrs = valid_multicast_data['rpf_nbrs']
                     
-                    if device_info.os == 'iosxe':
-                        rp_addresses = valid_multicast_data['rp_addresses']
-            else:
-                print("[!!!데이터 없음!!!]")
+#                     if device_info.os == 'iosxe':
+#                         rp_addresses = valid_multicast_data['rp_addresses']
+#             else:
+#                 print("[!!!데이터 없음!!!]")
 
-        elif data['cmd'] == 'show_ip_pim_rp':
-            print("[show ip pim rp logic]")
-            rp_addresses.append(list(data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['rp']['static_rp'].keys())[0])
+#         elif data['cmd'] == 'show_ip_pim_rp':
+#             print("[show ip pim rp logic]")
+#             rp_addresses.append(list(data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['rp']['static_rp'].keys())[0])
 
-    result = {
-        "device_name": device_name,
-        "device_os": device_info.os,
-        "mgmt_ip": str(device_info.connections.default.ip),
-        "valid_source_address_count": valid_source_address_count,
-        "valid_oif_count": valid_oif_count,
-        "min_uptime": min_uptime,
-        "rp_addresses": rp_addresses,
-        "rpf_nbrs": rpf_nbrs,
-        "mroute": cmd_response_list
-    }
+#     result = {
+#         "device_name": device_name,
+#         "device_os": device_info.os,
+#         "mgmt_ip": str(device_info.connections.default.ip),
+#         "valid_source_address_count": valid_source_address_count,
+#         "valid_oif_count": valid_oif_count,
+#         "min_uptime": min_uptime,
+#         "rp_addresses": rp_addresses,
+#         "rpf_nbrs": rpf_nbrs,
+#         "mroute": cmd_response_list
+#     }
 
-    return result
-
-
-def save_to_json(data, market_gubn):
-    print("save...")
-    ## write json
-    file_name = f"{FILE_PATH}{market_gubn}_members_mroute_{TODAY_STR}.json"
-
-    with open(file_name, 'w', encoding='utf-8') as json_file:
-        json.dump(data, json_file, indent=4, ensure_ascii=False)
+#     return result
 
 
-def execute_command(device_info):
-    print(f"[01.network device {device_info.name} connecting...]")
+# def save_to_json(data, market_gubn):
+#     print("save...")
+#     ## write json
+#     file_name = f"{FILE_PATH}{market_gubn}_members_mroute_{TODAY_STR}.json"
 
-    """
-    pyATS는 connect메서드 실행 시 자동으로 terminal timeout 설정을 무한(0)으로 설정한다.
-    이를 방지하기위해 init_exec_commands, init_config_commands 기본 명령을 제거."
-    """
-    device_info.connect(
-        init_exec_commands=[],
-        init_config_commands=[],
-        log_stdout=True,
-        prompt_recovery=False,
-        learn_hostname=False
-    ) 
+#     with open(file_name, 'w', encoding='utf-8') as json_file:
+#         json.dump(data, json_file, indent=4, ensure_ascii=False)
 
-    result = []
 
-    try:
-        if device_info.os == "nxos":
-            for cmd in NXOS_CMDS:
-                cmd_response:str = device_info.execute(cmd['value'])
-                print(f"\n\n[02.CMD_RESPONSE] ==> \n {cmd_response}\n")
+# def execute_command(device_info):
+#     print(f"[01.network device {device_info.name} connecting...]")
 
-                ## 할당한 명령어 순차적 실행
-                if cmd['key'] == 'show_ip_mroute_source-tree':
-                    parser = ShowIpMrouteVrfAll(device=None)
-                elif cmd['key'] == 'show_ip_pim_rp':
-                    parser = ShowIpPimRp(device=None)
+#     """
+#     pyATS는 connect메서드 실행 시 자동으로 terminal timeout 설정을 무한(0)으로 설정한다.
+#     이를 방지하기위해 init_exec_commands, init_config_commands 기본 명령을 제거."
+#     """
+#     device_info.connect(
+#         init_exec_commands=[],
+#         init_config_commands=[],
+#         log_stdout=True,
+#         prompt_recovery=False,
+#         learn_hostname=False
+#     ) 
+
+#     result = []
+
+#     try:
+#         if device_info.os == "nxos":
+#             for cmd in NXOS_CMDS:
+#                 cmd_response:str = device_info.execute(cmd['value'])
+#                 print(f"\n\n[02.CMD_RESPONSE] ==> \n {cmd_response}\n")
+
+#                 ## 할당한 명령어 순차적 실행
+#                 if cmd['key'] == 'show_ip_mroute_source-tree':
+#                     parser = ShowIpMrouteVrfAll(device=None)
+#                 elif cmd['key'] == 'show_ip_pim_rp':
+#                     parser = ShowIpPimRp(device=None)
                 
-                parsed_output, org_output = parse_pyats_to_json(parser, cmd_response)
+#                 parsed_output, org_output = parse_pyats_to_json(parser, cmd_response)
                 
-                temp = {
-                    "cmd": cmd['key'],
-                    "parsed_output": parsed_output,
-                    "org_output": org_output
-                }
-                result.append(temp)
+#                 temp = {
+#                     "cmd": cmd['key'],
+#                     "parsed_output": parsed_output,
+#                     "org_output": org_output
+#                 }
+#                 result.append(temp)
 
-        elif device_info.os == "iosxe":
-            for cmd in IOSXE_CMDS:
-                cmd_response:str = device_info.execute(cmd['value'])
+#         elif device_info.os == "iosxe":
+#             for cmd in IOSXE_CMDS:
+#                 cmd_response:str = device_info.execute(cmd['value'])
 
-                ## 할당한 명령어 순차적 실행
-                if cmd['key'] == 'show_ip_mroute':
-                    parser = ShowIpMroute(device=None)
+#                 ## 할당한 명령어 순차적 실행
+#                 if cmd['key'] == 'show_ip_mroute':
+#                     parser = ShowIpMroute(device=None)
 
-                parsed_output, org_output = parse_pyats_to_json(parser, cmd_response)
+#                 parsed_output, org_output = parse_pyats_to_json(parser, cmd_response)
 
-                temp = {
-                    "cmd": cmd['key'],
-                    "parsed_output": parsed_output,
-                    "org_output": org_output
-                }
-                result.append(temp)
+#                 temp = {
+#                     "cmd": cmd['key'],
+#                     "parsed_output": parsed_output,
+#                     "org_output": org_output
+#                 }
+#                 result.append(temp)
 
-        print(f"[04.RESULT] ==> \n {result}\n")
+#         print(f"[04.RESULT] ==> \n {result}\n")
         
-        return result
+#         return result
         
-    except Exception as e:
-        print(f"error: {e}")
+#     except Exception as e:
+#         print(f"error: {e}")
 
-    finally:
-        # 연결된 경우만 disconnect 실행
-        if device_info.connected:
-            device_info.disconnect()
-            print("network device disconnected...")
+#     finally:
+#         # 연결된 경우만 disconnect 실행
+#         if device_info.connected:
+#             device_info.disconnect()
+#             print("network device disconnected...")
 
 
-def parse_pyats_to_json(parser, cmd_response):
+# def parse_pyats_to_json(parser, cmd_response):
 
-    parsed_output = parser.parse(output=cmd_response)
-    print(f"[02-1.PARSED_OUTPUT] ==> {json.dumps(parsed_output, indent=4, ensure_ascii=False)}\n")
+#     parsed_output = parser.parse(output=cmd_response)
+#     print(f"[02-1.PARSED_OUTPUT] ==> {json.dumps(parsed_output, indent=4, ensure_ascii=False)}\n")
         
-    ## json 포맷으로 파싱된 데이터와 명령어로 실행한 아웃풋 값을 리턴
-    ## html에 CLI값을 출력하기위해 \r, \n 포맷을 변경
-    org_output = cmd_response.replace('\n', '\\n').replace('\r', '\\r')
-    org_output = html.escape(org_output)
+#     ## json 포맷으로 파싱된 데이터와 명령어로 실행한 아웃풋 값을 리턴
+#     ## html에 CLI값을 출력하기위해 \r, \n 포맷을 변경
+#     org_output = cmd_response.replace('\n', '\\n').replace('\r', '\\r')
+#     org_output = html.escape(org_output)
 
-    return parsed_output, org_output
+#     return parsed_output, org_output
 
 
-def count_valid_source_address(data):
-    count = 0
-    for ip, info in data.items():
-        source = info.get('source_address',{})
-        for key in source:
-            if '*' not in key:
-                count += 1
+# def count_valid_source_address(data):
+#     count = 0
+#     for ip, info in data.items():
+#         source = info.get('source_address',{})
+#         for key in source:
+#             if '*' not in key:
+#                 count += 1
     
-    return count
+#     return count
 
-def count_valid_oif_and_get_min_uptime(data, device_os:str):
-    print(f'device_os {device_os}')
-    valid_oif_count = 0
-    uptimes = []
-    rp_addresses = []
-    rpf_nbrs = []
-    vaild_check = False
+# def count_valid_oif_and_get_min_uptime(data, device_os:str):
+#     print(f'device_os {device_os}')
+#     valid_oif_count = 0
+#     uptimes = []
+#     rp_addresses = []
+#     rpf_nbrs = []
+#     vaild_check = False
 
-    for ip, ip_info in data.items():
-        ## 멀티캐스트그룹 239.29.30.x 대역 필터링
-        if ip.startswith("239.29.30."):
-            vaild_check = True
-            source_addresses = ip_info.get("source_address", {})
+#     for ip, ip_info in data.items():
+#         ## 멀티캐스트그룹 239.29.30.x 대역 필터링
+#         if ip.startswith("239.29.30."):
+#             vaild_check = True
+#             source_addresses = ip_info.get("source_address", {})
 
-            for addr, addr_info in source_addresses.items():
-                if addr == "*": ## (*, G)인 경우만 rp KEY가 존재하고, rpf_neighbor도 이 기준으로로 수집
-                    # 특정 멀티캐스트그룹IP : rp_address 값 모두 가져오기
-                    if device_os == 'iosxe':
-                        if addr_info['rp'] not in rp_addresses:
-                            rp_addresses.append(addr_info['rp'])
+#             for addr, addr_info in source_addresses.items():
+#                 if addr == "*": ## (*, G)인 경우만 rp KEY가 존재하고, rpf_neighbor도 이 기준으로로 수집
+#                     # 특정 멀티캐스트그룹IP : rp_address 값 모두 가져오기
+#                     if device_os == 'iosxe':
+#                         if addr_info['rp'] not in rp_addresses:
+#                             rp_addresses.append(addr_info['rp'])
                     
-                    # 특정 멀티캐스트그룹IP : rpf_neighbor 값 모두 가져오기
-                    if device_os == 'iosxe':
-                        if addr_info['rpf_nbr'] not in rpf_nbrs:
-                            rpf_nbrs.append(addr_info['rpf_nbr'])
-                    continue
+#                     # 특정 멀티캐스트그룹IP : rpf_neighbor 값 모두 가져오기
+#                     if device_os == 'iosxe':
+#                         if addr_info['rpf_nbr'] not in rpf_nbrs:
+#                             rpf_nbrs.append(addr_info['rpf_nbr'])
+#                     continue
 
-                if device_os == 'nxos':
-                    ## nxos ex
-                    # "239.29.30.62/32": {
-                    #     "source_address": {
-                    #         "177.21.180.101/32": {
-                    #             "uptime": "2w4d",
-                    #             "flags": "ip mrib pim",
-                    #             "incoming_interface_list": {
-                    #                 "Ethernet1/23": {
-                    #                     "rpf_nbr": "99.3.3.9"
-                    #                 }
-                    #             },
-                    #             "oil_count": 1,
-                    #             "outgoing_interface_list": {
-                    #                 "Vlan1100": {
-                    #                     "oil_uptime": "2w4d",
-                    #                     "oil_flags": "mrib"
-                    #                 }
-                    #             }
-                    #         }
-                    #     }
-                    # }
-                    first_key = next(iter(addr_info['incoming_interface_list']))
-                    first_value = addr_info['incoming_interface_list'][first_key]
-                    print(f"rpf {first_key}, {first_value}")
-                    if first_value['rpf_nbr'] not in rpf_nbrs:
-                        rpf_nbrs.append(first_value['rpf_nbr'])
+#                 if device_os == 'nxos':
+#                     ## nxos ex
+#                     # "239.29.30.62/32": {
+#                     #     "source_address": {
+#                     #         "177.21.180.101/32": {
+#                     #             "uptime": "2w4d",
+#                     #             "flags": "ip mrib pim",
+#                     #             "incoming_interface_list": {
+#                     #                 "Ethernet1/23": {
+#                     #                     "rpf_nbr": "99.3.3.9"
+#                     #                 }
+#                     #             },
+#                     #             "oil_count": 1,
+#                     #             "outgoing_interface_list": {
+#                     #                 "Vlan1100": {
+#                     #                     "oil_uptime": "2w4d",
+#                     #                     "oil_flags": "mrib"
+#                     #                 }
+#                     #             }
+#                     #         }
+#                     #     }
+#                     # }
+#                     first_key = next(iter(addr_info['incoming_interface_list']))
+#                     first_value = addr_info['incoming_interface_list'][first_key]
+#                     print(f"rpf {first_key}, {first_value}")
+#                     if first_value['rpf_nbr'] not in rpf_nbrs:
+#                         rpf_nbrs.append(first_value['rpf_nbr'])
                 
-                outgoing_interface = addr_info.get("outgoing_interface_list", {})
-                ## OIF가 Vlan1100일 때 (정상수신)
-                if "Vlan1100" in outgoing_interface:
-                    ## 특정 멀티캐스트그룹IP : uptime 값 가져오기
-                    if device_os == 'iosxe':
-                        uptimes.append(outgoing_interface['Vlan1100']['uptime'])
-                    elif device_os == 'nxos':
-                        uptimes.append(outgoing_interface['Vlan1100']['oil_uptime'])
-                    print(f"addr_info: {addr_info}")
+#                 outgoing_interface = addr_info.get("outgoing_interface_list", {})
+#                 ## OIF가 Vlan1100일 때 (정상수신)
+#                 if "Vlan1100" in outgoing_interface:
+#                     ## 특정 멀티캐스트그룹IP : uptime 값 가져오기
+#                     if device_os == 'iosxe':
+#                         uptimes.append(outgoing_interface['Vlan1100']['uptime'])
+#                     elif device_os == 'nxos':
+#                         uptimes.append(outgoing_interface['Vlan1100']['oil_uptime'])
+#                     print(f"addr_info: {addr_info}")
 
-                    # print(f"total_uptime_days: {total_uptime_days}")
-                    valid_oif_count += 1 
+#                     # print(f"total_uptime_days: {total_uptime_days}")
+#                     valid_oif_count += 1 
 
 
-    if vaild_check:
-        min_uptime = min(uptimes, key=parse_uptime)
+#     if vaild_check:
+#         min_uptime = min(uptimes, key=parse_uptime)
 
-        print("vlan1100 개수", valid_oif_count)
-        print(f"min_uptimes : {min_uptime}")
-        print(f"rp_addresses: {rp_addresses}")
-        print(f"rpf_nbrs: {rpf_nbrs}")
-        return_data = {
-            "valid_oif_count": valid_oif_count,
-            "min_uptime": min_uptime,
-            "rp_addresses": rp_addresses,
-            "rpf_nbrs": rpf_nbrs
-        }
-    else:
-        return_data = {}
+#         print("vlan1100 개수", valid_oif_count)
+#         print(f"min_uptimes : {min_uptime}")
+#         print(f"rp_addresses: {rp_addresses}")
+#         print(f"rpf_nbrs: {rpf_nbrs}")
+#         return_data = {
+#             "valid_oif_count": valid_oif_count,
+#             "min_uptime": min_uptime,
+#             "rp_addresses": rp_addresses,
+#             "rpf_nbrs": rpf_nbrs
+#         }
+#     else:
+#         return_data = {}
 
-    return return_data 
+#     return return_data 
 
-def parse_uptime(uptime:str):
-    ## 정규식으로 9w3d 같은 포맷에서 숫자를 추출
-    match = re.match(r"(?:(\d+)w)?(?:(\d+)d)?", uptime)
+# def parse_uptime(uptime:str):
+#     ## 정규식으로 9w3d 같은 포맷에서 숫자를 추출
+#     match = re.match(r"(?:(\d+)w)?(?:(\d+)d)?", uptime)
 
-    if not match:
-        return 0
+#     if not match:
+#         return 0
     
-    weeks = int(match.group(1)) if match.group(1) else 0
-    days = int(match.group(2)) if match.group(2) else 0
-    total_days = weeks * 7 + days
+#     weeks = int(match.group(1)) if match.group(1) else 0
+#     days = int(match.group(2)) if match.group(2) else 0
+#     total_days = weeks * 7 + days
 
-    return total_days
+#     return total_days
 
 
 if __name__ == "__main__":
