@@ -171,5 +171,5 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
 
         result.append(temp)
 
-    print(result)
+    # print(result)
     return result
