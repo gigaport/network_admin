@@ -9,6 +9,7 @@ eval "$("$PYENV_ROOT/bin/pyenv" virtualenv-init -)"
 echo "start:batch.sh"
 
 pyenv activate venv
+which python >> /home/sysmon/network_admin/batch.log 2>&1
 
 cd /home/sysmon/network_admin
 python3 batch.py >> /home/sysmon/network_admin/batch.log 2>&1
