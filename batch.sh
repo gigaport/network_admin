@@ -6,7 +6,7 @@ eval "$(pyenv init -)"
 
 echo "start:batch.sh"
 
-pyenv active venv
+pyenv activate venv
 python3 /home/sysmon/network_admin/batch.py >> /home/sysmon/network_admin/batch.log 2>&1
 
 echo "end:batch.sh"
