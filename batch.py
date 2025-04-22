@@ -117,7 +117,7 @@ def send_slack_message(message_info: Dict):
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
-            block=[
+            blocks=[
                 {
                     "type": "section",
                     "text": {
