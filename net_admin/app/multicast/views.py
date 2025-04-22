@@ -39,6 +39,7 @@ def init (request):
         print(f"sub_menu => {sub_menu}, market_gubn => {market_gubn}")
 
         path = f"../data/{market_gubn}_members_mroute_{TODAY_STR}.json"
+        print(f"PATH : {path}")
         members_mroute:Dict = openJsonFile(path)
 
         path = f"members_info.json"
@@ -52,6 +53,9 @@ def init (request):
         ## 01. member_info <- 시세 멀티캐스트그룹 수신 개수 삽입
         ## 02. member_mroute <- member_info 정보 삽입
             merge_members_info = merge_multicast_group_count(members_info, mpr_multicast_info)
+            print(f"[merge_members_info]\n{merge_members_info}\n\n")
+            print(f"[members_mroute['data']]\n{members_mroute['data']}")
+
             response_data:List = create_member_sise_info(members_mroute['data'], merge_members_info)
     
 

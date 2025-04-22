@@ -81,7 +81,6 @@ async def collect_data(target: str):
     return results
 
 def execute_collection(device_info, device_name):
-    data: Dict = {"data":[]}
 
     ## 명령어01, 명렁어02 결과를 LIST 타입으로 수신신
     cmd_response_list:List = connect_device_and_execute_cmd(device_info)
@@ -91,7 +90,7 @@ def execute_collection(device_info, device_name):
     processed_data = process_multicast_info(cmd_response_list, device_info, device_name)
     print(f"[06.PROCESSED_DATA] ==> {json.dumps(processed_data, indent=4, ensure_ascii=False)}")
 
-    data['data'].append(processed_data)
+    data = {"data": processed_data}
 
     return data
 

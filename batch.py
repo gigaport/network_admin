@@ -96,8 +96,12 @@ def main():
     for data in API_URL:
         print("START_batch_proccess")
         response = requests.get(data["url"])
+        response_json = response.json()
+
+        result = {"data": [item["data"] for item in response_json]}
+
         print(data["url"])
-        save_to_json(response.json(), data["market_gubn"])
+        save_to_json(result, data["market_gubn"])
 
 
 # @app.get("/collect/")
