@@ -122,7 +122,7 @@ def send_slack_message(message_info: Dict):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"{message_info["member_name"]} 멀티캐스트수신 이상"
+                        "text": f"{message_info['member_name']} 멀티캐스트수신 이상"
                     }
                 },
                 {
@@ -130,7 +130,7 @@ def send_slack_message(message_info: Dict):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"장비이름: {message_info["device_name"]}"
+                            "text": f'장비이름: {message_info["device_name"]}'
                         }
                     ]
                 },
