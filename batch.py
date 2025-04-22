@@ -193,13 +193,13 @@ def main():
 #     return result
 
 
-# def save_to_json(data, market_gubn):
-#     print("save...")
-#     ## write json
-#     file_name = f"{FILE_PATH}{market_gubn}_members_mroute_{TODAY_STR}.json"
+def save_to_json(data, market_gubn):
+    print("save...")
+    ## write json
+    file_name = f"{FILE_PATH}{market_gubn}_members_mroute_{TODAY_STR}.json"
 
-#     with open(file_name, 'w', encoding='utf-8') as json_file:
-#         json.dump(data, json_file, indent=4, ensure_ascii=False)
+    with open(file_name, 'w', encoding='utf-8') as json_file:
+        json.dump(data, json_file, indent=4, ensure_ascii=False)
 
 
 # def execute_command(device_info):
