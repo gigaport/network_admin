@@ -1,4 +1,6 @@
 import json, logging, re, time, html, sys, asyncio, uvicorn
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from concurrent.futures import ThreadPoolExecutor
@@ -18,7 +20,12 @@ from genie.libs.parser.iosxe.show_pim import ShowPimNeighbor
 from genie.libs.parser.nxos.show_mcast import ShowIpMrouteVrfAll
 from genie.libs.parser.nxos.show_pim import ShowIpPimRp
 
+
 app = FastAPI(root_path="/api")
+
+# SLACK
+slack_token = "***REMOVED***8455397334246-8462358192034-3F7aPVe7I0Jg686HyXzBtDU0"
+client = WebClient(token=slack_token)
 
 # 스레드풀 생성
 executor = ThreadPoolExecutor(max_workers=60)
@@ -65,7 +72,81 @@ async def hello():
 async def receive_syslog(request: Request):
     data = await request.json()
     print(f"Received log: {data}")
+
+    send_message_to_slack("#network-alert-syslog", data)
+
     return {"status": "ok"}
+
+@app.post("/send_message_to_slack")
+def send_message_to_slack(channel:str, message_info: Dict):
+    try:
+        response = client.chat_postMessage(
+            channel=channel,  # 예: "#general" 또는 "C12345678"
+            text= f":경고: SYSLOG:{message_info['PROGRAM']}-LEVEL:{message_info['LEVEL']} :경고:",
+            attachments=[
+                {
+                    "color": "danger",
+                    "title": f"{message_info['PROGRAM']}-LEVEL:{message_info['LEVEL']}",
+                    "text": (
+                        f"*장비이름: {message_info['PROGRAM']}*\n"
+                        f"장비IP: `{message_info['HOST']}`\n"
+                        f"발생일시: `{message_info['ISODATE']}`\n"
+                        f"LEVEL: {message_info['LEVEL']}\n"
+                        f"MESSAGE: ```{message_info['MESSAGE']}```\n"
+                    ),
+                    "mrkdwn_in": ["text", "title"]
+                }
+            ]
+            # blocks=[
+            #     {
+            #         "type": "section",
+            #         "text": {
+            #             "type": "mrkdwn",
+            #             "text": f":alert:*{message_info['member_name']} 멀티캐스트수신 이상*:alert:"
+            #         }
+            #     },
+            #     {
+            #         "type": "context",
+            #         "elements": [
+            #             {
+            #                 "type": "mrkdwn",
+            #                 "text": f"장비이름: {message_info['device_name']}"
+            #             },
+            #             {
+            #                 "type": "mrkdwn",
+            #                 "text": f"가입상품: {message_info['products']}"
+            #             },
+            #             {
+            #                 "type": "mrkdwn",
+            #                 "text": f"PIM_RP: {message_info['pim_rp']}"
+            #             },
+            #             {
+            #                 "type": "mrkdwn",
+            #                 "text": f"기준 mroute: {message_info['product_cnt']}"
+            #             },
+            #             {
+            #                 "type": "mrkdwn",
+            #                 "text": f"헌재 mroute: {message_info['mroute_cnt']}"
+            #             },
+            #             {
+            #                 "type": "mrkdwn",
+            #                 "text": f"현재 oif_cnt: {message_info['oif_cnt']}"
+            #             },
+            #             {
+            #                 "type": "mrkdwn",
+            #                 "text": f"RPF_NBR: {message_info['rpf_nbr']}"
+            #             },
+            #         ]
+            #     },
+            #     {
+            #         "type":"divider"
+            #     }
+            # ]
+        )
+        print("메시지 전송 성공:", response["ts"])
+
+    except SlackApiError as e:
+        print("메시지 전송 실패:", e.response["error"])
 
 
 @app.get("/collect/{target}")
