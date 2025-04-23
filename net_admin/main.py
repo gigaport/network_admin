@@ -79,10 +79,17 @@ async def receive_syslog(request: Request):
 
 @app.post("/send_message_to_slack")
 def send_message_to_slack(channel:str, message_info: Dict):
+    if channel == "#network-alert-syslog":
+        dt = datetime.fromisoformat(message_info['ISODATE'])
+        formatted_date = dt.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        formatted_date = message_info['ISODATE']
+
+        
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f":경고: SYSLOG>>{message_info['PROGRAM']} ({message_info['LEVEL']}) :경고:",
+            text= f":경고: {message_info['LEVEL'].upper}>>{message_info['PROGRAM']} :경고:",
             attachments=[
                 {
                     "color": "warning",
@@ -90,7 +97,7 @@ def send_message_to_slack(channel:str, message_info: Dict):
                     "text": (
                         f"*-장비이름: {message_info['PROGRAM']}*\n"
                         f"-장비IP: `{message_info['HOST']}`\n"
-                        f"-발생일시: `{message_info['ISODATE']}`\n"
+                        f"-발생일시: `{formatted_date}`\n"
                         f"-LEVEL: `{message_info['LEVEL'].upper()}`\n"
                         f"-MESSAGE: ```{message_info['MESSAGE']}```\n"
                     ),
