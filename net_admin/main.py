@@ -63,7 +63,7 @@ async def hello():
 
 @app.post("/logs")
 async def receive_syslog(request: Request):
-    data = await request.json()
+    # data = await request.json()
     print("Received log:", data)
     return {"status": "ok"}
 
