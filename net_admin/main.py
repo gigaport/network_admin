@@ -1,5 +1,5 @@
 import json, logging, re, time, html, sys, asyncio, uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -60,6 +60,12 @@ async def hello():
 #     "password": "Swr278577@",
 #     "port": 22
 # }
+
+@app.post("/logs")
+async def receive_syslog(request: Request):
+    data = await request.json()
+    print("Received log:", data)
+    return {"status": "ok"}
 
 
 @app.get("/collect/{target}")
