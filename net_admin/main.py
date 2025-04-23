@@ -85,11 +85,11 @@ def send_message_to_slack(channel:str, message_info: Dict):
     else:
         formatted_date = message_info['ISODATE']
 
-        
+
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f":경고: {message_info['LEVEL'].upper}>>{message_info['PROGRAM']} :경고:",
+            text= f":경고: {message_info['LEVEL'].upper()}>>{message_info['PROGRAM']} :경고:",
             attachments=[
                 {
                     "color": "warning",
