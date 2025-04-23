@@ -27,6 +27,8 @@ def index (request):
 
 def init (request):
     print(f'[CALL INIT TODAY] ==> {TODAY_STR}, {NOW} \n')
+    response_data = []
+
     if request.method == "GET":
         sub_menu = request.GET.get("sub_menu")
         market_gubn = ""
@@ -44,7 +46,7 @@ def init (request):
 
         path = f"members_info.json"
         members_info:Dict = openJsonFile(path)
-
+        
         path = f"{market_gubn}_mpr_multicast_info.json"
         mpr_multicast_info:Dict = openJsonFile(path)
 
@@ -53,12 +55,12 @@ def init (request):
         ## 01. member_info <- 시세 멀티캐스트그룹 수신 개수 삽입
         ## 02. member_mroute <- member_info 정보 삽입
             merge_members_info = merge_multicast_group_count(members_info, mpr_multicast_info)
-            print(f"[merge_members_info]\n{merge_members_info}\n\n")
-            print(f"[members_mroute['data']]\n{members_mroute['data']}")
+            # print(f"[merge_members_info]\n{merge_members_info}\n\n")
+            # print(f"[members_mroute['data']]\n{members_mroute['data']}")
 
-            response_data:List = create_member_sise_info(members_mroute['data'], merge_members_info)
+            response_data = create_member_sise_info(members_mroute['data'], merge_members_info)
     
-
+    
     # data meta info setting
     # meta = {'page': 1, 'pages': 1, 'perpage': -1, 'total': len(json_data['device_info']), 'sort': 'asc', 'field': 'id'}
     # result: Dict[str, str] = {'meta': meta}
@@ -110,6 +112,8 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
     bfd_nbr = ""
     rpf_nbr = ""
     org_output = ""
+    alarm = True
+    member_note = ""
     check_result = ""
     type = ""
     icon = ""
@@ -141,6 +145,8 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
             member_name = members_info[second_octet]['member_name']
             products = members_info[second_octet]['member_products']
             product_cnt = members_info[second_octet]['multicast_group_count']
+            alarm = members_info[second_octet]['alarm']
+            member_note = members_info[second_octet]['member_note']
 
         ## 멀티캐스트 시세 정상 확인
         ## 시세상품 멀티캐스트 그룹 카운트 == 장비 mroute 카운트 == vlan 1100 OIF 카운트 비교
@@ -152,6 +158,17 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
             check_result = '확인필요'
             type = "danger"
             icon = "fas fa-x-square"
+
+        print(f"ALARM: {alarm}")
+
+        if alarm:
+            alarm_icon = "fa-bell"
+            print("true")
+        else:
+            alarm_icon = "fa-bell-slash"
+            print("false")
+
+        print(f"ALARM_ICON: {alarm_icon}")
         
         temp = {
             "id" : idx+1,
@@ -169,6 +186,9 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
             "bfd_nbr": bfd_nbr,
             "rpf_nbr": rpf_nbr,
             "org_output": org_output,
+            "alarm":alarm,
+            "alarm_icon": alarm_icon,
+            "member_note": member_note,
             "check_result": check_result,
             "check_result_badge": { "type": type, "icon": icon }
         }

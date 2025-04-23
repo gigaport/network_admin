@@ -5,7 +5,7 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10, NXTA-COM"],
-    "alarm_exception": "False",
+    "alarm": true,
     "member_note":""
   },
   "1": {
@@ -14,7 +14,7 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False",
+    "alarm": true,
     "member_note":""
   },
   "2": {
@@ -23,7 +23,7 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"],
-    "alarm_exception": "False",
+    "alarm": true,
     "member_note":""
   },
   "3": {
@@ -32,7 +32,7 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"],
-    "alarm_exception": "False",
+    "alarm": true,
     "member_note":""
   },
   "4": {
@@ -41,7 +41,7 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False",
+    "alarm": true,
     "member_note":""
   },
   "5": {
@@ -50,7 +50,7 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False",
+    "alarm": true,
     "member_note":""
   },
   "6": {
@@ -59,7 +59,7 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False",
+    "alarm": true,
     "member_note":""
   },
   "8": {
@@ -68,7 +68,7 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False",
+    "alarm": true,
     "member_note":""
   },
   "9": {
@@ -77,7 +77,8 @@
     "member_gubn": "member",
     "member_acc_db": "pb",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "10": {
     "member_code": "ME",
@@ -85,7 +86,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "12": {
     "member_code": "NH",
@@ -93,7 +95,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "13": {
     "member_code": "BK",
@@ -101,7 +104,8 @@
     "member_gubn": "member",
     "member_acc_db": "pb",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "17": {
     "member_code": "KB",
@@ -109,7 +113,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "21": {
     "member_code": "HW",
@@ -117,7 +122,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "22": {
     "member_code": "HD",
@@ -125,7 +131,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "24": {
     "member_code": "YU",
@@ -133,7 +140,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "25": {
     "member_code": "SK",
@@ -141,7 +149,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "30": {
     "member_code": "SS",
@@ -149,7 +158,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "31": {
     "member_code": "DB",
@@ -157,7 +167,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "46": {
     "member_code": "IM",
@@ -165,7 +176,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "50": {
     "member_code": "KW",
@@ -173,7 +185,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "52": {
     "member_code": "LD",
@@ -181,7 +194,8 @@
     "member_gubn": "member",
     "member_acc_db": "pb",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "56": {
     "member_code": "HN",
@@ -189,7 +203,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "63": {
     "member_code": "LS",
@@ -197,7 +212,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "68": {
     "member_code": "IB",
@@ -205,7 +221,8 @@
     "member_gubn": "member",
     "member_acc_db": "pb",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "69": {
     "member_code": "KA",
@@ -213,7 +230,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "71": {
     "member_code": "DO",
@@ -221,7 +239,8 @@
     "member_gubn": "member",
     "member_acc_db": "pb",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "72": {
     "member_code": "CP",
@@ -229,7 +248,8 @@
     "member_gubn": "member",
     "member_acc_db": "pb",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "77": {
     "member_code": "TS",
@@ -237,7 +257,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "True"
+    "alarm": false,
+    "member_note":""
   },
   "79": {
     "member_code": "WR",
@@ -245,7 +266,8 @@
     "member_gubn": "member",
     "member_acc_db": "pb",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "86": {
     "member_code": "BN",
@@ -253,7 +275,8 @@
     "member_gubn": "member",
     "member_acc_db": "pb",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "101": {
     "member_code": "PB",
@@ -261,7 +284,8 @@
     "member_gubn": "member",
     "member_acc_db": "self",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "201": {
     "member_code": "TM",
@@ -269,7 +293,8 @@
     "member_gubn": "info",
     "member_acc_db": "",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "202": {
     "member_code": "YN",
@@ -277,7 +302,8 @@
     "member_gubn": "info",
     "member_acc_db": "",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "203": {
     "member_code": "BL",
@@ -285,7 +311,8 @@
     "member_gubn": "info",
     "member_acc_db": "",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "204": {
     "member_code": "IPC",
@@ -293,7 +320,8 @@
     "member_gubn": "info",
     "member_acc_db": "",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "205": {
     "member_code": "KG",
@@ -301,7 +329,8 @@
     "member_gubn": "info",
     "member_acc_db": "",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   },
   "206": {
     "member_code": "ICE",
@@ -309,6 +338,7 @@
     "member_gubn": "info",
     "member_acc_db": "",
     "member_products": ["NXTA-10", "NXTA-COM"],
-    "alarm_exception": "False"
+    "alarm": true,
+    "member_note":""
   }
 }

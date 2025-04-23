@@ -42,6 +42,9 @@
                             bfd_nbr,
                             rpf_nbr,
                             org_output,
+                            alarm,
+                            alarm_icon,
+                            member_note,
                             check_result,
                             check_result_badge
                         } = values;
@@ -94,6 +97,12 @@
                             </td>
                             <td class="rpf_nbr py-2 align-middle text-center fw-medium">
                                 ${rpf_nbr}
+                            </td>
+                            <td class="rpf_nbr py-2 align-middle text-center fw-medium">
+                                <span class="fa-solid ${alarm_icon} text-primary me-2"></span>${alarm}
+                            </td>
+                            <td class="rpf_nbr py-2 align-middle text-center fw-medium">
+                                ${member_note}
                             </td>
                             <td class="org_output py-2 align-middle text-center fs-8 fw-medium">
                                 <button id="btn_mroute" class="btn btn-phoenix-primary btn-sm" data-title=${device_name} data-info="${org_output}">mroute</button>
