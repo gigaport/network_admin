@@ -82,17 +82,17 @@ def send_message_to_slack(channel:str, message_info: Dict):
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f":경고: SYSLOG:{message_info['PROGRAM']}-LEVEL:{message_info['LEVEL']} :경고:",
+            text= f":경고: SYSLOG>>{message_info['PROGRAM']} ({message_info['LEVEL']}) :경고:",
             attachments=[
                 {
-                    "color": "danger",
-                    "title": f"{message_info['PROGRAM']}-LEVEL:{message_info['LEVEL']}",
+                    "color": "warning",
+                    "title": f"{message_info['PROGRAM']} // LEVEL:{message_info['LEVEL']}",
                     "text": (
-                        f"*장비이름: {message_info['PROGRAM']}*\n"
-                        f"장비IP: `{message_info['HOST']}`\n"
-                        f"발생일시: `{message_info['ISODATE']}`\n"
-                        f"LEVEL: {message_info['LEVEL']}\n"
-                        f"MESSAGE: ```{message_info['MESSAGE']}```\n"
+                        f"*-장비이름: {message_info['PROGRAM']}*\n"
+                        f"-장비IP: `{message_info['HOST']}`\n"
+                        f"-발생일시: `{message_info['ISODATE']}`\n"
+                        f"-LEVEL: `{message_info['LEVEL'].upper()}`\n"
+                        f"-MESSAGE: ```{message_info['MESSAGE']}```\n"
                     ),
                     "mrkdwn_in": ["text", "title"]
                 }
