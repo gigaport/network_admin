@@ -68,6 +68,10 @@ async def hello():
 #     "port": 22
 # }
 
+@app.get("/member_mkd/status")
+async def member_mkd():
+    return {"status":"ok"}
+
 @app.post("/logs")
 async def receive_syslog(request: Request):
     data = await request.json()
@@ -89,7 +93,7 @@ def send_message_to_slack(channel:str, message_info: Dict):
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f":경고: {message_info['LEVEL'].upper()}>>{message_info['PROGRAM']} :경고:",
+            text= f":warning: {message_info['LEVEL'].upper()}>>{message_info['PROGRAM']} :warning:",
             attachments=[
                 {
                     "color": "warning",
