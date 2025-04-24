@@ -85,8 +85,7 @@ async def receive_syslog(request: Request):
 def send_message_to_slack(channel:str, message_info: Dict):
     if channel == "#network-alert-syslog":
         dt = datetime.fromisoformat(message_info['ISODATE'])
-        dt_native = dt.replace(tzinfo=None)
-        formatted_date = dt_native.strftime("%Y-%m-%d %H:%M:%S")
+        formatted_date = dt.strftime("%Y-%m-%d %H:%M:%S")
     else:
         formatted_date = message_info['ISODATE']
 
