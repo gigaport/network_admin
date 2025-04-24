@@ -4,7 +4,7 @@ from slack_sdk.errors import SlackApiError
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pprint import pprint
 from typing import List, Dict, Tuple, Union, Optional
 ## Netmiko 라이브러리
@@ -26,6 +26,9 @@ app = FastAPI(root_path="/api")
 # SLACK
 slack_token = "***REMOVED***8455397334246-8462358192034-3F7aPVe7I0Jg686HyXzBtDU0"
 client = WebClient(token=slack_token)
+
+# TIME
+KST = timezone(timedelta(hours=9))
 
 # 스레드풀 생성
 executor = ThreadPoolExecutor(max_workers=60)
@@ -86,7 +89,8 @@ def send_message_to_slack(channel:str, message_info: Dict):
     if channel == "#network-alert-syslog":
         print(f"IOSDATE : {message_info['ISODATE']}")
         dt = datetime.fromisoformat(message_info['ISODATE'])
-        formatted_date = dt.strftime("%Y-%m-%d %H:%M:%S")
+        dt_kst = dt.astimezone(KST)
+        formatted_date = dt_kst.strftime("%Y-%m-%d %H:%M:%S")
     else:
         formatted_date = message_info['ISODATE']
 
