@@ -4,7 +4,7 @@ from slack_sdk.errors import SlackApiError
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timezone
 from pprint import pprint
 from typing import List, Dict, Tuple, Union, Optional
 ## Netmiko 라이브러리
@@ -85,7 +85,8 @@ async def receive_syslog(request: Request):
 def send_message_to_slack(channel:str, message_info: Dict):
     if channel == "#network-alert-syslog":
         dt = datetime.fromisoformat(message_info['ISODATE'])
-        formatted_date = dt.strftime("%Y-%m-%d %H:%M:%S")
+        utc_dt = dt.astimezone(timezone.utc)
+        formatted_date = utc_dt.strftime("%Y-%m-%d %H:%M:%S")
     else:
         formatted_date = message_info['ISODATE']
 
