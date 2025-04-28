@@ -54,11 +54,11 @@ def init (request):
         if members_mroute and members_info and mpr_multicast_info:
         ## 01. member_info <- 시세 멀티캐스트그룹 수신 개수 삽입
         ## 02. member_mroute <- member_info 정보 삽입
-            merge_members_info = merge_multicast_group_count(members_info, mpr_multicast_info)
+            merge_members_mroute = merge_multicast_group_count(members_mroute['data'], mpr_multicast_info)
             # print(f"[merge_members_info]\n{merge_members_info}\n\n")
             # print(f"[members_mroute['data']]\n{members_mroute['data']}")
 
-            response_data = create_member_sise_info(members_mroute['data'], merge_members_info)
+            response_data = create_member_sise_info(merge_members_mroute, merge_members_info)
     
     
     # data meta info setting
@@ -81,18 +81,18 @@ def openJsonFile(path):
 
     return data
 
-def merge_multicast_group_count(members_info:Dict, ts_mpr_multicast_info:Dict):
-    for key, member in members_info.items():
-        products = member.get("member_products", [])
+def merge_multicast_group_count(members_mroute:list, mpr_multicast_info:Dict):
+    for idx, device in enumerate(members_mroute):
+        products = device["products"]
         total = 0
 
         for product in products:
-            if product in ts_mpr_multicast_info:
-                total += ts_mpr_multicast_info[product].get("multicast_group_count", 0)
+            if product in mpr_multicast_info:
+                total += mpr_multicast_info[product].get("multicast_group_count", 0)
 
-        member["multicast_group_count"] = total
+        members_mroute[idx]["multicast_group_count"] = total
 
-    return members_info
+    return members_mroute
 
 
 
