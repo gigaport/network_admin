@@ -31,7 +31,7 @@
     "member_name": "한국투자증권",
     "member_gubn": "member",
     "member_acc_db": "self",
-    "member_products": ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"],
+    "member_products": ["NXTA-3", "NXTA-10", "NXTA-COM", "NXTB-3", "NXTB-10", "NXTB-COM"],
     "alarm": true,
     "member_note":""
   },
