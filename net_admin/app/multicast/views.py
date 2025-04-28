@@ -143,8 +143,6 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
             member_no = second_octet
             member_code = members_info[second_octet]['member_code']
             member_name = members_info[second_octet]['member_name']
-            products = members_info[second_octet]['member_products']
-            product_cnt = members_info[second_octet]['multicast_group_count']
             alarm = members_info[second_octet]['alarm']
             member_note = members_info[second_octet]['member_note']
 

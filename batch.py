@@ -280,8 +280,6 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
             member_no = second_octet
             member_code = members_info[second_octet]['member_code']
             member_name = members_info[second_octet]['member_name']
-            products = members_info[second_octet]['member_products']
-            product_cnt = members_info[second_octet]['multicast_group_count']
 
         ## 멀티캐스트 시세 정상 확인
         ## 시세상품 멀티캐스트 그룹 카운트 == 장비 mroute 카운트 == vlan 1100 OIF 카운트 비교
