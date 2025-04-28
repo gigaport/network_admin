@@ -58,7 +58,7 @@ def init (request):
             # print(f"[merge_members_info]\n{merge_members_info}\n\n")
             # print(f"[members_mroute['data']]\n{members_mroute['data']}")
 
-            response_data = create_member_sise_info(merge_members_mroute, merge_members_info)
+            response_data = create_member_sise_info(merge_members_mroute, members_info)
     
     
     # data meta info setting

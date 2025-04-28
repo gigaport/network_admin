@@ -207,7 +207,7 @@ def check_multicast_info(market_gubn, members_mroute):
         # print(f"[merge_members_info]\n{merge_members_info}\n\n")
         # print(f"[members_mroute['data']]\n{members_mroute['data']}")
 
-        response_data:List = create_member_sise_info(merge_members_mroute, merge_members_info, market_gubn)
+        response_data:List = create_member_sise_info(merge_members_mroute, members_info, market_gubn)
 
 def openJsonFile(path):
     data = {}
