@@ -250,7 +250,7 @@ def process_multicast_info(cmd_response_list, device_info, device_name):
     result = {
         "device_name": device_name,
         "device_os": device_info.os,
-        "products": device_info.custom.join_products,
+        "products": device_info.custom.get('join_products', []),
         "mgmt_ip": str(device_info.connections.default.ip),
         "valid_source_address_count": valid_source_address_count,
         "valid_oif_count": valid_oif_count,
