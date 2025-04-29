@@ -1,6 +1,6 @@
 import json, logging, re, time, html, sys, asyncio, uvicorn
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
+# from slack_sdk import WebClient
+# from slack_sdk.errors import SlackApiError
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from concurrent.futures import ThreadPoolExecutor
@@ -25,7 +25,7 @@ app = FastAPI(root_path="/api")
 
 # SLACK
 slack_token = "***REMOVED***8455397334246-8462358192034-3F7aPVe7I0Jg686HyXzBtDU0"
-client = WebClient(token=slack_token)
+# client = WebClient(token=slack_token)
 
 # TIME
 KST = timezone(timedelta(hours=9))
@@ -84,85 +84,85 @@ async def receive_syslog(request: Request):
 
     return {"status": "ok"}
 
-@app.post("/send_message_to_slack")
-def send_message_to_slack(channel:str, message_info: Dict):
-    if channel == "#network-alert-syslog":
-        print(f"IOSDATE : {message_info['ISODATE']}")
-        dt = datetime.fromisoformat(message_info['ISODATE'])
-        dt_kst = dt.astimezone(KST)
-        formatted_date = dt_kst.strftime("%Y-%m-%d %H:%M:%S")
-    else:
-        formatted_date = message_info['ISODATE']
+# @app.post("/send_message_to_slack")
+# def send_message_to_slack(channel:str, message_info: Dict):
+#     if channel == "#network-alert-syslog":
+#         print(f"IOSDATE : {message_info['ISODATE']}")
+#         dt = datetime.fromisoformat(message_info['ISODATE'])
+#         dt_kst = dt.astimezone(KST)
+#         formatted_date = dt_kst.strftime("%Y-%m-%d %H:%M:%S")
+#     else:
+#         formatted_date = message_info['ISODATE']
 
 
-    try:
-        response = client.chat_postMessage(
-            channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f":warning: {message_info['LEVEL'].upper()}>>{message_info['PROGRAM']} :warning:",
-            attachments=[
-                {
-                    "color": "warning",
-                    "title": f"{message_info['PROGRAM']} // LEVEL:{message_info['LEVEL']}",
-                    "text": (
-                        f"*-장비이름: {message_info['PROGRAM']}*\n"
-                        f"-장비IP: `{message_info['HOST']}`\n"
-                        f"-발생일시: `{formatted_date}`\n"
-                        f"-LEVEL: `{message_info['LEVEL'].upper()}`\n"
-                        f"-MESSAGE: ```{message_info['MESSAGE']}```\n"
-                    ),
-                    "mrkdwn_in": ["text", "title"]
-                }
-            ]
-            # blocks=[
-            #     {
-            #         "type": "section",
-            #         "text": {
-            #             "type": "mrkdwn",
-            #             "text": f":alert:*{message_info['member_name']} 멀티캐스트수신 이상*:alert:"
-            #         }
-            #     },
-            #     {
-            #         "type": "context",
-            #         "elements": [
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"장비이름: {message_info['device_name']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"가입상품: {message_info['products']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"PIM_RP: {message_info['pim_rp']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"기준 mroute: {message_info['product_cnt']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"헌재 mroute: {message_info['mroute_cnt']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"현재 oif_cnt: {message_info['oif_cnt']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"RPF_NBR: {message_info['rpf_nbr']}"
-            #             },
-            #         ]
-            #     },
-            #     {
-            #         "type":"divider"
-            #     }
-            # ]
-        )
-        print("메시지 전송 성공:", response["ts"])
+#     try:
+#         response = client.chat_postMessage(
+#             channel=channel,  # 예: "#general" 또는 "C12345678"
+#             text= f":warning: {message_info['LEVEL'].upper()}>>{message_info['PROGRAM']} :warning:",
+#             attachments=[
+#                 {
+#                     "color": "warning",
+#                     "title": f"{message_info['PROGRAM']} // LEVEL:{message_info['LEVEL']}",
+#                     "text": (
+#                         f"*-장비이름: {message_info['PROGRAM']}*\n"
+#                         f"-장비IP: `{message_info['HOST']}`\n"
+#                         f"-발생일시: `{formatted_date}`\n"
+#                         f"-LEVEL: `{message_info['LEVEL'].upper()}`\n"
+#                         f"-MESSAGE: ```{message_info['MESSAGE']}```\n"
+#                     ),
+#                     "mrkdwn_in": ["text", "title"]
+#                 }
+#             ]
+#             # blocks=[
+#             #     {
+#             #         "type": "section",
+#             #         "text": {
+#             #             "type": "mrkdwn",
+#             #             "text": f":alert:*{message_info['member_name']} 멀티캐스트수신 이상*:alert:"
+#             #         }
+#             #     },
+#             #     {
+#             #         "type": "context",
+#             #         "elements": [
+#             #             {
+#             #                 "type": "mrkdwn",
+#             #                 "text": f"장비이름: {message_info['device_name']}"
+#             #             },
+#             #             {
+#             #                 "type": "mrkdwn",
+#             #                 "text": f"가입상품: {message_info['products']}"
+#             #             },
+#             #             {
+#             #                 "type": "mrkdwn",
+#             #                 "text": f"PIM_RP: {message_info['pim_rp']}"
+#             #             },
+#             #             {
+#             #                 "type": "mrkdwn",
+#             #                 "text": f"기준 mroute: {message_info['product_cnt']}"
+#             #             },
+#             #             {
+#             #                 "type": "mrkdwn",
+#             #                 "text": f"헌재 mroute: {message_info['mroute_cnt']}"
+#             #             },
+#             #             {
+#             #                 "type": "mrkdwn",
+#             #                 "text": f"현재 oif_cnt: {message_info['oif_cnt']}"
+#             #             },
+#             #             {
+#             #                 "type": "mrkdwn",
+#             #                 "text": f"RPF_NBR: {message_info['rpf_nbr']}"
+#             #             },
+#             #         ]
+#             #     },
+#             #     {
+#             #         "type":"divider"
+#             #     }
+#             # ]
+#         )
+#         print("메시지 전송 성공:", response["ts"])
 
-    except SlackApiError as e:
-        print("메시지 전송 실패:", e.response["error"])
+#     except SlackApiError as e:
+#         print("메시지 전송 실패:", e.response["error"])
 
 
 @app.get("/collect/{target}")
@@ -191,7 +191,7 @@ def execute_collection(device_info, device_name):
     ## 멀티캐스트 관련 데이터 정제 시작 ##
     print(f"device_info : {device_info}")
     processed_data = process_multicast_info(cmd_response_list, device_info, device_name)
-    print(f"[06.PROCESSED_DATA] ==> {json.dumps(processed_data, indent=4, ensure_ascii=False)}")
+    # print(f"[06.PROCESSED_DATA] ==> {json.dumps(processed_data, indent=4, ensure_ascii=False)}")
 
     data = {"data": processed_data}
 
@@ -228,11 +228,11 @@ def process_multicast_info(cmd_response_list, device_info, device_name):
                 #####################==>> RP Address os별 삽입 기준 정리 해야됨!!!!!
                 valid_multicast_data = count_valid_oif_and_get_min_uptime(multicast_group, device_info.os)
 
-                print(f"[valid count] : {valid_source_address_count}\n")
+                # print(f"[valid count] : {valid_source_address_count}\n")
                 if not valid_multicast_data:
                     print('비어있음')
                 else:
-                    print(f"[vaild_multicast_data] => {valid_multicast_data}")
+                    # print(f"[vaild_multicast_data] => {valid_multicast_data}")
                     valid_source_address_count = valid_source_address_count
                     valid_oif_count = valid_multicast_data['valid_oif_count']
                     min_uptime = valid_multicast_data['min_uptime']
@@ -246,6 +246,8 @@ def process_multicast_info(cmd_response_list, device_info, device_name):
         elif data['cmd'] == 'show_ip_pim_rp':
             print("[show ip pim rp logic]")
             rp_addresses.append(list(data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['rp']['static_rp'].keys())[0])
+
+    print(f"device_info_join_products >> {device_info.custom.get('join_products', [])}")
 
     result = {
         "device_name": device_name,
@@ -284,7 +286,7 @@ def connect_device_and_execute_cmd(device_info):
         if device_info.os == "nxos":
             for cmd in NXOS_CMDS:
                 cmd_response:str = device_info.execute(cmd['value'])
-                print(f"\n\n[02.CMD_RESPONSE] ==> \n {cmd_response}\n")
+                # print(f"\n\n[02.CMD_RESPONSE] ==> \n {cmd_response}\n")
 
                 ## 할당한 명령어 순차적 실행
                 if cmd['key'] == 'show_ip_mroute_source-tree':
@@ -318,7 +320,7 @@ def connect_device_and_execute_cmd(device_info):
                 }
                 result.append(temp)
 
-        print(f"[04.RESULT] ==> \n {result}\n")
+        # print(f"[04.RESULT] ==> \n {result}\n")
         
         return result
         
@@ -335,7 +337,7 @@ def connect_device_and_execute_cmd(device_info):
 def parse_pyats_to_json(parser, cmd_response):
 
     parsed_output = parser.parse(output=cmd_response)
-    print(f"[02-1.PARSED_OUTPUT] ==> {json.dumps(parsed_output, indent=4, ensure_ascii=False)}\n")
+    # print(f"[02-1.PARSED_OUTPUT] ==> {json.dumps(parsed_output, indent=4, ensure_ascii=False)}\n")
         
     ## json 포맷으로 파싱된 데이터와 명령어로 실행한 아웃풋 값을 리턴
     ## html에 CLI값을 출력하기위해 \r, \n 포맷을 변경
