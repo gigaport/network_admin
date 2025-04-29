@@ -45,7 +45,7 @@ devices:
         ip: 50.3.1.21
     custom:
       groups: ["product"]
-      join_products: ["NXTA-3", "A-10", "A-COM", "B-3", "B-10", "B-COM"]
+      join_products: ["A-3", "A-10", "A-COM", "B-3", "B-10", "B-COM"]
   PPKR_MPR_L3_03:
     os: nxos
     type: switch
