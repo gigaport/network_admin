@@ -156,6 +156,10 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
             check_result = '정상확인'
             type = "success"
             icon = "fas fa-check"
+        elif connected_server_cnt == 0:
+            check_result = '회원사연결서버없음'
+            type = "primary"
+            icon = "fas fa-check"
         else:
             check_result = '확인필요'
             type = "danger"
