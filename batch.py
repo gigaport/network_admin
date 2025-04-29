@@ -129,13 +129,13 @@ def send_slack_message(message_info: Dict):
                     "color": "danger",
                     "title": f"대상회원사 : `{message_info['member_name']}`",
                     "text": (
-                        f"*장비이름: {message_info['device_name']}*\n"
-                        f"가입상품: `{message_info['products']}`\n"
-                        f"PIM_RP: {message_info['pim_rp']}\n"
-                        f"기준 mroute: {message_info['product_cnt']}\n"
-                        f"현재 mroute: {message_info['mroute_cnt']}\n"
-                        f"현재 oif_cnt: {message_info['oif_cnt']}\n"
-                        f"RPF_NBR: `{message_info['rpf_nbr']}`\n"
+                        f"*- 장비이름: {message_info['device_name']}*\n"
+                        f"- 가입상품: `{message_info['products']}`\n"
+                        f"- PIM_RP: {message_info['pim_rp']}\n"
+                        f"- 기준 mroute: {message_info['product_cnt']}\n"
+                        f"- 현재 mroute: {message_info['mroute_cnt']}\n"
+                        f"- 현재 oif_cnt: {message_info['oif_cnt']}\n"
+                        f"- RPF_NBR: `{message_info['rpf_nbr']}`\n"
                     ),
                     "mrkdwn_in": ["text", "title"]
                 }
@@ -306,7 +306,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
                 "check_result": check_result
             }
             
-            # send_slack_message(info)
+            send_slack_message(info)
 
         temp = {
             "id" : idx+1,
