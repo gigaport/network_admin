@@ -220,6 +220,7 @@ def process_multicast_info(cmd_response_list, device_info, device_name):
 
     valid_source_address_count = 0
     valid_oif_count = 0
+    connected_server_count = 0
     min_uptime = '확인필요'
     rpf_nbrs = '확인필요'
     rp_addresses = []
@@ -261,7 +262,7 @@ def process_multicast_info(cmd_response_list, device_info, device_name):
         elif data['cmd'] == 'show_interface_status':
             print("[show interface status]\n")
             print(f"{data['parsed_output']}")
-            connected_server_count = 0
+
             for interface, details in data['parsed_output']['interfaces'].items():
                 # access_vlan 값과 인터페이스 상태 확인
                 access_vlan = details.get('vlan')
@@ -270,7 +271,7 @@ def process_multicast_info(cmd_response_list, device_info, device_name):
                 if access_vlan == '1100' and oper_status == 'connected':
                     connected_server_count += 1
                     print(f"Matched interfaces: {interface} Deivice: {device_name}\n\n")
-            print(f"[VLAN1100 UP interfaces total COUNT] : {device_name} -- {connected_server_count}")
+            print(f"[VLAN1100 UP interfaces total COUNT] : {device_name}{device_info.os} ==> {connected_server_count}")
 
     print(f"device_info_join_products >> {device_info.custom.get('join_products', [])}")
 
