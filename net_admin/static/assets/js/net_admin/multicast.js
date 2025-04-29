@@ -41,6 +41,7 @@
                             min_update,
                             bfd_nbr,
                             rpf_nbr,
+                            connected_server_cnt,
                             org_output,
                             alarm,
                             alarm_icon,
@@ -97,6 +98,9 @@
                             </td>
                             <td class="rpf_nbr py-2 align-middle text-center fw-medium">
                                 ${rpf_nbr}
+                            </td>
+                            <td class="rpf_nbr py-2 align-middle text-center fw-medium">
+                                ${connected_server_cnt}
                             </td>
                             <td class="rpf_nbr py-2 align-middle text-center fw-medium">
                                 <span class="fa-solid ${alarm_icon} text-primary me-2"></span>${alarm}

@@ -13,10 +13,13 @@ from netmiko import ConnectHandler
 from genie.testbed import load
 ## 장비정보 파싱 라이브러리리
 ## IOSXE
-from genie.libs.parser.iosxe.show_interface import ShowInterfaces
+from genie.libs.parser.iosxe.show_interface import ShowInterfacesSwitchport
+from genie.libs.parser.iosxe.show_interface import ShowInterfacesStatus
 from genie.libs.parser.iosxe.show_mcast import ShowIpMroute
 from genie.libs.parser.iosxe.show_pim import ShowPimNeighbor
 ## NXOS
+from genie.libs.parser.nxos.show_interface import ShowInterfaceSwitchport
+from genie.libs.parser.nxos.show_interface import ShowInterfaceStatus
 from genie.libs.parser.nxos.show_mcast import ShowIpMrouteVrfAll
 from genie.libs.parser.nxos.show_pim import ShowIpPimRp
 
@@ -46,13 +49,21 @@ NXOS_CMDS = [
     {
         "key": "show_ip_pim_rp",
         "value": "show ip pim rp"
-    }     
+    },
+    {
+        "key": "show_interface_status",
+        "value": "show interface status"
+    }
 ]
 
 IOSXE_CMDS = [
     {
         "key": "show_ip_mroute",
         "value": "show ip mroute"
+    },
+    {
+        "key": "show_interface_status",
+        "value": "show interface status"
     }
 ]
 
@@ -244,8 +255,22 @@ def process_multicast_info(cmd_response_list, device_info, device_name):
                 print("[!!!데이터 없음!!!]")
 
         elif data['cmd'] == 'show_ip_pim_rp':
-            print("[show ip pim rp logic]")
+            print("[show ip pim rp logic]\n")
             rp_addresses.append(list(data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['rp']['static_rp'].keys())[0])
+
+        elif data['cmd'] == 'show_interface_status':
+            print("[show interface status]\n")
+            print(f"{data['parsed_output']}")
+            connected_server_count = 0
+            for interface, details in data['parsed_output']['interfaces'].items():
+                # access_vlan 값과 인터페이스 상태 확인
+                access_vlan = details.get('vlan')
+                oper_status = details.get('status')
+
+                if access_vlan == '1100' and oper_status == 'connected':
+                    connected_server_count += 1
+                    print(f"Matched interfaces: {interface} Deivice: {device_name}\n\n")
+            print(f"[VLAN1100 UP interfaces total COUNT] : {device_name} -- {connected_server_count}")
 
     print(f"device_info_join_products >> {device_info.custom.get('join_products', [])}")
 
@@ -259,6 +284,7 @@ def process_multicast_info(cmd_response_list, device_info, device_name):
         "min_uptime": min_uptime,
         "rp_addresses": rp_addresses,
         "rpf_nbrs": rpf_nbrs,
+        "connected_server_count": connected_server_count,
         "mroute": cmd_response_list
     }
 
@@ -293,6 +319,8 @@ def connect_device_and_execute_cmd(device_info):
                     parser = ShowIpMrouteVrfAll(device=None)
                 elif cmd['key'] == 'show_ip_pim_rp':
                     parser = ShowIpPimRp(device=None)
+                elif cmd['key'] == 'show_interface_status':
+                    parser = ShowInterfaceStatus(device=None)
                 
                 parsed_output, org_output = parse_pyats_to_json(parser, cmd_response)
                 
@@ -310,6 +338,8 @@ def connect_device_and_execute_cmd(device_info):
                 ## 할당한 명령어 순차적 실행
                 if cmd['key'] == 'show_ip_mroute':
                     parser = ShowIpMroute(device=None)
+                elif cmd['key'] == 'show_interface_status':
+                    parser = ShowInterfacesStatus(device=None)
 
                 parsed_output, org_output = parse_pyats_to_json(parser, cmd_response)
 

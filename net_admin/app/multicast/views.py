@@ -111,6 +111,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
     min_update = ""
     bfd_nbr = ""
     rpf_nbr = ""
+    connected_server_cnt = 0
     org_output = ""
     alarm = True
     member_note = ""
@@ -130,6 +131,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
         pim_rp = device['rp_addresses']
         products = device['products']
         product_cnt = device['multicast_group_count']
+        connected_server_cnt = device['connected_server_count']
         org_output = device['mroute'][0]['org_output'] ## show ip mroute 정보만 표기하기 위함 show ip pim neighbor는 X
 
         # print(f"[multicast_group] : {device['mroute']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']}")
