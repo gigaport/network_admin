@@ -342,6 +342,9 @@
             });
         });
     });
+    setTimeout(function() {
+        window.location.reload();
+    }, 60000);
 
   }));
   //# sourceMappingURL=advance-ajax-table.js.map
