@@ -188,6 +188,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
             "bfd_nbr": bfd_nbr,
             "rpf_nbr": rpf_nbr,
             "org_output": org_output,
+            "connected_server_cnt": connected_server_cnt,
             "alarm":alarm,
             "alarm_icon": alarm_icon,
             "member_note": member_note,

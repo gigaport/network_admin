@@ -100,7 +100,9 @@
                                 ${rpf_nbr}
                             </td>
                             <td class="rpf_nbr py-2 align-middle text-center fw-medium">
+                                <span class="text-${check_result_badge.type}">
                                 ${connected_server_cnt}
+                                </span>
                             </td>
                             <td class="rpf_nbr py-2 align-middle text-center fw-medium">
                                 <span class="fa-solid ${alarm_icon} text-primary me-2"></span>${alarm}
