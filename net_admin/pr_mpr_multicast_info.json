@@ -1,5 +1,5 @@
 {
-    "NXTA-10": {
+    "A-10": {
       "multicast_group_count": 4,
       "data": [
         {
@@ -16,7 +16,7 @@
         }
       ]
     },
-    "NXTA-3": {
+    "A-3": {
       "multicast_group_count": 2,
       "data": [
         {
@@ -27,7 +27,7 @@
         }
       ]
     },
-    "NXTA-5": {
+    "A-5": {
       "multicast_group_count": 2,
       "data": [
         {
@@ -38,7 +38,7 @@
         }
       ]
     },
-    "NXTA-COM": {
+    "A-COM": {
       "multicast_group_count": 8,
       "data": [
         {
@@ -67,7 +67,7 @@
         }
       ]
     },
-    "NXTB-10": {
+    "B-10": {
       "multicast_group_count": 4,
       "data": [
         {
@@ -84,7 +84,7 @@
         }
       ]
     },
-    "NXTB-3": {
+    "B-3": {
       "multicast_group_count": 2,
       "data": [
         {
@@ -95,7 +95,7 @@
         }
       ]
     },
-    "NXTB-5": {
+    "B-5": {
       "multicast_group_count": 2,
       "data": [
         {
@@ -106,7 +106,7 @@
         }
       ]
     },
-    "NXTB-COM": {
+    "B-COM": {
       "multicast_group_count": 8,
       "data": [
         {
