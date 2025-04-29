@@ -300,7 +300,7 @@ def connect_device_and_execute_cmd(device_info):
     이를 방지하기위해 init_exec_commands, init_config_commands 기본 명령을 제거."
     """
     device_info.connect(
-        init_exec_commands=[],
+        init_exec_commands=['terminal length 0', 'terminal width 511'],
         init_config_commands=[],
         log_stdout=True,
         prompt_recovery=False,
