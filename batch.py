@@ -313,7 +313,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
                 "check_result": check_result
             }
             
-            # send_slack_message(info)
+            send_slack_message(info)
 
         temp = {
             "id" : idx+1,

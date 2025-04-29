@@ -2,8 +2,8 @@ testbed:
   name: NxtNetwork
   credentials:
     default:
-      username: "125003"
-      password: Swr278577@
+      username: "nwcfg"
+      password: Sprtmxm1@3
 
 devices:
   PTKY_COM_L3_01:
