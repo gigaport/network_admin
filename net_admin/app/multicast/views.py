@@ -165,6 +165,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
             type = "danger"
             icon = "fas fa-x-square"
 
+
         print(f"ALARM: {alarm}")
 
         if alarm:

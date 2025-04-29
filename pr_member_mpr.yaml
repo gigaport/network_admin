@@ -13,6 +13,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.1.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -23,6 +29,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.2.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -33,6 +45,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.2.1.23
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM", "B-10", "B-COM"]
@@ -43,6 +61,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.3.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-3", "A-10", "A-COM", "B-3", "B-10", "B-COM"]
@@ -53,6 +77,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.3.2.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM", "B-10", "B-COM"]
@@ -63,6 +93,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.4.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -73,6 +109,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.5.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -83,6 +125,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.6.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -93,6 +141,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.8.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -103,6 +157,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.10.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -113,6 +173,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.12.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -123,6 +189,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.12.2.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -133,6 +205,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.17.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -143,6 +221,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.17.2.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -153,6 +237,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.21.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -163,6 +253,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.22.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -173,6 +269,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.24.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -183,6 +285,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.25.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -193,6 +301,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.30.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -203,6 +317,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.31.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -213,6 +333,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.46.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -223,6 +349,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.50.2.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -233,6 +365,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.50.3.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -243,6 +381,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.56.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -253,6 +397,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.56.2.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -263,6 +413,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.63.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -273,6 +429,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.69.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -283,6 +445,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.71.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -293,6 +461,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.71.2.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -303,6 +477,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.77.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -313,6 +493,12 @@ devices:
       default:
         protocol: ssh
         ip: 50.101.1.21
+    connection_options:
+      cli:
+        settings:
+          INIT_EXEC_CMDS:
+            - terminal length 0
+            - terminal width 511
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
