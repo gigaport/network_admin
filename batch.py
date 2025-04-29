@@ -247,6 +247,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
     product_cnt = 0
     mroute_cnt = 0
     oif_cnt = 0
+    connected_server_cnt = 0
     min_update = ""
     bfd_nbr = ""
     rpf_nbr = ""
@@ -267,6 +268,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
         pim_rp = device['rp_addresses']
         products = device['products']
         product_cnt = device['multicast_group_count']
+        connected_server_cnt = device['connected_server_count']
         org_output = device['mroute'][0]['org_output'] ## show ip mroute 정보만 표기하기 위함 show ip pim neighbor는 X
 
         # print(f"[multicast_group] : {device['mroute']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']}")
@@ -289,6 +291,10 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
             check_result = '정상확인'
             type = "success"
             icon = "fas fa-check"
+        elif connected_server_cnt == 0:
+            check_result = '회원사연결서버없음'
+            type = "primary"
+            icon = "fas fa-check"
         else:
             check_result = '확인필요'
             type = "danger"
@@ -303,10 +309,11 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
                 "mroute_cnt": mroute_cnt,
                 "oif_cnt": oif_cnt,
                 "rpf_nbr": rpf_nbr,
+                "connected_server_cnt": connected_server_cnt,
                 "check_result": check_result
             }
             
-            # send_slack_message(info)
+            send_slack_message(info)
 
         temp = {
             "id" : idx+1,
