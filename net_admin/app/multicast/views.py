@@ -13,6 +13,7 @@ from django.http import HttpResponse, Http404, QueryDict
 NOW = timezone.localtime()
 # TODAY_STR = NOW.date()
 TODAY_STR = datetime.today().strftime('%Y-%m-%d')
+TODAY_TIME = datetime.today().strftime('%Y-%m-%d %H:%M')
 
 def index (request): 
     org_path = request.path.strip('/')
@@ -179,6 +180,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
         
         temp = {
             "id" : idx+1,
+            "updated_time": TODAY_TIME,
             "member_no": member_no,
             "member_code": member_code,
             "member_name": member_name,
@@ -202,6 +204,8 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
         }
 
         result.append(temp)
+
+        print(temp)
 
     # print(result)
     return result

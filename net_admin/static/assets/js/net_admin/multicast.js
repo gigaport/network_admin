@@ -19,6 +19,7 @@
             response_data = response;
             
             const table = document.getElementById('multicast_table');
+            document.getElementById("contents_title").innerText = 'last updated : '+response_data[0]['updated_time'];
   
             if (table) {
                 const options = {
