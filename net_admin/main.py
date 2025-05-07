@@ -32,6 +32,7 @@ client = WebClient(token=slack_token)
 
 # TIME
 KST = timezone(timedelta(hours=9))
+TODAY_TIME = datetime.today().strftime('%Y-%m-%d %H:%M')
 
 # 스레드풀 생성
 executor = ThreadPoolExecutor(max_workers=60)
@@ -277,6 +278,7 @@ def process_multicast_info(cmd_response_list, device_info, device_name):
 
     result = {
         "device_name": device_name,
+        "updated_time":TODAY_TIME,
         "device_os": device_info.os,
         "products": device_info.custom.get('join_products', []),
         "mgmt_ip": str(device_info.connections.default.ip),
