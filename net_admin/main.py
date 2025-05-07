@@ -42,6 +42,11 @@ TS_DEVICES = load('../ts_member_mpr.yaml')
 PR_DEVICES = load('../pr_member_mpr.yaml')
 FILE_PATH = "./data/"
 
+# pyATS 로거 설정 (로그 출력 비활성화)
+logging.getLogger('pyats').setLevel(logging.CRITICAL)
+logging.getLogger('genie').setLevel(logging.CRITICAL)
+logging.getLogger('unicon').setLevel(logging.CRITICAL)
+
 NXOS_CMDS = [
     {
         "key": "show_ip_mroute_source-tree",
