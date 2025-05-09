@@ -309,9 +309,10 @@ def connect_device_and_execute_cmd(device_info):
     device_info.connect(
         init_exec_commands=['terminal length 0', 'terminal width 511'],
         init_config_commands=[],
-        log_stdout=True,
+        log_stdout=False,
         prompt_recovery=False,
-        learn_hostname=False
+        learn_hostname=False,
+        logfile=None
     ) 
 
     result = []
