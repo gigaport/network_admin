@@ -73,7 +73,22 @@ IOSXE_CMDS = [
     }
 ]
 
-KNOWN_MULTICAST_IP = ["224.0.0.1", "224.0.0.2", "224.0.0.5", "224.0.0.6", "224.0.0.9", "224.0.0.13", "224.0.0.18", "224.0.0.22", "224.0.1.1", "224.0.1.2", "224.0.1.39", "224.0.1.40", "224.0.0.32", "224.0.0.41"]
+KNOWN_MULTICAST_IP = [
+    "224.0.0.1/32", 
+    "224.0.0.2/32", 
+    "224.0.0.5/32", 
+    "224.0.0.6/32", 
+    "224.0.0.9/32", 
+    "224.0.0.13/32", 
+    "224.0.0.18/32", 
+    "224.0.0.22/32", 
+    "224.0.1.1/32", 
+    "224.0.1.2/32", 
+    "224.0.1.39/32", 
+    "224.0.1.40/32", 
+    "224.0.0.32/32", 
+    "224.0.0.41/32"
+]
 
 
 @app.get("/")
@@ -391,6 +406,7 @@ def parse_pyats_to_json(parser, cmd_response):
 def count_valid_source_address(data):
     count = 0
     for multicast_ip, info in data.items():
+        print(f"multicast_group_ip : {multicast_ip}")
         if multicast_ip not in KNOWN_MULTICAST_IP :
             source = info.get('source_address',{})
             for key in source:
