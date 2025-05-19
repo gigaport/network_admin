@@ -73,6 +73,8 @@ IOSXE_CMDS = [
     }
 ]
 
+KNOWN_MULTICAST_IP = ["224.0.0.1", "224.0.0.2", "224.0.0.5", "224.0.0.6", "224.0.0.9", "224.0.0.13", "224.0.0.18", "224.0.0.22", "224.0.1.1", "224.0.1.2", "224.0.1.39", "224.0.1.40", "224.0.0.32", "224.0.0.41"]
+
 
 @app.get("/")
 async def hello():
@@ -388,11 +390,12 @@ def parse_pyats_to_json(parser, cmd_response):
 
 def count_valid_source_address(data):
     count = 0
-    for ip, info in data.items():
-        source = info.get('source_address',{})
-        for key in source:
-            if '*' not in key:
-                count += 1
+    for multicast_ip, info in data.items():
+        if multicast_ip not in KNOWN_MULTICAST_IP :
+            source = info.get('source_address',{})
+            for key in source:
+                if '*' not in key:
+                    count += 1
     
     return count
 
