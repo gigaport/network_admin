@@ -120,13 +120,13 @@ async def receive_syslog(request: Request):
 
 @app.post("/send_message_to_slack")
 def send_message_to_slack(channel:str, message_info: Dict):
-    if channel == "#network-alert-syslog":
-        print(f"IOSDATE : {message_info['timestamp']}")
-        dt = datetime.fromisoformat(message_info['timestamp'])
-        dt_kst = dt.astimezone(KST)
-        formatted_date = dt_kst.strftime("%Y-%m-%d %H:%M:%S")
-    else:
-        formatted_date = message_info['timestamp']
+    # if channel == "#network-alert-syslog":
+    #     print(f"IOSDATE : {message_info['kst_time_formatted']}")
+    #     # dt = datetime.fromisoformat(message_info['timestamp'])
+    #     dt_kst = dt.astimezone(KST)
+    #     formatted_date = dt_kst.strftime("%Y-%m-%d %H:%M:%S")
+    # else:
+    #     formatted_date = message_info['kst_time_formatted']
 
 
     try:
@@ -140,7 +140,7 @@ def send_message_to_slack(channel:str, message_info: Dict):
                     "text": (
                         f"*-장비이름: {message_info['device']}*\n"
                         f"-장비IP: `{message_info['host_ip']}`\n"
-                        f"-발생일시: `{formatted_date}`\n"
+                        f"-발생일시: `{message_info['kst_time_formatted']}`\n"
                         f"-LEVEL: `{message_info['severity'].upper()}`\n"
                         f"-MESSAGE: ```{message_info['message']}```\n"
                     ),
