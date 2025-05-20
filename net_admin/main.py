@@ -121,28 +121,28 @@ async def receive_syslog(request: Request):
 @app.post("/send_message_to_slack")
 def send_message_to_slack(channel:str, message_info: Dict):
     if channel == "#network-alert-syslog":
-        print(f"IOSDATE : {message_info['ISODATE']}")
-        dt = datetime.fromisoformat(message_info['ISODATE'])
+        print(f"IOSDATE : {message_info['timestamp']}")
+        dt = datetime.fromisoformat(message_info['timestamp'])
         dt_kst = dt.astimezone(KST)
         formatted_date = dt_kst.strftime("%Y-%m-%d %H:%M:%S")
     else:
-        formatted_date = message_info['ISODATE']
+        formatted_date = message_info['timestamp']
 
 
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f":warning: {message_info['LEVEL'].upper()}>>{message_info['PROGRAM']} :warning:",
+            text= f":warning: {message_info['severity'].upper()}>>{message_info['device']} :warning:",
             attachments=[
                 {
                     "color": "warning",
-                    "title": f"{message_info['PROGRAM']} // LEVEL:{message_info['LEVEL']}",
+                    "title": f"{message_info['device']} // LEVEL:{message_info['severity']}",
                     "text": (
-                        f"*-장비이름: {message_info['PROGRAM']}*\n"
-                        f"-장비IP: `{message_info['HOST']}`\n"
+                        f"*-장비이름: {message_info['device']}*\n"
+                        f"-장비IP: `{message_info['source_ip']}`\n"
                         f"-발생일시: `{formatted_date}`\n"
-                        f"-LEVEL: `{message_info['LEVEL'].upper()}`\n"
-                        f"-MESSAGE: ```{message_info['MESSAGE']}```\n"
+                        f"-LEVEL: `{message_info['severity'].upper()}`\n"
+                        f"-MESSAGE: ```{message_info['message']}```\n"
                     ),
                     "mrkdwn_in": ["text", "title"]
                 }
