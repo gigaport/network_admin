@@ -1,4 +1,5 @@
 import json, logging, re, time, html, sys, asyncio, uvicorn
+from repynery import Repynery
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from fastapi import FastAPI, Request
@@ -6,6 +7,7 @@ from fastapi.responses import JSONResponse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
 from pprint import pprint
+from urllib.parse import quote
 from typing import List, Dict, Tuple, Union, Optional
 ## Netmiko 라이브러리
 from netmiko import ConnectHandler
@@ -87,8 +89,24 @@ KNOWN_MULTICAST_IP = [
     "224.0.1.39/32", 
     "224.0.1.40/32", 
     "224.0.0.32/32", 
-    "224.0.0.41/32"
+    "224.0.0.41/32",
+    "239.255.255.250/32"
 ]
+
+# === [ 사용자 설정 영역 ] ===
+feedname = "COR_ASN"
+tag_values = ["ALL_SECUTIES","KB","KR_HQ","KR_KT","MR", "KW", "SH","NH","SS","KRX","STOCK-NET"]  # 여러 태그 지정 (리스트로 작성)
+bind_value = 121
+
+# 서버 접속 및 로그인
+print("Log in")
+r1 = Repynery(False, "172.24.32.47", 8080, "lampad", "Sprtmxm1@3")
+if not r1.login():
+    print("Failed to login. Check connection information")
+    exit(-1)
+else:
+    print(f'Logged in. Token: {r1.token}, Tag: {r1.tag}')
+
 
 
 @app.get("/")
@@ -514,3 +532,60 @@ def parse_uptime(uptime:str):
     total_days = weeks * 7 + days
 
     return total_days
+
+
+@app.get("/lampad")
+async def execute_collect():
+    kst = timezone(timedelta(hours=9))
+    kst_now = datetime.now(kst)
+    epoch_kst_now = int(kst_now.timestamp())
+    kst_from = kst_now - timedelta(seconds=120)
+    epoch_kst_from = int(kst_from.timestamp())
+
+    loop = asyncio.get_event_loop()
+    tasks = [
+        loop.run_in_executor(executor, collect_data, tag, epoch_kst_from, epoch_kst_now)
+        for tag in tag_values
+    ]
+
+    results = await asyncio.gather(*tasks)
+    return results
+
+def collect_data(tag, epoch_kst_from, epoch_kst_now):
+    print(f"\n=== Processing Tag: {tag} ===")
+#    print(f"kst_now : {E_NOW_DATETIME}, E_THIRTY_SECONDS_AGO : {E_THIRTY_SECONDS_AGO}")
+
+    # 데이터 요청
+    error = r1.request_data_generation(feedname, {
+        'from': epoch_kst_from,
+        'to': epoch_kst_now,
+        'type': 'bps',
+        'base': 'bytes',
+        'tags': tag
+    })
+    if error != '':
+        print(f"Error for tag {tag}: {error}")
+
+    # 결과 조회
+    get_parameters = {'bind': bind_value}
+    status = r1.get_result({})
+    while status != 200:
+        if status < 300:
+            status = r1.get_result(get_parameters)
+        else:
+            print(f"Failed to get result for tag {tag}. Status code: {status}")
+            continue
+
+    # 결과 저장
+    try:
+        decoded = r1.result.decode('utf-8')
+        fixed_json = re.sub(r'(\w+):"', r'"\1":"', decoded)
+        fixed_json = re.sub(r'(\w+):', r'"\1":', fixed_json)
+        data = json.loads(fixed_json)
+        data[0]['tag'] = tag
+        print(f">> {tag} : {data[0]}")
+
+        return data[0]
+    
+    except Exception as e:
+        print(f"❌ Failed to process result for tag {tag}: {e}")
