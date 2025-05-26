@@ -145,11 +145,11 @@ async def send_webhook_slack(request: Request):
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f":warning: {data['severity'].upper()}>>{data['device']} :warning:",
+            text= f"회원사 장시간 MAX 트래픽",
             attachments=[
                 {
                     "color": "#439FE0",
-                    "title": f"회원사 장시간 MAX 트래픽",
+                    # "title": f"회원사 장시간 MAX 트래픽",
                     "text": (
                         f"`전체증권사`: {data[0]['max_bps']}*\n"
                         f"`KB`: `{data[1]['max_bps']}`\n"
