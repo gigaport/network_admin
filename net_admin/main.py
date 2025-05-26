@@ -151,17 +151,17 @@ async def send_webhook_slack(request: Request):
                     "color": "#439FE0",
                     # "title": f"회원사 장시간 MAX 트래픽",
                     "text": (
-                        f"`전체증권사`: {data[0]['max_bps_unit']}\n"
-                        f"`KB`: {data[1]['max_bps_unit']}\n"
-                        f"`KB_HQ`: {data[2]['max_bps_unit']}\n"
-                        f"`한국투자`: {data[3]['max_bps_unit']}\n"
-                        f"`미래에셋`: {data[4]['max_bps_unit']}\n"
-                        f"`키움`: {data[5]['max_bps_unit']}\n"
-                        f"`신한`: {data[6]['max_bps_unit']}\n"
-                        f"`NH`: {data[7]['max_bps_unit']}\n"
-                        f"`삼성`: {data[8]['max_bps_unit']}\n"
-                        f"`KRX`: {data[9]['max_bps_unit']}\n"
-                        f"`STOCK-NET`: `{data[10]['max_bps_unit']}\n"
+                        f"`전체증권사` : {data[0]['max_bps_unit']} (증감표시예정)\n\n"
+                        f"`KB` : {data[1]['max_bps_unit']}\n\n (증감표시예정)"
+                        f"`KB_HQ` : {data[2]['max_bps_unit']}\n\n (증감표시예정)"
+                        f"`한국투자` : {data[3]['max_bps_unit']}\n\n (증감표시예정)"
+                        f"`미래에셋` : {data[4]['max_bps_unit']}\n\n (증감표시예정)"
+                        f"`키움` : {data[5]['max_bps_unit']}\n\n (증감표시예정)"
+                        f"`신한` : {data[6]['max_bps_unit']}\n\n (증감표시예정)"
+                        f"`NH` : {data[7]['max_bps_unit']}\n\n (증감표시예정)"
+                        f"`삼성` : {data[8]['max_bps_unit']}\n\n (증감표시예정)"
+                        f"`KRX` : {data[9]['max_bps_unit']}\n\n (증감표시예정)"
+                        f"`STOCK-NET` : {data[10]['max_bps_unit']}\n (증감표시예정)"
                     ),
                     "mrkdwn_in": ["text", "title"]
                 }
