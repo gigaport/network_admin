@@ -136,6 +136,43 @@ async def receive_syslog(request: Request):
 
     return {"status": "ok"}
 
+@app.post("/webhook/slack")
+async def send_webhook_slack(request: Request):
+    data = await request.json()
+    print(f"Received data: {data}")
+    channel = "network-monitor"
+
+    try:
+        response = client.chat_postMessage(
+            channel=channel,  # 예: "#general" 또는 "C12345678"
+            text= f":warning: {data['severity'].upper()}>>{data['device']} :warning:",
+            attachments=[
+                {
+                    "color": "#439FE0",
+                    "title": f"회원사 장시간 MAX 트래픽",
+                    "text": (
+                        f"`전체증권사`: {data[0]['max_bps']}*\n"
+                        f"`KB`: `{data[1]['max_bps']}`\n"
+                        f"`KB_HQ`: `{data[2]['max_bps']}`\n"
+                        f"`한국투자`: `{data[3]['max_bps']}`\n"
+                        f"`미래에셋`: `{data[4]['max_bps']}`\n"
+                        f"`키움`: `{data[5]['max_bps']}`\n"
+                        f"`신한`: `{data[6]['max_bps']}`\n"
+                        f"`NH`: `{data[7]['max_bps']}`\n"
+                        f"`삼성`: `{data[8]['max_bps']}`\n"
+                        f"`KRX`: `{data[9]['max_bps']}`\n"
+                        f"`STOCK-NET`: `{data[10]['max_bps']}`\n"
+                    ),
+                    "mrkdwn_in": ["text", "title"]
+                }
+            ]
+        )
+        print("메시지 전송 성공:", response["ts"])
+
+    except SlackApiError as e:
+        print("메시지 전송 실패:", e.response["error"])
+
+
 @app.post("/send_message_to_slack")
 def send_message_to_slack(channel:str, message_info: Dict):
     # if channel == "#network-alert-syslog":
