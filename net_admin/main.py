@@ -138,14 +138,16 @@ async def receive_syslog(request: Request):
 
 @app.post("/webhook/slack")
 async def send_webhook_slack(request: Request):
-    data = await request.json()
+    received_data = await request.json()
+    market = received_data["market"]
+    data = received_data["data"]
     print(f"Received data: {data}")
     channel = "network-monitor"
 
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f"회원사 장시간 MAX 트래픽",
+            text= f"[{market}] 회원사 장시간 MAX 트래픽",
             attachments=[
                 {
                     "color": "#439FE0",
