@@ -142,7 +142,7 @@ async def send_webhook_slack(request: Request):
     market = received_data["market"]
     data = received_data["data"]
     print(f"Received data: {data}")
-    channel = "network-test"
+    channel = "network-monitor"
 
     try:
         response = client.chat_postMessage(
@@ -153,7 +153,7 @@ async def send_webhook_slack(request: Request):
                     "type": "section",
                     "text":{
                         "type": "mrkdwn",
-                        "text": f"*[{market}] 회원사 장시간 MAX 트래픽*"
+                        "text": f"*:stock: [{market}] 회원사 장시간 MAX 트래픽*"
                     }
                 }
             ],
