@@ -147,8 +147,16 @@ async def send_webhook_slack(request: Request):
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f"*[{market}] 회원사 장시간 MAX 트래픽*",
-            mrkdwn=True,
+            # text= f"*[{market}] 회원사 장시간 MAX 트래픽*",
+            blocks=[
+                {
+                    "type": "section",
+                    "text":{
+                        "type": "mrkdwn",
+                        "text": f"*[{market}] 회원사 장시간 MAX 트래픽*"
+                    }
+                }
+            ],
             attachments=[
                 {
                     "color": "#439FE0",
