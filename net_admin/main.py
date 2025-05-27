@@ -168,6 +168,7 @@ async def send_webhook_slack(request: Request):
                     "mrkdwn_in": ["text", "title"]
                 }
             ]
+            mrkdwn=True
         )
         print("메시지 전송 성공:", response["ts"])
 
