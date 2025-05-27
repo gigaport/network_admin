@@ -148,6 +148,7 @@ async def send_webhook_slack(request: Request):
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
             text= f"*[{market}] 회원사 장시간 MAX 트래픽*",
+            mrkdwn=True,
             attachments=[
                 {
                     "color": "#439FE0",
@@ -168,7 +169,6 @@ async def send_webhook_slack(request: Request):
                     "mrkdwn_in": ["text", "title"]
                 }
             ]
-            mrkdwn=True
         )
         print("메시지 전송 성공:", response["ts"])
 
