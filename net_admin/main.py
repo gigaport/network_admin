@@ -140,9 +140,17 @@ async def receive_syslog(request: Request):
 async def send_webhook_slack(request: Request):
     received_data = await request.json()
     market = received_data["market"]
+    time_range = ""
+    if market == "프리":
+        time_range = "07:58~08:01"
+    elif market == "정규":
+        time_range = "08:58~09:01"
+    elif market == "에프터":
+        time_range = "15:38~15:41"
+
     data = received_data["data"]
     print(f"Received data: {data}")
-    channel = "network-monitor"
+    channel = "network-test"
 
     try:
         response = client.chat_postMessage(
@@ -153,7 +161,7 @@ async def send_webhook_slack(request: Request):
                     "type": "section",
                     "text":{
                         "type": "mrkdwn",
-                        "text": f"*:stock: [{market}] 회원사 장시간 MAX 트래픽*"
+                        "text": f"*:stock: [{market}-{time_range}] 장시간 MAX 트래픽*"
                     }
                 }
             ],
