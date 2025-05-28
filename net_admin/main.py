@@ -102,7 +102,8 @@ SYSLOG_NORMAL_KEYWORD = [
     "auth",
     "User",
     "nwcfg",
-    "Login"
+    "Login",
+    "Unexpected message type has arrived. Terminating the connection from"
 ]
 
 # === [ 사용자 설정 영역 ] ===
