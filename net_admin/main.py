@@ -93,6 +93,18 @@ KNOWN_MULTICAST_IP = [
     "239.255.255.250/32"
 ]
 
+SYSLOG_NORMAL_KEYWORD = [
+    "Authentication",
+    "PAM",
+    "PWD",
+    "COMMAND",
+    "pam",
+    "auth",
+    "User",
+    "nwcfg",
+    "Login"
+]
+
 # === [ 사용자 설정 영역 ] ===
 feedname = "COR_ASN"
 tag_values = ["ALL_SECUTIES","KB","KR_HQ","KR_KT","MR", "KW", "SH","NH","SS","KRX","STOCK-NET"]  # 여러 태그 지정 (리스트로 작성)
@@ -131,8 +143,12 @@ async def member_mkd():
 async def receive_syslog(request: Request):
     data = await request.json()
     print(f"Received log: {data}")
+    channel = "#network-alert-syslog"
+    
+    if any(keyword in data["message"] for keyword in SYSLOG_NORMAL_KEYWORD) :
+        channel = "#network-alert-normal"
 
-    send_message_to_slack("#network-alert-syslog", data)
+    send_message_to_slack(channel, data)
 
     return {"status": "ok"}
 
@@ -151,7 +167,7 @@ async def send_webhook_slack(request: Request):
     data = received_data["data"]
     print(f"Received data: {data}")
     # channel = "network-monitor"
-    channel = "network-test"
+    channel = "network-monitor"
 
     try:
         response = client.chat_postMessage(
