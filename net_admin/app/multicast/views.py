@@ -27,7 +27,12 @@ def index (request):
     return render(request, path, context=context)
 
 def init (request):
-    print(f'[CALL INIT TODAY] ==> {TODAY_STR}, {NOW} \n')
+    now = timezone.localtime()
+    # TODAY_STR = NOW.date()
+    today_str = datetime.today().strftime('%Y-%m-%d')
+    today_time = datetime.today().strftime('%Y-%m-%d %H:%M')
+
+    print(f'[CALL INIT TODAY] ==> {today_str}, {now} \n')
     response_data = []
 
     if request.method == "GET":
@@ -41,7 +46,7 @@ def init (request):
 
         print(f"sub_menu => {sub_menu}, market_gubn => {market_gubn}")
 
-        path = f"../data/{market_gubn}_members_mroute_{TODAY_STR}.json"
+        path = f"../data/{market_gubn}_members_mroute_{today_str}.json"
         print(f"PATH : {path}")
         members_mroute:Dict = openJsonFile(path)
 
