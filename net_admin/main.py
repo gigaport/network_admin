@@ -157,12 +157,16 @@ async def send_webhook_slack(request: Request):
     received_data = await request.json()
     market = received_data["market"]
     time_range = ""
-    if market == "프리":
+    emoji = ""
+    if market == "프리장":
         time_range = "07:58~08:01"
-    elif market == "정규":
+        emoji = ":sun:"
+    elif market == "정규장":
         time_range = "08:58~09:01"
-    elif market == "에프터":
+        emoji = ":gogo_dancer:"
+    elif market == "에프터장":
         time_range = "15:38~15:41"
+        emoji = ":sunset:"
 
     data = received_data["data"]
     print(f"Received data: {data}")
@@ -178,7 +182,7 @@ async def send_webhook_slack(request: Request):
                     "type": "section",
                     "text":{
                         "type": "mrkdwn",
-                        "text": f"*:stock: [{market}-{time_range}] 장시간 MAX 트래픽*"
+                        "text": f"*{emoji} [{market}-{time_range}] MAX 트래픽*"
                     }
                 }
             ],
