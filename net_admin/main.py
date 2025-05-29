@@ -159,13 +159,16 @@ async def send_webhook_slack(request: Request):
     market = received_data["market"]
     time_range = ""
     emoji = ""
-    if market == "프리장":
+    if market == "프리":
+        market = "프리장"
         time_range = "07:58~08:01"
         emoji = ":sun:"
-    elif market == "정규장":
+    elif market == "정규":
+        market = "정규장"
         time_range = "08:58~09:01"
         emoji = ":gogo_dancer:"
-    elif market == "에프터장":
+    elif market == "에프터":
+        market = "에프터장"
         time_range = "15:38~15:41"
         emoji = ":sunset:"
 
@@ -192,17 +195,17 @@ async def send_webhook_slack(request: Request):
                     "color": "#439FE0",
                     # "title": f"회원사 장시간 MAX 트래픽",
                     "text": (
-                        f"`전체증권사` : {data[0]['max_bps_unit']} (증감표시예정)\n"
-                        f"`KB_01` : {data[1]['max_bps_unit']} (증감표시예정)\n"
-                        f"`KB_02` : {data[2]['max_bps_unit']} (증감표시예정)\n"
-                        f"`KR` : {data[3]['max_bps_unit']} (증감표시예정)\n"
-                        f"`MR` : {data[4]['max_bps_unit']} (증감표시예정)\n"
-                        f"`KW` : {data[5]['max_bps_unit']} (증감표시예정)\n"
-                        f"`SH` : {data[6]['max_bps_unit']} (증감표시예정)\n"
-                        f"`NH` : {data[7]['max_bps_unit']} (증감표시예정)\n"
-                        f"`SS` : {data[8]['max_bps_unit']} (증감표시예정)\n"
-                        f"`KRX` : {data[9]['max_bps_unit']} (증감표시예정)\n"
-                        f"`STOCK-NET` : {data[10]['max_bps_unit']} (증감표시예정)\n"
+                        f"`전체증권사` : {data[0]['max_bps_unit']}\n"
+                        f"`KB_01` : {data[1]['max_bps_unit']}\n"
+                        f"`KB_02` : {data[2]['max_bps_unit']}\n"
+                        f"`KR` : {data[3]['max_bps_unit']}\n"
+                        f"`MR` : {data[4]['max_bps_unit']}\n"
+                        f"`KW` : {data[5]['max_bps_unit']}\n"
+                        f"`SH` : {data[6]['max_bps_unit']}\n"
+                        f"`NH` : {data[7]['max_bps_unit']}\n"
+                        f"`SS` : {data[8]['max_bps_unit']}\n"
+                        f"`KRX` : {data[9]['max_bps_unit']}\n"
+                        f"`STOCK-NET` : {data[10]['max_bps_unit']}\n"
                     ),
                     "mrkdwn_in": ["text", "title"]
                 }
