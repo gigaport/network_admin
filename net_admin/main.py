@@ -235,12 +235,15 @@ def send_message_to_slack(channel:str, message_info: Dict):
             attachments=[
                 {
                     "color": "warning",
-                    "title": f"{message_info['device']} // LEVEL:{message_info['severity']}",
+                    # "title": f"{message_info['device']} // LEVEL:{message_info['severity']}",
                     "text": (
                         f"*-장비이름: {message_info['device']}*\n"
                         f"-장비IP: `{message_info['host_ip']}`\n"
                         f"-발생일시: `{message_info['timestamp_trans']}`\n"
                         f"-LEVEL: `{message_info['severity'].upper()}`\n"
+                        f"-Facility: {message_info['facility']}\n"
+                        f"-Mnemonic: {message_info['mnemonic']}\n"
+                        f"-Type: {message_info['type']}\n"
                         f"-MESSAGE: ```{message_info['message']}```\n"
                     ),
                     "mrkdwn_in": ["text", "title"]
