@@ -106,6 +106,12 @@ SYSLOG_NORMAL_KEYWORD = [
     "Unexpected message type has arrived. Terminating the connection from"
 ]
 
+SYSLOG_ENDPOINT_MNEMONIC = [
+    "IF_UP",
+    "IF_DOWN",
+    "IF_DUPLEX"
+]
+
 # === [ 사용자 설정 영역 ] ===
 feedname = "COR_ASN"
 tag_values = ["ALL_SECUTIES","KB","KR_HQ","KR_KT","MR", "KW", "SH","NH","SS","KRX","STOCK-NET"]  # 여러 태그 지정 (리스트로 작성)
@@ -148,6 +154,9 @@ async def receive_syslog(request: Request):
     
     if any(keyword in data["message"] for keyword in SYSLOG_NORMAL_KEYWORD) :
         channel = "#network-alert-normal"
+    
+    if any(keyword in data["mnemonic"] for keyword in SYSLOG_ENDPOINT_MNEMONIC) :
+        channel = "#network-alert-endpoint"
 
     send_message_to_slack(channel, data)
 
