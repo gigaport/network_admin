@@ -181,8 +181,8 @@ async def send_webhook_slack(request: Request):
         time_range = "15:38~15:41"
         emoji = ":sunset:"
 
-    data = received_data["data"]
-    print(f"Received data: {data}")
+    # data = received_data["data"]
+    # print(f"Received data: {data}")
     channel = "network-test"
     # channel = "network-monitor"
 
@@ -204,17 +204,17 @@ async def send_webhook_slack(request: Request):
                     "color": "#439FE0",
                     # "title": f"회원사 장시간 MAX 트래픽",
                     "text": (
-                        f"`전체증권사` : {data[0]['max_bps_unit']}\n"
-                        f"`KB_01` : {data[1]['max_bps_unit']}\n"
-                        f"`KB_02` : {data[2]['max_bps_unit']}\n"
-                        f"`KR` : {data[3]['max_bps_unit']}\n"
-                        f"`MR` : {data[4]['max_bps_unit']}\n"
-                        f"`KW` : {data[5]['max_bps_unit']}\n"
-                        f"`SH` : {data[6]['max_bps_unit']}\n"
-                        f"`NH` : {data[7]['max_bps_unit']}\n"
-                        f"`SS` : {data[8]['max_bps_unit']}\n"
-                        f"`KRX` : {data[9]['max_bps_unit']}\n"
-                        f"`STOCK-NET` : {data[10]['max_bps_unit']}\n"
+                        f"`전체증권사` : {received_data['ALL_SECUTIES']['max_bps_unit']}\n"
+                        f"`KB` : {received_data['KB']['max_bps_unit']}\n"
+                        f"`KR_HQ` : {received_data['KR_HQ']['max_bps_unit']}\n"
+                        f"`KR_KT` : {received_data['KR_KT']['max_bps_unit']}\n"
+                        f"`MR` : {received_data['MR']['max_bps_unit']}\n"
+                        f"`KW` : {received_data['KW']['max_bps_unit']}\n"
+                        f"`SH` : {received_data['SH']['max_bps_unit']}\n"
+                        f"`NH` : {received_data['NH']['max_bps_unit']}\n"
+                        f"`SS` : {received_data['SS']['max_bps_unit']}\n"
+                        f"`KRX` : {received_data['KRX']['max_bps_unit']}\n"
+                        f"`STOCK-NET` : {received_data['STOCK-NET']['max_bps_unit']}\n"
                     ),
                     "mrkdwn_in": ["text", "title"]
                 }
