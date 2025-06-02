@@ -205,16 +205,16 @@ async def send_webhook_slack(request: Request):
                     # "title": f"회원사 장시간 MAX 트래픽",
                     "text": (
                         f"`전체증권사` : {received_data['ALL_SECUTIES']['max_bps_unit']}\n"
-                        f"`KB` : {received_data['KB']['max_bps_unit']}\n"
-                        f"`KR_HQ` : {received_data['KR_HQ']['max_bps_unit']}\n"
-                        f"`KR_KT` : {received_data['KR_KT']['max_bps_unit']}\n"
-                        f"`MR` : {received_data['MR']['max_bps_unit']}\n"
-                        f"`KW` : {received_data['KW']['max_bps_unit']}\n"
-                        f"`SH` : {received_data['SH']['max_bps_unit']}\n"
-                        f"`NH` : {received_data['NH']['max_bps_unit']}\n"
-                        f"`SS` : {received_data['SS']['max_bps_unit']}\n"
-                        f"`KRX` : {received_data['KRX']['max_bps_unit']}\n"
-                        f"`STOCK-NET` : {received_data['STOCK-NET']['max_bps_unit']}\n"
+                        f"`KB` : {received_data['KB']['max_bps_unit']} (100M)\n"
+                        f"`KR_HQ` : {received_data['KR_HQ']['max_bps_unit']} (100M)\n"
+                        f"`KR_KT` : {received_data['KR_KT']['max_bps_unit']} (100M)\n"
+                        f"`MR` : {received_data['MR']['max_bps_unit']} (200M)\n"
+                        f"`KW` : {received_data['KW']['max_bps_unit']} (50M)\n"
+                        f"`SH` : {received_data['SH']['max_bps_unit']} (50M)\n"
+                        f"`NH` : {received_data['NH']['max_bps_unit']} (50M)\n"
+                        f"`SS` : {received_data['SS']['max_bps_unit']} (50M)\n"
+                        f"`KRX` : {received_data['KRX']['max_bps_unit']} (2G)\n"
+                        f"`STOCK-NET` : {received_data['STOCK-NET']['max_bps_unit']} (45M)\n"
                     ),
                     "mrkdwn_in": ["text", "title"]
                 }
