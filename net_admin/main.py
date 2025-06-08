@@ -221,10 +221,14 @@ async def send_webhook_slack(request: Request):
                 }
             ]
         )
-        print("메시지 전송 성공:", response["ts"])
-
+        
     except SlackApiError as e:
-        print("메시지 전송 실패:", e.response["error"])
+        if e.response["status_code"] == 429:
+            retry_after = int(e.response.headers.get("Retry-After", 1))
+            print(f"Rate limited. Retrying after {retry_after} seconds...")
+            time.sleep(retry_after)
+        else:
+            print(f"failed_message_sending: {e.response['error']}, {e.response['status_code']}")
 
 
 @app.post("/send_message_to_slack")
