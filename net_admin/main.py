@@ -305,10 +305,10 @@ def send_message_to_slack(channel:str, message_info: Dict):
             #     }
             # ]
         )
-        print("메시지 전송 성공:", response["ts"])
+        print("succes_message_sending:", response["ts"])
 
     except SlackApiError as e:
-        print("메시지 전송 실패:", e.response["error"])
+        print("failed_message_sending:", e.response["error"])
 
 
 @app.get("/collect/{target}")
