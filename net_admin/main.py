@@ -165,6 +165,7 @@ async def receive_syslog(request: Request):
 @app.post("/webhook/slack")
 async def send_webhook_slack(request: Request):
     received_data = await request.json()
+    print(f"daily_data: {received_data}")
     market = received_data["market"]
     time_range = ""
     emoji = ""
