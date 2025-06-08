@@ -313,7 +313,7 @@ def send_message_to_slack(channel:str, message_info: Dict):
             print(f"Rate limited. Retrying after {retry_after} seconds...")
             time.sleep(retry_after)
         else:
-            print(f"failed_message_sending: {e.response["error"]}, {e.response.status_code}")
+            print(f"failed_message_sending: {e.response["error"]}, {e.response["status_code"]}")
 
 
 @app.get("/collect/{target}")
