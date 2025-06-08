@@ -187,52 +187,53 @@ async def send_webhook_slack(request: Request):
     channel = "network-test"
     # channel = "network-monitor"
 
-    try:
-        response = client.chat_postMessage(
-            channel=channel,  # 예: "#general" 또는 "C12345678"
-            # text= f"*[{market}] 회원사 장시간 MAX 트래픽*",
-            blocks=[
-                {
-                    "type": "section",
-                    "text":{
-                        "type": "mrkdwn",
-                        "text": f"*{emoji} [{market}-{time_range}] MAX 트래픽*"
-                    }
-                }
-            ],
-            attachments=[
-                {
-                    "color": "#439FE0",
-                    # "title": f"회원사 장시간 MAX 트래픽",
-                    "text": (
-                        f"`전체증권사` : {received_data['ALL_SECUTIES']['max_bps_unit']} ({received_data['ALL_SECUTIES']['diff_emoji']}{received_data['ALL_SECUTIES']['diff_unit']})\n"
-                        f"`KB [100M]` : {received_data['KB']['max_bps_unit']} ({received_data['KB']['diff_emoji']}{received_data['KB']['diff_unit']})\n"
-                        f"`KR_HQ [100M]` : {received_data['KR_HQ']['max_bps_unit']} ({received_data['KR_HQ']['diff_emoji']}{received_data['KR_HQ']['diff_unit']})\n"
-                        f"`KR_KT [100M]` : {received_data['KR_KT']['max_bps_unit']} ({received_data['KR_KT']['diff_emoji']}{received_data['KR_KT']['diff_unit']})\n"
-                        f"`MR [200M]` : {received_data['MR']['max_bps_unit']} ({received_data['MR']['diff_emoji']}{received_data['MR']['diff_unit']})\n"
-                        f"`KW [50M]` : {received_data['KW']['max_bps_unit']} ({received_data['KW']['diff_emoji']}{received_data['KW']['diff_unit']})\n"
-                        f"`SH [50M]` : {received_data['SH']['max_bps_unit']} ({received_data['SH']['diff_emoji']}{received_data['SH']['diff_unit']})\n"
-                        f"`NH [50M]` : {received_data['NH']['max_bps_unit']} ({received_data['NH']['diff_emoji']}{received_data['NH']['diff_unit']})\n"
-                        f"`SS [50M]` : {received_data['SS']['max_bps_unit']} ({received_data['SS']['diff_emoji']}{received_data['SS']['diff_unit']})\n"
-                        f"`KRX [2G]` : {received_data['KRX']['max_bps_unit']} ({received_data['KRX']['diff_emoji']}{received_data['KRX']['diff_unit']})\n"
-                        f"`STOCK-NET [45M]` : {received_data['STOCK-NET']['max_bps_unit']} ({received_data['STOCK-NET']['diff_emoji']}{received_data['STOCK-NET']['diff_unit']})\n"
-                    ),
-                    "mrkdwn_in": ["text", "title"]
-                }
-            ]
-        )
+    # try:
+    #     response = client.chat_postMessage(
+    #         channel=channel,  # 예: "#general" 또는 "C12345678"
+    #         # text= f"*[{market}] 회원사 장시간 MAX 트래픽*",
+    #         blocks=[
+    #             {
+    #                 "type": "section",
+    #                 "text":{
+    #                     "type": "mrkdwn",
+    #                     "text": f"*{emoji} [{market}-{time_range}] MAX 트래픽*"
+    #                 }
+    #             }
+    #         ],
+    #         attachments=[
+    #             {
+    #                 "color": "#439FE0",
+    #                 # "title": f"회원사 장시간 MAX 트래픽",
+    #                 "text": (
+    #                     f"`전체증권사` : {received_data['ALL_SECUTIES']['max_bps_unit']} ({received_data['ALL_SECUTIES']['diff_emoji']}{received_data['ALL_SECUTIES']['diff_unit']})\n"
+    #                     f"`KB [100M]` : {received_data['KB']['max_bps_unit']} ({received_data['KB']['diff_emoji']}{received_data['KB']['diff_unit']})\n"
+    #                     f"`KR_HQ [100M]` : {received_data['KR_HQ']['max_bps_unit']} ({received_data['KR_HQ']['diff_emoji']}{received_data['KR_HQ']['diff_unit']})\n"
+    #                     f"`KR_KT [100M]` : {received_data['KR_KT']['max_bps_unit']} ({received_data['KR_KT']['diff_emoji']}{received_data['KR_KT']['diff_unit']})\n"
+    #                     f"`MR [200M]` : {received_data['MR']['max_bps_unit']} ({received_data['MR']['diff_emoji']}{received_data['MR']['diff_unit']})\n"
+    #                     f"`KW [50M]` : {received_data['KW']['max_bps_unit']} ({received_data['KW']['diff_emoji']}{received_data['KW']['diff_unit']})\n"
+    #                     f"`SH [50M]` : {received_data['SH']['max_bps_unit']} ({received_data['SH']['diff_emoji']}{received_data['SH']['diff_unit']})\n"
+    #                     f"`NH [50M]` : {received_data['NH']['max_bps_unit']} ({received_data['NH']['diff_emoji']}{received_data['NH']['diff_unit']})\n"
+    #                     f"`SS [50M]` : {received_data['SS']['max_bps_unit']} ({received_data['SS']['diff_emoji']}{received_data['SS']['diff_unit']})\n"
+    #                     f"`KRX [2G]` : {received_data['KRX']['max_bps_unit']} ({received_data['KRX']['diff_emoji']}{received_data['KRX']['diff_unit']})\n"
+    #                     f"`STOCK-NET [45M]` : {received_data['STOCK-NET']['max_bps_unit']} ({received_data['STOCK-NET']['diff_emoji']}{received_data['STOCK-NET']['diff_unit']})\n"
+    #                 ),
+    #                 "mrkdwn_in": ["text", "title"]
+    #             }
+    #         ]
+    #     )
 
-    except SlackApiError as e:
-        if e.response.status_code == 429:
-            retry_after = int(e.response.headers.get("Retry-After", 1))
-            print(f"Rate limited. Retrying after {retry_after} seconds...")
-            time.sleep(retry_after)
-        else:
-            print(f"failed_message_sending: {e.response['error']}, {e.response.status_code}")
+    # except SlackApiError as e:
+    #     if e.response.status_code == 429:
+    #         retry_after = int(e.response.headers.get("Retry-After", 1))
+    #         print(f"Rate limited. Retrying after {retry_after} seconds...")
+    #         time.sleep(retry_after)
+    #     else:
+    #         print(f"failed_message_sending: {e.response['error']}, {e.response.status_code}")
 
 
 @app.post("/send_message_to_slack")
 def send_message_to_slack(channel:str, message_info: Dict):
+    print("temp")
     # if channel == "#network-alert-syslog":
     #     print(f"IOSDATE : {message_info['kst_time_formatted']}")
     #     # dt = datetime.fromisoformat(message_info['timestamp'])
@@ -242,82 +243,82 @@ def send_message_to_slack(channel:str, message_info: Dict):
     #     formatted_date = message_info['kst_time_formatted']
 
 
-    try:
-        response = client.chat_postMessage(
-            channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f":warning: {message_info['severity'].upper()}>>{message_info['device']} :warning:",
-            attachments=[
-                {
-                    "color": "warning",
-                    # "title": f"{message_info['device']} // LEVEL:{message_info['severity']}",
-                    "text": (
-                        f"*-장비이름: {message_info['device']}*\n"
-                        f"-장비IP: `{message_info['host_ip']}`\n"
-                        f"-발생일시: `{message_info['timestamp_trans']}`\n"
-                        f"-level: `{message_info['severity'].upper()}`\n"
-                        f"-facility: {message_info['facility']}\n"
-                        f"-mnemonic: {message_info['mnemonic']}\n"
-                        f"-type: {message_info['type'].upper()}\n"
-                        f"-message: ```{message_info['message']}```\n"
-                    ),
-                    "mrkdwn_in": ["text", "title"]
-                }
-            ]
-            # blocks=[
-            #     {
-            #         "type": "section",
-            #         "text": {
-            #             "type": "mrkdwn",
-            #             "text": f":alert:*{message_info['member_name']} 멀티캐스트수신 이상*:alert:"
-            #         }
-            #     },
-            #     {
-            #         "type": "context",
-            #         "elements": [
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"장비이름: {message_info['device_name']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"가입상품: {message_info['products']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"PIM_RP: {message_info['pim_rp']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"기준 mroute: {message_info['product_cnt']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"헌재 mroute: {message_info['mroute_cnt']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"현재 oif_cnt: {message_info['oif_cnt']}"
-            #             },
-            #             {
-            #                 "type": "mrkdwn",
-            #                 "text": f"RPF_NBR: {message_info['rpf_nbr']}"
-            #             },
-            #         ]
-            #     },
-            #     {
-            #         "type":"divider"
-            #     }
-            # ]
-        )
-        print("success_message_sending:", response["ts"])
+    # try:
+    #     response = client.chat_postMessage(
+    #         channel=channel,  # 예: "#general" 또는 "C12345678"
+    #         text= f":warning: {message_info['severity'].upper()}>>{message_info['device']} :warning:",
+    #         attachments=[
+    #             {
+    #                 "color": "warning",
+    #                 # "title": f"{message_info['device']} // LEVEL:{message_info['severity']}",
+    #                 "text": (
+    #                     f"*-장비이름: {message_info['device']}*\n"
+    #                     f"-장비IP: `{message_info['host_ip']}`\n"
+    #                     f"-발생일시: `{message_info['timestamp_trans']}`\n"
+    #                     f"-level: `{message_info['severity'].upper()}`\n"
+    #                     f"-facility: {message_info['facility']}\n"
+    #                     f"-mnemonic: {message_info['mnemonic']}\n"
+    #                     f"-type: {message_info['type'].upper()}\n"
+    #                     f"-message: ```{message_info['message']}```\n"
+    #                 ),
+    #                 "mrkdwn_in": ["text", "title"]
+    #             }
+    #         ]
+    #         # blocks=[
+    #         #     {
+    #         #         "type": "section",
+    #         #         "text": {
+    #         #             "type": "mrkdwn",
+    #         #             "text": f":alert:*{message_info['member_name']} 멀티캐스트수신 이상*:alert:"
+    #         #         }
+    #         #     },
+    #         #     {
+    #         #         "type": "context",
+    #         #         "elements": [
+    #         #             {
+    #         #                 "type": "mrkdwn",
+    #         #                 "text": f"장비이름: {message_info['device_name']}"
+    #         #             },
+    #         #             {
+    #         #                 "type": "mrkdwn",
+    #         #                 "text": f"가입상품: {message_info['products']}"
+    #         #             },
+    #         #             {
+    #         #                 "type": "mrkdwn",
+    #         #                 "text": f"PIM_RP: {message_info['pim_rp']}"
+    #         #             },
+    #         #             {
+    #         #                 "type": "mrkdwn",
+    #         #                 "text": f"기준 mroute: {message_info['product_cnt']}"
+    #         #             },
+    #         #             {
+    #         #                 "type": "mrkdwn",
+    #         #                 "text": f"헌재 mroute: {message_info['mroute_cnt']}"
+    #         #             },
+    #         #             {
+    #         #                 "type": "mrkdwn",
+    #         #                 "text": f"현재 oif_cnt: {message_info['oif_cnt']}"
+    #         #             },
+    #         #             {
+    #         #                 "type": "mrkdwn",
+    #         #                 "text": f"RPF_NBR: {message_info['rpf_nbr']}"
+    #         #             },
+    #         #         ]
+    #         #     },
+    #         #     {
+    #         #         "type":"divider"
+    #         #     }
+    #         # ]
+    #     )
+    #     print("success_message_sending:", response["ts"])
 
-    except SlackApiError as e:
-        if e.response["status_code"] == 429:
-            retry_after = int(e.response.headers.get("Retry-After", 1))
-            print(f"Rate limited. Retrying after {retry_after} seconds...")
-            time.sleep(retry_after)
-        else:
-            print(f"failed_message_sending: {e.response['error']}, {e.response['status_code']}")
+    # except SlackApiError as e:
+    #     if e.response["status_code"] == 429:
+    #         retry_after = int(e.response.headers.get("Retry-After", 1))
+    #         print(f"Rate limited. Retrying after {retry_after} seconds...")
+    #         time.sleep(retry_after)
+    #     else:
+    #         print(f"failed_message_sending: {e.response['error']}, {e.response['status_code']}")
 
 
 @app.get("/collect/{target}")
