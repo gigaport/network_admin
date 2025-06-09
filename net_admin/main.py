@@ -185,8 +185,8 @@ async def send_webhook_slack(request: Request):
 
     # data = received_data["data"]
     # print(f"Received data: {data}")
-    channel = "network-test"
-    # channel = "network-monitor"
+    # channel = "network-test"
+    channel = "network-monitor"
 
     try:
         response = client.chat_postMessage(
