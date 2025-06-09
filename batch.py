@@ -187,6 +187,8 @@ def send_slack_message(message_info: Dict):
             # ]
         )
         print("메시지 전송 성공:", response["ts"])
+        time.sleep(1)
+
 
     except SlackApiError as e:
         print("메시지 전송 실패:", e.response["error"])

@@ -311,6 +311,7 @@ def send_message_to_slack(channel:str, message_info: Dict):
             # ]
         )
         print("success_message_sending:", response["ts"])
+        time.sleep(1)
 
     except SlackApiError as e:
         if e.response["status_code"] == 429:
