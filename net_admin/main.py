@@ -30,7 +30,7 @@ app = FastAPI(root_path="/api")
 
 # SLACK
 # slack_token = "***REMOVED***8455397334246-8462358192034-3F7aPVe7I0Jg686HyXzBtDU0"
-slack_token = "***REMOVED***9015318325377-9019974153362-8abHU2QMuZlAKgnRbGgOmDH0"
+slack_token = "***REMOVED***9015318325377-9019974153362-woHLnGBnxMBrwG9I1Z5EiPKX"
 client = WebClient(token=slack_token)
 
 # TIME
