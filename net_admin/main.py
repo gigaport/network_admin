@@ -113,6 +113,23 @@ SYSLOG_ENDPOINT_MNEMONIC = [
     "IF_DUPLEX"
 ]
 
+###### 전용회선 정보
+LINE_INFO = [
+    {'id':167343, 'name':'쿠콘 (메인회선)', 'isp':'KT', 'speed':'512K', 'no':'2507-2006-0025', 'owner':'쿠콘', 'location':'', 'manager':'임승주 대리', 'tel':'02-3779-9178', 'mobile':'010-2596-9259', 'email':'sjlim@cucon.net', 'isp_tel':'1588-0114'},
+    {'id':167342, 'name':'예탁원 (메인회선)', 'isp':'KT', 'speed':'128K', 'no':'2500-3035-0065', 'owner':'예탁원', 'location':'일산', 'manager':'이광우 과장', 'tel':'031-900-7179', 'mobile':'', 'email':'gwangwu.yi@ksd.or.kr', 'isp_tel':'1588-0114'},
+    {'id':167345, 'name':'KCB (메인회선)', 'isp':'KT', 'speed':'256K', 'no':'0103-4363-0012', 'owner':'KCB', 'location':'', 'manager':'조재호 대리', 'tel':'02-766-8912', 'mobile':'', 'email':'fodcar@koreacb.com', 'isp_tel':'1588-0114'},
+    {'id':167344, 'name':'NICE (메인회선)', 'isp':'KT', 'speed':'256K', 'no':'0103-5420-3441', 'owner':'NICE', 'location':'', 'manager':'김종근 과장', 'tel':'02-331-7746', 'mobile':'', 'email':'kij7777777@niceinfo.co.kr', 'isp_tel':'1588-0114'},
+    {'id':345439, 'name':'하나은행_환전 (메인회선)', 'isp':'KT', 'speed':'20M', 'no':'3420-4600-0038', 'owner':'토스증권', 'location':'', 'manager':'이승환 차장', 'tel':'02-3466-4863', 'mobile':'', 'email':'nuri1998@hanafn.com', 'isp_tel':'1588-0114'},
+    {'id':41212, 'name':'연합인포 (메인회선)', 'isp':'KT', 'speed':'30M', 'no':'3420-4600-0028', 'owner':'토스증권', 'location':'', 'manager':'정진홍 차장', 'tel':'010-8722-5104', 'mobile':'', 'email':'jhjung2@yna.co.kr', 'isp_tel':'1588-0114'},
+
+    {'id':167410, 'name':'쿠콘 (백업회선)', 'isp':'LGU+', 'speed':'512K', 'no':'5001-9149-2233', 'owner':'토스증권', 'location':'', 'manager':'임승주 대리', 'tel':'02-3779-9178', 'mobile':'010-2596-9259', 'email':'sjlim@cucon.net', 'isp_tel':'02-2089-8284'},
+    {'id':167408, 'name':'예탁원 (백업회선)', 'isp':'LGU+', 'speed':'128K', 'no':'5002-0283-3711', 'owner':'토스증권', 'location':'일산', 'manager':'이광우 과장', 'tel':'031-900-7179', 'mobile':'', 'email':'gwangwu.yi@ksd.or.kr', 'isp_tel':'02-2089-8284'},
+    {'id':167409, 'name':'KCB (백업회선)', 'isp':'LGU+', 'speed':'256K', 'no':'5001-8459-7648', 'owner':'토스증권', 'location':'', 'manager':'조재호 대리', 'tel':'02-766-8912', 'mobile':'', 'email':'fodcar@koreacb.com', 'isp_tel':'02-2089-8284'},
+    {'id':167411, 'name':'NICE (백업회선)', 'isp':'LGU+', 'speed':'256K', 'no':'5002-1687-7670', 'owner':'토스증권', 'location':'', 'manager':'김종근 과장', 'tel':'02-331-7746', 'mobile':'', 'email':'kij7777777@niceinfo.co.kr', 'isp_tel':'02-2089-8284'},
+    {'id':345443, 'name':'하나은행_환전 (백업회선)', 'isp':'LGU+', 'speed':'20M', 'no':'5002-5875-0288', 'owner':'토스증권', 'location':'', 'manager':'이승환 차장', 'tel':'02-3466-4863', 'mobile':'', 'email':'nuri1998@hanafn.com', 'isp_tel':'1588-0114'},
+    {'id':41564, 'name':'연합인포 (백업회선)', 'isp':'LGU+', 'speed':'30M', 'no':'5002-2906-2603', 'owner':'토스증권', 'location':'', 'manager':'정진홍 차장', 'tel':'010-8722-5104', 'mobile':'', 'email':'jhjung2@yna.co.kr', 'isp_tel':'1588-0114'},
+]
+
 # === [ 사용자 설정 영역 ] ===
 feedname = "COR_ASN"
 tag_values = ["ALL_SECUTIES","KB","KR_HQ","KR_KT","MR", "KW", "SH","NH","SS","KRX","STOCK-NET"]  # 여러 태그 지정 (리스트로 작성)
@@ -163,8 +180,175 @@ async def receive_syslog(request: Request):
 
     return {"status": "ok"}
 
+
+@app.post("/webhook/zabbix")
+async def send_zabbix_webhook_to_slack(request: Request):
+    print(f'[zabbix_alert_webhook_request] : {request}')
+
+    body = json.loads(request.body)
+    print(f'[zabbix_alert_webhook_body] : {body}')
+
+    channel = "network-alert-critical"
+    
+    if body['event_value'] == '0' : ## 장애해소
+        main_text = f":task-check-green-circle: {body['hostname']} >> {body['event_name']}"
+        attachment_color = "#3bc95c"
+        message_body = {
+                "color": attachment_color,
+                "mrkdwn_in": ["fields"],
+                "fields": [
+                    {
+                        "title": "대상장비",
+                        "value": f"`{body['hostname']}`",
+                        "short": True,
+                    },
+                    {
+                        "title": "대상그룹",
+                        "value": f"`{body['host_group']}`",
+                        "short": True,
+                    },
+                    {
+                        "title": "LEVEL",
+                        "value": f"`{body['severity']}`",
+                        "short": True,
+                    },
+                    {
+                        "title": "발생일시",
+                        "value": f"{body['event_date']} {body['event_time']}",
+                        "short": True,
+                    },
+                    {
+                        "title": "발생내용",
+                        "value": f"```{body['event_name']}```",
+                        "short": False,
+                    },
+                    {
+                        "title": "현재상태",
+                        "value": f"```{body['opdata']}```",
+                        "short": False,
+                    },
+                    {
+                        "title": "경과시간",
+                        "value": f"```{body['event_duration']}```",
+                        "short": False,
+                    },
+                ],
+            }
+    else: ## 장애발생
+        main_text = f":emoji-fire: {body['hostname']} >> {body['event_name']}"
+        attachment_color = "#e71c1c"
+
+        ## 전용회선 다운 시 정보 추가 ##
+        trigger_id = int(body['trigger_id'])
+        dic_problem_line = next((sub for sub in LINE_INFO if sub['id'] == trigger_id), None)
+        print(f'[problem_line] : {dic_problem_line}')
+
+        if dic_problem_line is None: ## 일반 장애 시
+            message_body = {
+                "color": attachment_color,
+                "mrkdwn_in": ["fields"],
+                "fields": [
+                    {
+                        "title": "대상장비",
+                        "value": f"`{body['hostname']}`",
+                        "short": True,
+                    },
+                    {
+                        "title": "대상그룹",
+                        "value": f"`{body['host_group']}`",
+                        "short": True,
+                    },
+                    {
+                        "title": "LEVEL",
+                        "value": f"`{body['severity']}`",
+                        "short": True,
+                    },
+                    {
+                        "title": "발생일시",
+                            "value": f"{body['event_date']} {body['event_time']}",
+                        "short": True,
+                    },
+                    {
+                        "title": "발생내용",
+                        "value": f"```{body['event_name']}```",
+                        "short": False,
+                    },
+                    {
+                        "title": "현재상태",
+                        "value": f"```{body['opdata']}```",
+                        "short": False,
+                    }
+                ],
+            }
+        else : ## 회선 장애 시
+            message_body = {
+                "color": attachment_color,
+                "mrkdwn_in": ["fields"],
+                "fields": [
+                    {
+                        "title": "대상장비",
+                        "value": f"`{body['hostname']}`",
+                        "short": True,
+                    },
+                    {
+                        "title": "대상그룹",
+                        "value": f"`{body['host_group']}`",
+                        "short": True,
+                    },
+                    {
+                        "title": "LEVEL",
+                        "value": f"`{body['severity']}`",
+                        "short": True,
+                    },
+                    {
+                        "title": "발생일시",
+                        "value": f"{body['event_date']} {body['event_time']}",
+                        "short": True,
+                    },
+                    {
+                        "title": "발생내용",
+                        "value": f"```{body['event_name']}```",
+                        "short": False,
+                    },
+                    {
+                        "title": "현재상태",
+                        "value": f"```{body['opdata']}```",
+                        "short": False,
+                    },
+                    {
+                        "title": "통신사",
+                        "value": f"`{dic_problem_line['isp']}`",
+                        "short": True,
+                    },
+                    {
+                        "title": "청약회사",
+                        "value": f"`{dic_problem_line['owner']}`",
+                        "short": True,
+                    },
+                    {
+                        "title": "회선번호/속도",
+                        "value": f"`{dic_problem_line['no']} ({dic_problem_line['speed']})`",
+                        "short": True,
+                    },
+                    {
+                        "title": "담당자",
+                        "value": f"{dic_problem_line['manager']} ({dic_problem_line['tel']})",
+                        "short": True,
+                    },
+                    {
+                        "title": "통신사 연락처",
+                        "value": f"{dic_problem_line['isp_tel']}",
+                        "short": True,
+                    }
+                ],
+            }
+
+    print(f'[slack_message_body] : {message_body}')
+    send_to_slack_message(channel, main_text, message_body)
+    
+
 @app.post("/webhook/slack")
-async def send_webhook_slack(request: Request):
+async def send_monitor_webhook_to_slack(request: Request):
     received_data = await request.json()
     print(f"daily_data: {received_data}")
     market = received_data["market"]
@@ -231,6 +415,37 @@ async def send_webhook_slack(request: Request):
         else:
             print(f"failed_message_sending: {e.response['error']}, {e.response['status_code']}")
 
+
+def send_to_slack_message(channel, message_title, message_body):
+    try:
+        response = client.chat_postMessage(
+            channel=channel,  # 예: "#general" 또는 "C12345678"
+            # text= f"*[{market}] 회원사 장시간 MAX 트래픽*",
+            blocks=[
+                {
+                    "type": "section",
+                    "text":{
+                        "type": "mrkdwn",
+                        "text": message_title
+                    }
+                }
+            ],
+            attachments=[
+                {
+                    "color": message_body['color'],
+                    "fields": message_body['fields'],
+                    "mrkdwn_in": message_body['mrkdwn_in']
+                }
+            ]
+        )
+
+    except SlackApiError as e:
+        if e.response['status_code'] == 429:
+            retry_after = int(e.response.headers.get("Retry-After", 1))
+            print(f"Rate limited. Retrying after {retry_after} seconds...")
+            time.sleep(retry_after)
+        else:
+            print(f"failed_message_sending: {e.response['error']}, {e.response['status_code']}")
 
 @app.post("/send_message_to_slack")
 def send_message_to_slack(channel:str, message_info: Dict):
