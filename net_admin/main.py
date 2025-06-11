@@ -191,7 +191,7 @@ async def send_zabbix_webhook_to_slack(request: Request):
     channel = "network-alert-critical"
     
     if data['event_value'] == '0' : ## 장애해소
-        main_text = f":task-check-green-circle: {data['hostname']} >> {data['event_name']}"
+        main_text = f":green-check-mark: {data['hostname']} >> {data['event_name']}"
         attachment_color = "#3bc95c"
         message_body = {
                 "color": attachment_color,
@@ -235,7 +235,7 @@ async def send_zabbix_webhook_to_slack(request: Request):
                 ],
             }
     else: ## 장애발생
-        main_text = f":emoji-fire: {data['hostname']} >> {data['event_name']}"
+        main_text = f":critical: {data['hostname']} >> {data['event_name']}"
         attachment_color = "#e71c1c"
 
         ## 전용회선 다운 시 정보 추가 ##
