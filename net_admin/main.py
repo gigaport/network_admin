@@ -185,13 +185,13 @@ async def receive_syslog(request: Request):
 async def send_zabbix_webhook_to_slack(request: Request):
     print(f'[zabbix_alert_webhook_request] : {request}')
 
-    body = json.loads(request.body)
-    print(f'[zabbix_alert_webhook_body] : {body}')
+    data = await request.json()
+    print(f'[zabbix_alert_webhook_body] : {data}')
 
     channel = "network-alert-critical"
     
-    if body['event_value'] == '0' : ## 장애해소
-        main_text = f":task-check-green-circle: {body['hostname']} >> {body['event_name']}"
+    if data['event_value'] == '0' : ## 장애해소
+        main_text = f":task-check-green-circle: {data['hostname']} >> {data['event_name']}"
         attachment_color = "#3bc95c"
         message_body = {
                 "color": attachment_color,
@@ -199,47 +199,47 @@ async def send_zabbix_webhook_to_slack(request: Request):
                 "fields": [
                     {
                         "title": "대상장비",
-                        "value": f"`{body['hostname']}`",
+                        "value": f"`{data['hostname']}`",
                         "short": True,
                     },
                     {
                         "title": "대상그룹",
-                        "value": f"`{body['host_group']}`",
+                        "value": f"`{data['host_group']}`",
                         "short": True,
                     },
                     {
                         "title": "LEVEL",
-                        "value": f"`{body['severity']}`",
+                        "value": f"`{data['severity']}`",
                         "short": True,
                     },
                     {
                         "title": "발생일시",
-                        "value": f"{body['event_date']} {body['event_time']}",
+                        "value": f"{data['event_date']} {data['event_time']}",
                         "short": True,
                     },
                     {
                         "title": "발생내용",
-                        "value": f"```{body['event_name']}```",
+                        "value": f"```{data['event_name']}```",
                         "short": False,
                     },
                     {
                         "title": "현재상태",
-                        "value": f"```{body['opdata']}```",
+                        "value": f"```{data['opdata']}```",
                         "short": False,
                     },
                     {
                         "title": "경과시간",
-                        "value": f"```{body['event_duration']}```",
+                        "value": f"```{data['event_duration']}```",
                         "short": False,
                     },
                 ],
             }
     else: ## 장애발생
-        main_text = f":emoji-fire: {body['hostname']} >> {body['event_name']}"
+        main_text = f":emoji-fire: {data['hostname']} >> {data['event_name']}"
         attachment_color = "#e71c1c"
 
         ## 전용회선 다운 시 정보 추가 ##
-        trigger_id = int(body['trigger_id'])
+        trigger_id = int(data['trigger_id'])
         dic_problem_line = next((sub for sub in LINE_INFO if sub['id'] == trigger_id), None)
         print(f'[problem_line] : {dic_problem_line}')
 
@@ -250,32 +250,32 @@ async def send_zabbix_webhook_to_slack(request: Request):
                 "fields": [
                     {
                         "title": "대상장비",
-                        "value": f"`{body['hostname']}`",
+                        "value": f"`{data['hostname']}`",
                         "short": True,
                     },
                     {
                         "title": "대상그룹",
-                        "value": f"`{body['host_group']}`",
+                        "value": f"`{data['host_group']}`",
                         "short": True,
                     },
                     {
                         "title": "LEVEL",
-                        "value": f"`{body['severity']}`",
+                        "value": f"`{data['severity']}`",
                         "short": True,
                     },
                     {
                         "title": "발생일시",
-                            "value": f"{body['event_date']} {body['event_time']}",
+                            "value": f"{data['event_date']} {data['event_time']}",
                         "short": True,
                     },
                     {
                         "title": "발생내용",
-                        "value": f"```{body['event_name']}```",
+                        "value": f"```{data['event_name']}```",
                         "short": False,
                     },
                     {
                         "title": "현재상태",
-                        "value": f"```{body['opdata']}```",
+                        "value": f"```{data['opdata']}```",
                         "short": False,
                     }
                 ],
@@ -287,32 +287,32 @@ async def send_zabbix_webhook_to_slack(request: Request):
                 "fields": [
                     {
                         "title": "대상장비",
-                        "value": f"`{body['hostname']}`",
+                        "value": f"`{data['hostname']}`",
                         "short": True,
                     },
                     {
                         "title": "대상그룹",
-                        "value": f"`{body['host_group']}`",
+                        "value": f"`{data['host_group']}`",
                         "short": True,
                     },
                     {
                         "title": "LEVEL",
-                        "value": f"`{body['severity']}`",
+                        "value": f"`{data['severity']}`",
                         "short": True,
                     },
                     {
                         "title": "발생일시",
-                        "value": f"{body['event_date']} {body['event_time']}",
+                        "value": f"{data['event_date']} {data['event_time']}",
                         "short": True,
                     },
                     {
                         "title": "발생내용",
-                        "value": f"```{body['event_name']}```",
+                        "value": f"```{data['event_name']}```",
                         "short": False,
                     },
                     {
                         "title": "현재상태",
-                        "value": f"```{body['opdata']}```",
+                        "value": f"```{data['opdata']}```",
                         "short": False,
                     },
                     {
