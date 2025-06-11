@@ -2,7 +2,7 @@ import json, logging, re, time, html, sys, asyncio, uvicorn
 from repynery import Repynery
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, timedelta
@@ -345,7 +345,12 @@ async def send_zabbix_webhook_to_slack(request: Request):
 
     print(f'[slack_message_body] : {message_body}')
     send_to_slack_message(channel, main_text, message_body)
-    
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "success", "detail": "전송송처리가 완료되었습니다."}
+    )
+
 
 @app.post("/webhook/slack")
 async def send_monitor_webhook_to_slack(request: Request):
