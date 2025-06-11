@@ -24,7 +24,7 @@ from genie.libs.parser.nxos.show_pim import ShowIpPimRp
 # 스레드풀 생성
 executor = ThreadPoolExecutor(max_workers=60)
 
-slack_token = "***REMOVED***8455397334246-8462358192034-3F7aPVe7I0Jg686HyXzBtDU0"
+slack_token = "***REMOVED***9015318325377-9019974153362-woHLnGBnxMBrwG9I1Z5EiPKX"
 client = WebClient(token=slack_token)
 
 TODAY_STR = datetime.today().strftime('%Y-%m-%d')
@@ -119,7 +119,7 @@ def send_slack_message(message_info: Dict):
         market_gubn = "테스트"
     elif message_info['market_gubn'] == "dr":
         market_gubn = "DR"
-    channel = "C08DNHG3CR2"
+    channel = "#network-alert-multicast"
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
