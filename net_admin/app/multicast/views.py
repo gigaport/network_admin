@@ -32,7 +32,7 @@ def init (request):
     today_str = datetime.today().strftime('%Y-%m-%d')
     today_time = datetime.today().strftime('%Y-%m-%d %H:%M')
 
-    print(f'[CALL INIT TODAY] ==> {today_str}, {now} \n')
+    print(f'[call_init_today] ==> {today_str}, {today_time}, {now} \n')
     response_data = []
 
     if request.method == "GET":
