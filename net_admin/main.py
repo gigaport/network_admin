@@ -113,6 +113,10 @@ SYSLOG_ENDPOINT_MNEMONIC = [
     "IF_DUPLEX"
 ]
 
+SYSLOG_NORMAL_MNEMONIC = [
+    "USER"
+]
+
 ###### 전용회선 정보
 LINE_INFO = [
     {'id':167343, 'name':'쿠콘 (메인회선)', 'isp':'KT', 'speed':'512K', 'no':'2507-2006-0025', 'owner':'쿠콘', 'location':'', 'manager':'임승주 대리', 'tel':'02-3779-9178', 'mobile':'010-2596-9259', 'email':'sjlim@cucon.net', 'isp_tel':'1588-0114'},
@@ -170,7 +174,7 @@ async def receive_syslog(request: Request):
     print(f"Received log: {data}")
     channel = "#network-alert-syslog"
     
-    if any(keyword in data["message"] for keyword in SYSLOG_NORMAL_KEYWORD) :
+    if any(keyword in data["message"] for keyword in SYSLOG_NORMAL_KEYWORD) or any(keyword in data["mnemonic"] for keyword in SYSLOG_NORMAL_KEYWORD):
         channel = "#network-alert-normal"
     
     if any(keyword in data["mnemonic"] for keyword in SYSLOG_ENDPOINT_MNEMONIC) :
