@@ -64,7 +64,7 @@ def init (request):
             # print(f"[merge_members_info]\n{merge_members_info}\n\n")
             # print(f"[members_mroute['data']]\n{members_mroute['data']}")
 
-            response_data = create_member_sise_info(merge_members_mroute, members_info)
+            response_data = create_member_sise_info(merge_members_mroute, members_info, today_time)
     
     
     # data meta info setting
@@ -102,9 +102,8 @@ def merge_multicast_group_count(members_mroute:list, mpr_multicast_info:Dict):
 
 
 
-def create_member_sise_info(members_mroute:list, members_info:Dict):
+def create_member_sise_info(members_mroute:list, members_info:Dict, updated_time:str):
     result = []
-    updated_time = ''
     member_no = 0
     member_code = ""
     member_name = ""
@@ -140,7 +139,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict):
         product_cnt = device['multicast_group_count']
         connected_server_cnt = device['connected_server_count']
         org_output = device['mroute'][0]['org_output'] ## show ip mroute 정보만 표기하기 위함 show ip pim neighbor는 X
-        updated_time = device['updated_time']
+        # updated_time = device['updated_time']
 
         # print(f"[multicast_group] : {device['mroute']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']}")
         # multicast_group = device['mroute']['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']
