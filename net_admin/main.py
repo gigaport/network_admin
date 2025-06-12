@@ -479,10 +479,11 @@ def send_to_slack_message(channel, message_title, message_body):
                 {
                     "color": message_body['color'],
                     "fields": message_body['fields'],
-                    "blocks": message_body['blocks'],
+                    # "blocks": message_body['blocks'],
                     "mrkdwn_in": message_body['mrkdwn_in']
                 }
-            ]
+            ],
+            blocks=message_body['blocks']
         )
 
     except SlackApiError as e:
