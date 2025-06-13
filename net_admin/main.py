@@ -117,6 +117,10 @@ SYSLOG_NORMAL_FACILITY = [
     "USER"
 ]
 
+ZABBIX_MUTE = [
+    "memory"
+]
+
 ###### 전용회선 정보
 LINE_INFO = [
     {'id':167343, 'name':'쿠콘 (메인회선)', 'isp':'KT', 'speed':'512K', 'no':'2507-2006-0025', 'owner':'쿠콘', 'location':'', 'manager':'임승주 대리', 'tel':'02-3779-9178', 'mobile':'010-2596-9259', 'email':'sjlim@cucon.net', 'isp_tel':'1588-0114'},
@@ -348,7 +352,10 @@ async def send_zabbix_webhook_to_slack(request: Request):
             }
 
     print(f'[slack_message_body] : {message_body}')
-    send_to_slack_message(channel, main_text, message_body)
+    
+    if any(keyword not in data["mneevent_namemonic"] for keyword in ZABBIX_MUTE) :
+        send_to_slack_message(channel, main_text, message_body)
+
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,
