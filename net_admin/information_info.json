@@ -1,0 +1,92 @@
+{
+  "29": {
+    "member_code": "SA",
+    "member_name": "상상인투투자증권",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "alarm": true,
+    "member_note":""
+  },
+  "52": {
+    "member_code": "LD",
+    "member_name": "리딩투자증권",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "alarm": true,
+    "member_note":""
+  },
+  "68": {
+    "member_code": "IB",
+    "member_name": "IBK투자증권",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "alarm": true,
+    "member_note":""
+  },
+  "79": {
+    "member_code": "WR",
+    "member_name": "우리투자증권",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "alarm": true, 
+    "member_note":""
+  },
+  "201": {
+    "member_code": "TM",
+    "member_name": "e토마토",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-COM"],
+    "alarm": true,
+    "member_note":""
+  },
+  "202": {
+    "member_code": "YN",
+    "member_name": "연합인포맥스",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-COM"],
+    "alarm": true,
+    "member_note":""
+  },
+  "203": {
+    "member_code": "BL",
+    "member_name": "Bloomberg",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-COM"],
+    "alarm": true,
+    "member_note":""
+  },
+  "204": {
+    "member_code": "IPC",
+    "member_name": "IPC",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-COM"],
+    "alarm": true,
+    "member_note":""
+  },
+  "205": {
+    "member_code": "KG",
+    "member_name": "KG제로인",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-COM"],
+    "alarm": true,
+    "member_note":""
+  },
+  "206": {
+    "member_code": "ICE",
+    "member_name": "ICE",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "alarm": true,
+    "member_note":""
+  }
+}
