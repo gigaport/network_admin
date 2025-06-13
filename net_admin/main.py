@@ -113,7 +113,7 @@ SYSLOG_ENDPOINT_MNEMONIC = [
     "IF_DUPLEX"
 ]
 
-SYSLOG_NORMAL_MNEMONIC = [
+SYSLOG_NORMAL_FACILITY = [
     "USER"
 ]
 
@@ -174,7 +174,7 @@ async def receive_syslog(request: Request):
     print(f"Received log: {data}")
     channel = "#network-alert-syslog"
     
-    if any(keyword in data["message"] for keyword in SYSLOG_NORMAL_KEYWORD) or any(keyword in data["mnemonic"] for keyword in SYSLOG_NORMAL_KEYWORD):
+    if any(keyword in data["message"] for keyword in SYSLOG_NORMAL_KEYWORD) or any(keyword in data["facility"] for keyword in SYSLOG_NORMAL_FACILITY):
         channel = "#network-alert-normal"
     
     if any(keyword in data["mnemonic"] for keyword in SYSLOG_ENDPOINT_MNEMONIC) :
