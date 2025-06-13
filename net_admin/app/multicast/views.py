@@ -61,10 +61,10 @@ def init (request):
         client_info:Dict = openJsonFile(path)
         
         if sub_menu == "pr_multicast" or sub_menu == "pr_info_multicast": 
-            path = f"ps_mpr_multicast_info.json"
+            path = f"pr_mpr_multicast_info.json"
         elif sub_menu == "ts_multicast": 
             path = f"ts_mpr_multicast_info.json"
-            
+
         mpr_multicast_info:Dict = openJsonFile(path)
 
         ## 데이터 유무 검증
