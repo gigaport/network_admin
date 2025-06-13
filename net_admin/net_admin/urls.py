@@ -24,5 +24,6 @@ urlpatterns = [
     path('multicast/', include('app.multicast.urls')),
     path('pr_multicast/', include('app.multicast.urls')),
     path('ts_multicast/', include('app.multicast.urls')),
+    path('pr_info_multicast/', include('app.multicast.urls')),
     path('index', include('app.urls')),
 ]

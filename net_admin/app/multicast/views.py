@@ -40,31 +40,38 @@ def init (request):
         market_gubn = ""
         
         if sub_menu == "pr_multicast":
-            market_gubn = "pr"
+            market_gubn = "pr_members"
         elif sub_menu == "ts_multicast":
-            market_gubn = "ts"
+            market_gubn = "ts_members"
+        elif sub_menu == "pr_info_multicast":
+            market_gubn = "pr_information"
 
         print(f"sub_menu => {sub_menu}, market_gubn => {market_gubn}")
 
-        path = f"../data/{market_gubn}_members_mroute_{today_str}.json"
+        path = f"../data/{market_gubn}_mroute_{today_str}.json"
         print(f"PATH : {path}")
         members_mroute:Dict = openJsonFile(path)
 
-        path = f"members_info.json"
-        members_info:Dict = openJsonFile(path)
+        ## 회원사 or 정보이용사 정보 가져오기 ##
+        if sub_menu == "pr_multicast" or sub_menu == "ts_multicast":
+            path = f"members_info.json"
+        elif sub_menu == "pr_info_multicast":
+            path = f"information_info.json"
+
+        client_info:Dict = openJsonFile(path)
         
         path = f"{market_gubn}_mpr_multicast_info.json"
         mpr_multicast_info:Dict = openJsonFile(path)
 
         ## 데이터 유무 검증
-        if members_mroute and members_info and mpr_multicast_info:
+        if members_mroute and client_info and mpr_multicast_info:
         ## 01. member_info <- 시세 멀티캐스트그룹 수신 개수 삽입
         ## 02. member_mroute <- member_info 정보 삽입
             merge_members_mroute = merge_multicast_group_count(members_mroute['data'], mpr_multicast_info)
             # print(f"[merge_members_info]\n{merge_members_info}\n\n")
             # print(f"[members_mroute['data']]\n{members_mroute['data']}")
 
-            response_data = create_member_sise_info(merge_members_mroute, members_info, today_time)
+            response_data = create_member_sise_info(merge_members_mroute, client_info, today_time)
     
     
     # data meta info setting
