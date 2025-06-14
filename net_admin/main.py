@@ -229,17 +229,50 @@ async def send_zabbix_webhook_to_slack(request: Request):
                         "title": "경과시간",
                         "value": f"`{data['event_duration']}`",
                         "short": False,
+                    }
+                    # {
+                    #     "title": "발생내용",
+                    #     "value": f"{data['event_name']}",
+                    #     "short": False,
+                    # },
+                    # {
+                    #     "title": "현재상태",
+                    #     "value": f"`{data['opdata']}`",
+                    #     "short": False,
+                    # },
+                ],
+                "blocks": [
+                    {
+                        "type": "section",
+                        "text":{
+                            "type": "mrkdwn",
+                            "text": "발생내용"
+                        }
                     },
                     {
-                        "title": "발생내용",
-                        "value": f"{data['event_name']}",
-                        "short": False,
+                        "type": "section",
+                        "text":{
+                            "type": "mrkdwn",
+                            "text": f"```{data['event_name']}```",
+                        }
                     },
                     {
-                        "title": "현재상태",
-                        "value": f"`{data['opdata']}`",
-                        "short": False,
+                        "type": "section",
+                        "text":{
+                            "type": "mrkdwn",
+                            "text": "현재상태"
+                        }
                     },
+                    {
+                        "type": "section",
+                        "text":{
+                            "type": "mrkdwn",
+                            "text": f"```{data['opdata']}```",
+                        }
+                    },
+                    {
+                        "type": "divider"
+                    }
                 ]
             }
     else: ## 장애발생
@@ -275,17 +308,50 @@ async def send_zabbix_webhook_to_slack(request: Request):
                         "title": "발생일시",
                         "value": f"{data['event_date']} {data['event_time']}",
                         "short": True,
+                    }
+                #     {
+                #         "title": "발생내용",
+                #         "value": f"{data['event_name']}",
+                #         "short": False,
+                #     },
+                #     {
+                #         "title": "현재상태",
+                #         "value": f"`{data['opdata']}`",
+                #         "short": False,
+                #     },
+                ],
+                "blocks": [
+                    {
+                        "type": "section",
+                        "text":{
+                            "type": "mrkdwn",
+                            "text": "발생내용"
+                        }
                     },
                     {
-                        "title": "발생내용",
-                        "value": f"{data['event_name']}",
-                        "short": False,
+                        "type": "section",
+                        "text":{
+                            "type": "mrkdwn",
+                            "text": f"```{data['event_name']}```",
+                        }
                     },
                     {
-                        "title": "현재상태",
-                        "value": f"`{data['opdata']}`",
-                        "short": False,
+                        "type": "section",
+                        "text":{
+                            "type": "mrkdwn",
+                            "text": "현재상태"
+                        }
                     },
+                    {
+                        "type": "section",
+                        "text":{
+                            "type": "mrkdwn",
+                            "text": f"```{data['opdata']}```",
+                        }
+                    },
+                    {
+                        "type": "divider"
+                    }
                 ]
             }
         else : ## 회선 장애 시
@@ -449,10 +515,12 @@ def send_to_slack_message(channel, message_title, message_body):
             attachments=[
                 {
                     "color": message_body['color'],
+                    "pretext": message_title,
                     "fields": message_body['fields'],
                     "mrkdwn_in": message_body['mrkdwn_in']
                 }
-            ]
+            ],
+            blocks=message_body['blocks']
         )
 
     except SlackApiError as e:
