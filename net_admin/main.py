@@ -241,39 +241,14 @@ async def send_zabbix_webhook_to_slack(request: Request):
                     #     "short": False,
                     # },
                 ],
-                "blocks": [
-                    {
-                        "type": "section",
-                        "text":{
-                            "type": "mrkdwn",
-                            "text": "발생내용"
-                        }
-                    },
-                    {
-                        "type": "section",
-                        "text":{
-                            "type": "mrkdwn",
-                            "text": f"```{data['event_name']}```",
-                        }
-                    },
-                    {
-                        "type": "section",
-                        "text":{
-                            "type": "mrkdwn",
-                            "text": "현재상태"
-                        }
-                    },
-                    {
-                        "type": "section",
-                        "text":{
-                            "type": "mrkdwn",
-                            "text": f"```{data['opdata']}```",
-                        }
-                    },
-                    {
-                        "type": "divider"
-                    }
-                ]
+                "event_name":{
+                    "title": "발생내용",
+                    "text": f"```{data['event_name']}```"
+                },
+                "opdata":{
+                    "title": "현재상태",
+                    "text": f"```{data['opdata']}```"
+                }
             }
     else: ## 장애발생
         main_text = f":critical: {data['hostname']} >> {data['event_name']}"
@@ -320,39 +295,14 @@ async def send_zabbix_webhook_to_slack(request: Request):
                 #         "short": False,
                 #     },
                 ],
-                "blocks": [
-                    {
-                        "type": "section",
-                        "text":{
-                            "type": "mrkdwn",
-                            "text": "발생내용"
-                        }
-                    },
-                    {
-                        "type": "section",
-                        "text":{
-                            "type": "mrkdwn",
-                            "text": f"```{data['event_name']}```",
-                        }
-                    },
-                    {
-                        "type": "section",
-                        "text":{
-                            "type": "mrkdwn",
-                            "text": "현재상태"
-                        }
-                    },
-                    {
-                        "type": "section",
-                        "text":{
-                            "type": "mrkdwn",
-                            "text": f"```{data['opdata']}```",
-                        }
-                    },
-                    {
-                        "type": "divider"
-                    }
-                ]
+                "event_name":{
+                    "title": "발생내용",
+                    "text": f"```{data['event_name']}```"
+                },
+                "opdata":{
+                    "title": "현재상태",
+                    "text": f"```{data['opdata']}```"
+                }
             }
         else : ## 회선 장애 시
             message_body = {
@@ -501,8 +451,7 @@ async def send_monitor_webhook_to_slack(request: Request):
 def send_to_slack_message(channel, message_title, message_body):
     try:
         response = client.chat_postMessage(
-            channel=channel,  # 예: "#general" 또는 "C12345678"
-            # text= f"*[{market}] 회원사 장시간 MAX 트래픽*",
+            channel=channel,
             # blocks=[
             #     {
             #         "type": "section",
@@ -519,11 +468,18 @@ def send_to_slack_message(channel, message_title, message_body):
                     "fields": message_body['fields'],
                     "mrkdwn_in": message_body['mrkdwn_in']
                 },
-                {
-                    "text": f"```message_body['blocks'][1]['text']['text']```"
+                {   # 발생내용블럭
+                    "color": message_body['color'],
+                    "title": message_body['event_name']['title'],
+                    "text": message_body['event_name']['text']
+                },
+                {   # 현재상태블럭럭
+                    "color": message_body['color'],
+                    "title": message_body['event_name']['title'],
+                    "text": message_body['event_name']['text']
                 }
-            ],
-            blocks=message_body['blocks']
+            ]
+            # blocks=message_body['blocks']
         )
 
     except SlackApiError as e:
