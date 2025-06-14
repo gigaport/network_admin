@@ -503,15 +503,15 @@ def send_to_slack_message(channel, message_title, message_body):
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
             # text= f"*[{market}] 회원사 장시간 MAX 트래픽*",
-            blocks=[
-                {
-                    "type": "section",
-                    "text":{
-                        "type": "mrkdwn",
-                        "text": message_title
-                    }
-                }
-            ],
+            # blocks=[
+            #     {
+            #         "type": "section",
+            #         "text":{
+            #             "type": "mrkdwn",
+            #             "text": message_title
+            #         }
+            #     }
+            # ],
             attachments=[
                 {
                     "color": message_body['color'],
