@@ -518,6 +518,9 @@ def send_to_slack_message(channel, message_title, message_body):
                     "pretext": message_title,
                     "fields": message_body['fields'],
                     "mrkdwn_in": message_body['mrkdwn_in']
+                },
+                {
+                    "text": f"```message_body['blocks'][1]['text']['text']```"
                 }
             ],
             blocks=message_body['blocks']
