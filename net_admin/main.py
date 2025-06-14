@@ -419,7 +419,7 @@ async def send_zabbix_webhook_to_slack(request: Request):
 
     print(f'[slack_message_body] : {message_body}')
     
-    if any(keyword not in data["mneevent_namemonic"] for keyword in ZABBIX_MUTE) :
+    if any(keyword not in data["event_name"] for keyword in ZABBIX_MUTE) :
         send_to_slack_message(channel, main_text, message_body)
 
 
