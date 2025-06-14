@@ -188,6 +188,17 @@ async def receive_syslog(request: Request):
 
     return {"status": "ok"}
 
+@app.post("/webhook/grafana")
+async def send_zabbix_webhook_to_slack(request: Request):
+    print(f'[grafana_alert_webhook_request] : {request}')
+
+    data = await request.json()
+    print(f'[grafana_alert_webhook_body] : {data}')
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "success", "detail": "전송송처리가 완료되었습니다."}
+    )
 
 @app.post("/webhook/zabbix")
 async def send_zabbix_webhook_to_slack(request: Request):
