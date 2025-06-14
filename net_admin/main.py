@@ -452,9 +452,9 @@ def send_to_slack_message(channel, message_title, message_body):
     try:
         response = client.chat_postMessage(
             channel=channel,
-            # blocks=[
+            # blocks=[dsfasdf
             #     {
-            #         "type": "section",
+            #         "type": "secㄴㅇtion",
             #         "text":{
             #             "type": "mrkdwn",
             #             "text": message_title
@@ -475,8 +475,8 @@ def send_to_slack_message(channel, message_title, message_body):
                 },
                 {   # 현재상태블럭럭
                     "color": message_body['color'],
-                    "title": message_body['event_name']['title'],
-                    "text": message_body['event_name']['text']
+                    "title": message_body['opdata']['title'],
+                    "text": message_body['opdata']['text']
                 }
             ]
             # blocks=message_body['blocks']
