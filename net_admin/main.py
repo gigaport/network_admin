@@ -427,18 +427,18 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                     "color": "#90EE90",
                     "title": f"<회원사_2그룹>",
                     "text": (
-                        f"`DA [100M]` : {received_data['DA']['max_bps_unit']} ({received_data['DA']['diff_emoji']}{received_data['DA']['diff_unit']})\n"
-                        f"`DB [50M]` : {received_data['DB']['max_bps_unit']} ({received_data['DB']['diff_emoji']}{received_data['DB']['diff_unit']})\n"
-                        f"`EU [50M]` : {received_data['EU']['max_bps_unit']} ({received_data['EU']['diff_emoji']}{received_data['EU']['diff_unit']})\n"
-                        f"`HD [50M]` : {received_data['HD']['max_bps_unit']} ({received_data['HD']['diff_emoji']}{received_data['HD']['diff_unit']})\n"
-                        f"`HN [50M]` : {received_data['HN']['max_bps_unit']} ({received_data['HN']['diff_emoji']}{received_data['HN']['diff_unit']})\n"
-                        f"`HW [50M]` : {received_data['HW']['max_bps_unit']} ({received_data['HW']['diff_emoji']}{received_data['HW']['diff_unit']})\n"
-                        f"`KA [50M]` : {received_data['KA']['max_bps_unit']} ({received_data['KA']['diff_emoji']}{received_data['KA']['diff_unit']})\n"
-                        f"`LS [100M]` : {received_data['LS']['max_bps_unit']} ({received_data['LS']['diff_emoji']}{received_data['LS']['diff_unit']})\n"
-                        f"`ME [50M]` : {received_data['ME']['max_bps_unit']} ({received_data['ME']['diff_emoji']}{received_data['ME']['diff_unit']})\n"
-                        f"`SK [50M]` : {received_data['SK']['max_bps_unit']} ({received_data['SK']['diff_emoji']}{received_data['SK']['diff_unit']})\n"                        
-                        f"`SY [50M]` : {received_data['SY']['max_bps_unit']} ({received_data['SY']['diff_emoji']}{received_data['SY']['diff_unit']})\n"
-                        f"`IM [50M]` : {received_data['IM']['max_bps_unit']} ({received_data['IM']['diff_emoji']}{received_data['IM']['diff_unit']})\n"
+                        f"`DA [{received_data['DA']['bd_usage']}/100M]` : {received_data['DA']['max_bps_unit']} ({received_data['DA']['diff_emoji']}{received_data['DA']['diff_unit']})\n"
+                        f"`DB [{received_data['DB']['bd_usage']}/50M]` : {received_data['DB']['max_bps_unit']} ({received_data['DB']['diff_emoji']}{received_data['DB']['diff_unit']})\n"
+                        f"`EU [{received_data['TS']['bd_usage']}/50M]` : {received_data['EU']['max_bps_unit']} ({received_data['EU']['diff_emoji']}{received_data['EU']['diff_unit']})\n"
+                        f"`HD [{received_data['HD']['bd_usage']}/50M]` : {received_data['HD']['max_bps_unit']} ({received_data['HD']['diff_emoji']}{received_data['HD']['diff_unit']})\n"
+                        f"`HN [{received_data['HN']['bd_usage']}/50M]` : {received_data['HN']['max_bps_unit']} ({received_data['HN']['diff_emoji']}{received_data['HN']['diff_unit']})\n"
+                        f"`HW [{received_data['HW']['bd_usage']}/50M]` : {received_data['HW']['max_bps_unit']} ({received_data['HW']['diff_emoji']}{received_data['HW']['diff_unit']})\n"
+                        f"`KA [{received_data['KA']['bd_usage']}/50M]` : {received_data['KA']['max_bps_unit']} ({received_data['KA']['diff_emoji']}{received_data['KA']['diff_unit']})\n"
+                        f"`LS [{received_data['LS']['bd_usage']}/100M]` : {received_data['LS']['max_bps_unit']} ({received_data['LS']['diff_emoji']}{received_data['LS']['diff_unit']})\n"
+                        f"`ME [{received_data['ME']['bd_usage']}/50M]` : {received_data['ME']['max_bps_unit']} ({received_data['ME']['diff_emoji']}{received_data['ME']['diff_unit']})\n"
+                        f"`SK [{received_data['SK']['bd_usage']}/50M]` : {received_data['SK']['max_bps_unit']} ({received_data['SK']['diff_emoji']}{received_data['SK']['diff_unit']})\n"                        
+                        f"`SY [{received_data['SY']['bd_usage']}/50M]` : {received_data['SY']['max_bps_unit']} ({received_data['SY']['diff_emoji']}{received_data['SY']['diff_unit']})\n"
+                        f"`IM [{received_data['IM']['bd_usage']}/50M]` : {received_data['IM']['max_bps_unit']} ({received_data['IM']['diff_emoji']}{received_data['IM']['diff_unit']})\n"
                     ),
                     "mrkdwn_in": ["text", "title"]
                 },
@@ -446,14 +446,14 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                     "color": "#9370DB",
                     "title": f"<PB이용사>",
                     "text": (
-                        f"`BN [50M]` : {received_data['BN']['max_bps_unit']} ({received_data['BN']['diff_emoji']}{received_data['BN']['diff_unit']})\n"
-                        f"`BK [50M]` : {received_data['BK']['max_bps_unit']} ({received_data['BK']['diff_emoji']}{received_data['BK']['diff_unit']})\n"
-                        f"`DO [50M]` : {received_data['DO']['max_bps_unit']} ({received_data['DO']['diff_emoji']}{received_data['DO']['diff_unit']})\n"
-                        f"`DS [50M]` : {received_data['DS']['max_bps_unit']} ({received_data['DS']['diff_emoji']}{received_data['DS']['diff_unit']})\n"
-                        f"`HY [50M]` : {received_data['HY']['max_bps_unit']} ({received_data['HY']['diff_emoji']}{received_data['HY']['diff_unit']})\n"
-                        f"`IB [50M]` : {received_data['IB']['max_bps_unit']} ({received_data['IB']['diff_emoji']}{received_data['IB']['diff_unit']})\n"
-                        f"`LD [50M]` : {received_data['LD']['max_bps_unit']} ({received_data['LD']['diff_emoji']}{received_data['LD']['diff_unit']})\n"
-                        f"`WR [50M]` : {received_data['WR']['max_bps_unit']} ({received_data['WR']['diff_emoji']}{received_data['WR']['diff_unit']})\n"
+                        f"`BN [{received_data['BN']['bd_usage']}/50M]` : {received_data['BN']['max_bps_unit']} ({received_data['BN']['diff_emoji']}{received_data['BN']['diff_unit']})\n"
+                        f"`BK [{received_data['BK']['bd_usage']}/50M]` : {received_data['BK']['max_bps_unit']} ({received_data['BK']['diff_emoji']}{received_data['BK']['diff_unit']})\n"
+                        f"`DO [{received_data['DO']['bd_usage']}/50M]` : {received_data['DO']['max_bps_unit']} ({received_data['DO']['diff_emoji']}{received_data['DO']['diff_unit']})\n"
+                        f"`DS [{received_data['DS']['bd_usage']}/50M]` : {received_data['DS']['max_bps_unit']} ({received_data['DS']['diff_emoji']}{received_data['DS']['diff_unit']})\n"
+                        f"`HY [{received_data['HY']['bd_usage']}/50M]` : {received_data['HY']['max_bps_unit']} ({received_data['HY']['diff_emoji']}{received_data['HY']['diff_unit']})\n"
+                        f"`IB [{received_data['IB']['bd_usage']}/50M]` : {received_data['IB']['max_bps_unit']} ({received_data['IB']['diff_emoji']}{received_data['IB']['diff_unit']})\n"
+                        f"`LD [{received_data['LD']['bd_usage']}/50M]` : {received_data['LD']['max_bps_unit']} ({received_data['LD']['diff_emoji']}{received_data['LD']['diff_unit']})\n"
+                        f"`WR [{received_data['WR']['bd_usage']}/50M]` : {received_data['WR']['max_bps_unit']} ({received_data['WR']['diff_emoji']}{received_data['WR']['diff_unit']})\n"
                     ),
                     "mrkdwn_in": ["text", "title"]
                 },
@@ -461,9 +461,9 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                     "color": "#D2B48C",
                     "title": f"<대외기관>",
                     "text": (
-                        f"`FIMS [1G]` : {received_data['FIMS']['max_bps_unit']} ({received_data['FIMS']['diff_emoji']}{received_data['FIMS']['diff_unit']})\n"                        
-                        f"`KRX [2G]` : {received_data['KRX']['max_bps_unit']} ({received_data['KRX']['diff_emoji']}{received_data['KRX']['diff_unit']})\n"
-                        f"`STOCK-NET [45M]` : {received_data['STOCK-NET']['max_bps_unit']} ({received_data['STOCK-NET']['diff_emoji']}{received_data['STOCK-NET']['diff_unit']})\n"
+                        f"`FIMS [{received_data['FIMS']['bd_usage']}/1G]` : {received_data['FIMS']['max_bps_unit']} ({received_data['FIMS']['diff_emoji']}{received_data['FIMS']['diff_unit']})\n"                        
+                        f"`KRX [{received_data['KRX']['bd_usage']}/2G]` : {received_data['KRX']['max_bps_unit']} ({received_data['KRX']['diff_emoji']}{received_data['KRX']['diff_unit']})\n"
+                        f"`STOCK-NET [{received_data['STOCK-NET']['bd_usage']}/45M]` : {received_data['STOCK-NET']['max_bps_unit']} ({received_data['STOCK-NET']['diff_emoji']}{received_data['STOCK-NET']['diff_unit']})\n"
                     ),
                     "mrkdwn_in": ["text", "title"]
                 }
@@ -484,14 +484,14 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                 "color": "#90EE90",
                 "title": f"<시세상품>",
                 "text": (
-                    f"`NXTA-COM` : {received_data['NXTA-COM']['max_bps_unit']} ({received_data['NXTA-COM']['diff_emoji']}{received_data['NXTA-COM']['diff_unit']})\n"
-                    f"`NXTA-10` : {received_data['NXTA-10']['max_bps_unit']} ({received_data['NXTA-10']['diff_emoji']}{received_data['NXTA-10']['diff_unit']})\n"
-                    f"`NXTA-5` : {received_data['NXTA-5']['max_bps_unit']} ({received_data['NXTA-5']['diff_emoji']}{received_data['NXTA-5']['diff_unit']})\n"
-                    f"`NXTA-3` : {received_data['NXTA-3']['max_bps_unit']} ({received_data['NXTA-3']['diff_emoji']}{received_data['NXTA-3']['diff_unit']})\n"
-                    f"`NXTB-COM` : {received_data['NXTB-COM']['max_bps_unit']} ({received_data['NXTB-COM']['diff_emoji']}{received_data['NXTB-COM']['diff_unit']})\n"
-                    f"`NXTB-10` : {received_data['NXTB-10']['max_bps_unit']} ({received_data['NXTB-10']['diff_emoji']}{received_data['NXTB-10']['diff_unit']})\n"
-                    f"`NXTB-5` : {received_data['NXTB-5']['max_bps_unit']} ({received_data['NXTB-5']['diff_emoji']}{received_data['NXTB-5']['diff_unit']})\n"
-                    f"`NXTB-3` : {received_data['NXTB-3']['max_bps_unit']} ({received_data['NXTB-3']['diff_emoji']}{received_data['NXTB-3']['diff_unit']})\n"
+                    f"`NXTA-COM [{received_data['NXTA-COM ']['bd_usage']}/50M]` : {received_data['NXTA-COM']['max_bps_unit']} ({received_data['NXTA-COM']['diff_emoji']}{received_data['NXTA-COM']['diff_unit']})\n"
+                    f"`NXTA-10 [{received_data['NXTA-10']['bd_usage']}/50M]` : {received_data['NXTA-10']['max_bps_unit']} ({received_data['NXTA-10']['diff_emoji']}{received_data['NXTA-10']['diff_unit']})\n"
+                    f"`NXTA-5 [{received_data['NXTA-5']['bd_usage']}/50M]` : {received_data['NXTA-5']['max_bps_unit']} ({received_data['NXTA-5']['diff_emoji']}{received_data['NXTA-5']['diff_unit']})\n"
+                    f"`NXTA-3 [{received_data['NXTA-3']['bd_usage']}/50M]` : {received_data['NXTA-3']['max_bps_unit']} ({received_data['NXTA-3']['diff_emoji']}{received_data['NXTA-3']['diff_unit']})\n"
+                    f"`NXTB-COM [{received_data['NXTB-COM']['bd_usage']}/50M]` : {received_data['NXTB-COM']['max_bps_unit']} ({received_data['NXTB-COM']['diff_emoji']}{received_data['NXTB-COM']['diff_unit']})\n"
+                    f"`NXTB-10 [{received_data['NXTB-10']['bd_usage']}/50M]` : {received_data['NXTB-10']['max_bps_unit']} ({received_data['NXTB-10']['diff_emoji']}{received_data['NXTB-10']['diff_unit']})\n"
+                    f"`NXTB-5 [{received_data['NXTB-5']['bd_usage']}/50M]` : {received_data['NXTB-5']['max_bps_unit']} ({received_data['NXTB-5']['diff_emoji']}{received_data['NXTB-5']['diff_unit']})\n"
+                    f"`NXTB-3 [{received_data['NXTB-3']['bd_usage']}/50M]` : {received_data['NXTB-3']['max_bps_unit']} ({received_data['NXTB-3']['diff_emoji']}{received_data['NXTB-3']['diff_unit']})\n"
                 ),
                 "mrkdwn_in": ["text", "title"]
             }
