@@ -123,7 +123,7 @@ def send_slack_message(message_info: Dict):
     try:
         response = client.chat_postMessage(
             channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f":alert: *({market_gubn}){message_info['member_name']} 멀티캐스트수신 이상* :alert:",
+            text= f":alert: *({market_gubn}){message_info['member_name']} 시세수신 이상* :alert:",
             attachments=[
                 {
                     "color": "danger",
