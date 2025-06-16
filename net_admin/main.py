@@ -414,7 +414,7 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                         f"`KR_KT [100M]` : {received_data['KR_KT']['max_bps_unit']} ({received_data['KR_KT']['diff_emoji']}{received_data['KR_KT']['diff_unit']})\n"
                         f"`MR [200M]` : {received_data['MR']['max_bps_unit']} ({received_data['MR']['diff_emoji']}{received_data['MR']['diff_unit']})\n"
                         f"`KW [100M]` : {received_data['KW']['max_bps_unit']} ({received_data['KW']['diff_emoji']}{received_data['KW']['diff_unit']})\n"
-                        f"`SH [50M]` : {received_data['SH']['max_bps_unit']} ({received_data['SH']['diff_emoji']}{received_data['SH']['diff_unit']})\n"
+                        f"`SH [100M]` : {received_data['SH']['max_bps_unit']} ({received_data['SH']['diff_emoji']}{received_data['SH']['diff_unit']})\n"
                         f"`NH [50M]` : {received_data['NH']['max_bps_unit']} ({received_data['NH']['diff_emoji']}{received_data['NH']['diff_unit']})\n"
                         f"`SS [50M]` : {received_data['SS']['max_bps_unit']} ({received_data['SS']['diff_emoji']}{received_data['SS']['diff_unit']})\n"
                         f"`KY [50M]` : {received_data['KY']['max_bps_unit']} ({received_data['KY']['diff_emoji']}{received_data['KY']['diff_unit']})\n"
@@ -427,15 +427,14 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                     "color": "#90EE90",
                     "title": f"<회원사_2그룹>",
                     "text": (
-                        f"`DA [50M]` : {received_data['DA']['max_bps_unit']} ({received_data['DA']['diff_emoji']}{received_data['DA']['diff_unit']})\n"
+                        f"`DA [100M]` : {received_data['DA']['max_bps_unit']} ({received_data['DA']['diff_emoji']}{received_data['DA']['diff_unit']})\n"
                         f"`DB [50M]` : {received_data['DB']['max_bps_unit']} ({received_data['DB']['diff_emoji']}{received_data['DB']['diff_unit']})\n"
-                        f"`BN [50M]` : {received_data['BN']['max_bps_unit']} ({received_data['BN']['diff_emoji']}{received_data['BN']['diff_unit']})\n"
                         f"`EU [50M]` : {received_data['EU']['max_bps_unit']} ({received_data['EU']['diff_emoji']}{received_data['EU']['diff_unit']})\n"
                         f"`HD [50M]` : {received_data['HD']['max_bps_unit']} ({received_data['HD']['diff_emoji']}{received_data['HD']['diff_unit']})\n"
                         f"`HN [50M]` : {received_data['HN']['max_bps_unit']} ({received_data['HN']['diff_emoji']}{received_data['HN']['diff_unit']})\n"
                         f"`HW [50M]` : {received_data['HW']['max_bps_unit']} ({received_data['HW']['diff_emoji']}{received_data['HW']['diff_unit']})\n"
                         f"`KA [50M]` : {received_data['KA']['max_bps_unit']} ({received_data['KA']['diff_emoji']}{received_data['KA']['diff_unit']})\n"
-                        f"`LS [50M]` : {received_data['LS']['max_bps_unit']} ({received_data['LS']['diff_emoji']}{received_data['LS']['diff_unit']})\n"
+                        f"`LS [100M]` : {received_data['LS']['max_bps_unit']} ({received_data['LS']['diff_emoji']}{received_data['LS']['diff_unit']})\n"
                         f"`ME [50M]` : {received_data['ME']['max_bps_unit']} ({received_data['ME']['diff_emoji']}{received_data['ME']['diff_unit']})\n"
                         f"`SK [50M]` : {received_data['SK']['max_bps_unit']} ({received_data['SK']['diff_emoji']}{received_data['SK']['diff_unit']})\n"                        
                         f"`SY [50M]` : {received_data['SY']['max_bps_unit']} ({received_data['SY']['diff_emoji']}{received_data['SY']['diff_unit']})\n"
@@ -447,6 +446,7 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                     "color": "#9370DB",
                     "title": f"<PB이용사>",
                     "text": (
+                        f"`BN [50M]` : {received_data['BN']['max_bps_unit']} ({received_data['BN']['diff_emoji']}{received_data['BN']['diff_unit']})\n"
                         f"`BK [50M]` : {received_data['BK']['max_bps_unit']} ({received_data['BK']['diff_emoji']}{received_data['BK']['diff_unit']})\n"
                         f"`DO [50M]` : {received_data['DO']['max_bps_unit']} ({received_data['DO']['diff_emoji']}{received_data['DO']['diff_unit']})\n"
                         f"`DS [50M]` : {received_data['DS']['max_bps_unit']} ({received_data['DS']['diff_emoji']}{received_data['DS']['diff_unit']})\n"
