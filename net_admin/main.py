@@ -484,14 +484,14 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                 "color": "#90EE90",
                 "title": f"<시세상품>",
                 "text": (
-                    f"`NXTA-COM [{received_data['NXTA-COM']['bd_usage']}/50M]` : {received_data['NXTA-COM']['max_bps_unit']} ({received_data['NXTA-COM']['diff_emoji']}{received_data['NXTA-COM']['diff_unit']})\n"
-                    f"`NXTA-10 [{received_data['NXTA-10']['bd_usage']}/50M]` : {received_data['NXTA-10']['max_bps_unit']} ({received_data['NXTA-10']['diff_emoji']}{received_data['NXTA-10']['diff_unit']})\n"
-                    f"`NXTA-5 [{received_data['NXTA-5']['bd_usage']}/50M]` : {received_data['NXTA-5']['max_bps_unit']} ({received_data['NXTA-5']['diff_emoji']}{received_data['NXTA-5']['diff_unit']})\n"
-                    f"`NXTA-3 [{received_data['NXTA-3']['bd_usage']}/50M]` : {received_data['NXTA-3']['max_bps_unit']} ({received_data['NXTA-3']['diff_emoji']}{received_data['NXTA-3']['diff_unit']})\n"
-                    f"`NXTB-COM [{received_data['NXTB-COM']['bd_usage']}/50M]` : {received_data['NXTB-COM']['max_bps_unit']} ({received_data['NXTB-COM']['diff_emoji']}{received_data['NXTB-COM']['diff_unit']})\n"
-                    f"`NXTB-10 [{received_data['NXTB-10']['bd_usage']}/50M]` : {received_data['NXTB-10']['max_bps_unit']} ({received_data['NXTB-10']['diff_emoji']}{received_data['NXTB-10']['diff_unit']})\n"
-                    f"`NXTB-5 [{received_data['NXTB-5']['bd_usage']}/50M]` : {received_data['NXTB-5']['max_bps_unit']} ({received_data['NXTB-5']['diff_emoji']}{received_data['NXTB-5']['diff_unit']})\n"
-                    f"`NXTB-3 [{received_data['NXTB-3']['bd_usage']}/50M]` : {received_data['NXTB-3']['max_bps_unit']} ({received_data['NXTB-3']['diff_emoji']}{received_data['NXTB-3']['diff_unit']})\n"
+                    f"`NXTA-COM [{received_data['NXTA-COM']['bd_usage']}/100M]` : {received_data['NXTA-COM']['max_bps_unit']} ({received_data['NXTA-COM']['diff_emoji']}{received_data['NXTA-COM']['diff_unit']})\n"
+                    f"`NXTA-10 [{received_data['NXTA-10']['bd_usage']}/100M]` : {received_data['NXTA-10']['max_bps_unit']} ({received_data['NXTA-10']['diff_emoji']}{received_data['NXTA-10']['diff_unit']})\n"
+                    f"`NXTA-5 [{received_data['NXTA-5']['bd_usage']}/100M]` : {received_data['NXTA-5']['max_bps_unit']} ({received_data['NXTA-5']['diff_emoji']}{received_data['NXTA-5']['diff_unit']})\n"
+                    f"`NXTA-3 [{received_data['NXTA-3']['bd_usage']}/100M]` : {received_data['NXTA-3']['max_bps_unit']} ({received_data['NXTA-3']['diff_emoji']}{received_data['NXTA-3']['diff_unit']})\n"
+                    f"`NXTB-COM [{received_data['NXTB-COM']['bd_usage']}/100M]` : {received_data['NXTB-COM']['max_bps_unit']} ({received_data['NXTB-COM']['diff_emoji']}{received_data['NXTB-COM']['diff_unit']})\n"
+                    f"`NXTB-10 [{received_data['NXTB-10']['bd_usage']}/100M]` : {received_data['NXTB-10']['max_bps_unit']} ({received_data['NXTB-10']['diff_emoji']}{received_data['NXTB-10']['diff_unit']})\n"
+                    f"`NXTB-5 [{received_data['NXTB-5']['bd_usage']}/100M]` : {received_data['NXTB-5']['max_bps_unit']} ({received_data['NXTB-5']['diff_emoji']}{received_data['NXTB-5']['diff_unit']})\n"
+                    f"`NXTB-3 [{received_data['NXTB-3']['bd_usage']}/100M]` : {received_data['NXTB-3']['max_bps_unit']} ({received_data['NXTB-3']['diff_emoji']}{received_data['NXTB-3']['diff_unit']})\n"
                 ),
                 "mrkdwn_in": ["text", "title"]
             }
