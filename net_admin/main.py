@@ -424,7 +424,7 @@ async def send_monitor_webhook_to_slack(request: Request):
                     "type": "section",
                     "text":{
                         "type": "mrkdwn",
-                        "text": f"*{emoji} [{market}-{time_range}] MAX 트래픽*"
+                        "text": f"*{emoji} [{market}-{time_range}] 주문망 트래픽*"
                     }
                 }
             ],
@@ -449,7 +449,7 @@ async def send_monitor_webhook_to_slack(request: Request):
                     "mrkdwn_in": ["text", "title"]
                 },
                 {
-                    "color": "#ADD8E6",
+                    "color": "#90EE90",
                     "title": f"회원사_2그룹",
                     "text": (
                         f"`DA [50M]` : {received_data['DA']['max_bps_unit']} ({received_data['DA']['diff_emoji']}{received_data['DA']['diff_unit']})\n"
