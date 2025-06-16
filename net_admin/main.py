@@ -409,17 +409,17 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                     "title": f"<회원사_1그룹>",
                     "text": (
                         f"`전체증권사` : {received_data['ALL_SECUTIES']['max_bps_unit']} ({received_data['ALL_SECUTIES']['diff_emoji']}{received_data['ALL_SECUTIES']['diff_unit']})\n"
-                        f"`KB [100M]` : {received_data['KB']['max_bps_unit']} ({received_data['KB']['diff_emoji']}{received_data['KB']['diff_unit']})\n"
-                        f"`KR_HQ [100M]` : {received_data['KR_HQ']['max_bps_unit']} ({received_data['KR_HQ']['diff_emoji']}{received_data['KR_HQ']['diff_unit']})\n"
-                        f"`KR_KT [100M]` : {received_data['KR_KT']['max_bps_unit']} ({received_data['KR_KT']['diff_emoji']}{received_data['KR_KT']['diff_unit']})\n"
-                        f"`MR [200M]` : {received_data['MR']['max_bps_unit']} ({received_data['MR']['diff_emoji']}{received_data['MR']['diff_unit']})\n"
-                        f"`KW [100M]` : {received_data['KW']['max_bps_unit']} ({received_data['KW']['diff_emoji']}{received_data['KW']['diff_unit']})\n"
-                        f"`SH [100M]` : {received_data['SH']['max_bps_unit']} ({received_data['SH']['diff_emoji']}{received_data['SH']['diff_unit']})\n"
-                        f"`NH [50M]` : {received_data['NH']['max_bps_unit']} ({received_data['NH']['diff_emoji']}{received_data['NH']['diff_unit']})\n"
-                        f"`SS [50M]` : {received_data['SS']['max_bps_unit']} ({received_data['SS']['diff_emoji']}{received_data['SS']['diff_unit']})\n"
-                        f"`KY [50M]` : {received_data['KY']['max_bps_unit']} ({received_data['KY']['diff_emoji']}{received_data['KY']['diff_unit']})\n"
-                        f"`YU [50M]` : {received_data['YU']['max_bps_unit']} ({received_data['YU']['diff_emoji']}{received_data['YU']['diff_unit']})\n"
-                        f"`TS [50M]` : {received_data['TS']['max_bps_unit']} ({received_data['TS']['diff_emoji']}{received_data['TS']['diff_unit']})\n"
+                        f"`KB [{received_data['KB']['bd_usage']}/100M]` : {received_data['KB']['max_bps_unit']} ({received_data['KB']['diff_emoji']}{received_data['KB']['diff_unit']})\n"
+                        f"`KR_HQ [{received_data['KR_HQ']['bd_usage']}/100M]` : {received_data['KR_HQ']['max_bps_unit']} ({received_data['KR_HQ']['diff_emoji']}{received_data['KR_HQ']['diff_unit']})\n"
+                        f"`KR_KT [{received_data['KR_KT']['bd_usage']}/100M]` : {received_data['KR_KT']['max_bps_unit']} ({received_data['KR_KT']['diff_emoji']}{received_data['KR_KT']['diff_unit']})\n"
+                        f"`MR [{received_data['MR']['bd_usage']}/200M]` : {received_data['MR']['max_bps_unit']} ({received_data['MR']['diff_emoji']}{received_data['MR']['diff_unit']})\n"
+                        f"`KW [{received_data['KW']['bd_usage']}/100M]` : {received_data['KW']['max_bps_unit']} ({received_data['KW']['diff_emoji']}{received_data['KW']['diff_unit']})\n"
+                        f"`SH [{received_data['SH']['bd_usage']}/100M]` : {received_data['SH']['max_bps_unit']} ({received_data['SH']['diff_emoji']}{received_data['SH']['diff_unit']})\n"
+                        f"`NH [{received_data['NH']['bd_usage']}/50M]` : {received_data['NH']['max_bps_unit']} ({received_data['NH']['diff_emoji']}{received_data['NH']['diff_unit']})\n"
+                        f"`SS [{received_data['SS']['bd_usage']}/50M]` : {received_data['SS']['max_bps_unit']} ({received_data['SS']['diff_emoji']}{received_data['SS']['diff_unit']})\n"
+                        f"`KY [{received_data['KY']['bd_usage']}/50M]` : {received_data['KY']['max_bps_unit']} ({received_data['KY']['diff_emoji']}{received_data['KY']['diff_unit']})\n"
+                        f"`YU [{received_data['YU']['bd_usage']}/50M]` : {received_data['YU']['max_bps_unit']} ({received_data['YU']['diff_emoji']}{received_data['YU']['diff_unit']})\n"
+                        f"`TS [{received_data['TS']['bd_usage']}/50M]` : {received_data['TS']['max_bps_unit']} ({received_data['TS']['diff_emoji']}{received_data['TS']['diff_unit']})\n"
                     ),
                     "mrkdwn_in": ["text", "title"]
                 },
