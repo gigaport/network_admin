@@ -469,7 +469,7 @@ async def send_monitor_webhook_to_slack(request: Request):
                     "mrkdwn_in": ["text", "title"]
                 },
                 {
-                    "color": "#ADD8E6",
+                    "color": "#9370DB",
                     "title": f"PB이용사",
                     "text": (
                         f"`BK [50M]` : {received_data['BK']['max_bps_unit']} ({received_data['BK']['diff_emoji']}{received_data['BK']['diff_unit']})\n"
@@ -484,7 +484,7 @@ async def send_monitor_webhook_to_slack(request: Request):
                 },
                 {
                     "color": "#D2B48C",
-                    # "title": f"회원사 장시간 MAX 트래픽",
+                    "title": f"대외기관",
                     "text": (
                         f"`FIMS [1G]` : {received_data['FIMS']['max_bps_unit']} ({received_data['FIMS']['diff_emoji']}{received_data['FIMS']['diff_unit']})\n"                        
                         f"`KRX [2G]` : {received_data['KRX']['max_bps_unit']} ({received_data['KRX']['diff_emoji']}{received_data['KRX']['diff_unit']})\n"
