@@ -390,45 +390,20 @@ async def send_zabbix_webhook_to_slack(request: Request):
     )
 
 
-@app.post("/webhook/slack/{net_gubn}")
-async def send_monitor_webhook_to_slack(request: Request):
-    received_data = await request.json()
-    print(f"daily_data: {received_data}")
-    market = received_data["market"]
-    time_range = ""
-    emoji = ""
-    if market == "프리":
-        market = "프리장"
-        time_range = "07:58~08:01"
-        emoji = ":sun:"
-    elif market == "정규":
-        market = "정규장"
-        time_range = "08:58~09:01"
-        emoji = ":gogo_dancer:"
-    elif market == "에프터":
-        market = "에프터장"
-        time_range = "15:38~15:41"
-        emoji = ":sunset:"
-
-    # data = received_data["data"]
-    # print(f"Received data: {data}")
-    # channel = "network-test"
+def convert_to_message_format(received_data, net_gubn, market, time_range, emoji):
     channel = "network-monitor"
 
-    try:
-        response = client.chat_postMessage(
-            channel=channel,  # 예: "#general" 또는 "C12345678"
-            # text= f"*[{market}] 회원사 장시간 MAX 트래픽*",
-            blocks=[
-                {
-                    "type": "section",
-                    "text":{
-                        "type": "mrkdwn",
-                        "text": f"*{emoji} [{market}-{time_range}] 주문망 트래픽*"
-                    }
+    if net_gubn == "ord":
+        blocks=[
+            {
+                "type": "section",
+                "text":{
+                    "type": "mrkdwn",
+                    "text": f"*{emoji} [{market}-{time_range}] 주문망 트래픽*"
                 }
-            ],
-            attachments=[
+            }
+        ]
+        attachments=[
                 {
                     "color": "#439FE0",
                     "title": f"회원사_1그룹",
@@ -493,7 +468,36 @@ async def send_monitor_webhook_to_slack(request: Request):
                     "mrkdwn_in": ["text", "title"]
                 }
             ]
-        )
+
+    elif net_gubn == "mpr":
+        blocks=[
+            {
+                "type": "section",
+                "text":{
+                    "type": "mrkdwn",
+                    "text": f"*{emoji} [{market}-{time_range}] 시세망 트래픽*"
+                }
+            }
+        ]
+        attachments=[
+            {
+                "color": "#90EE90",
+                "title": f"시세상품",
+                "text": (
+                    f"`NXTA-COM` : {received_data['NXTA-COM']['max_bps_unit']} ({received_data['NXTA-COM']['diff_emoji']}{received_data['NXTA-COM']['diff_unit']})\n"
+                    f"`NXTA-10` : {received_data['NXTA-10']['max_bps_unit']} ({received_data['NXTA-10']['diff_emoji']}{received_data['NXTA-10']['diff_unit']})\n"
+                    f"`NXTA-5` : {received_data['NXTA-5']['max_bps_unit']} ({received_data['NXTA-5']['diff_emoji']}{received_data['NXTA-5']['diff_unit']})\n"
+                    f"`NXTA-3` : {received_data['NXTA-3']['max_bps_unit']} ({received_data['NXTA-3']['diff_emoji']}{received_data['NXTA-3']['diff_unit']})\n"
+                    f"`NXTB-COM` : {received_data['NXTB-COM']['max_bps_unit']} ({received_data['NXTB-COM']['diff_emoji']}{received_data['NXTB-COM']['diff_unit']})\n"
+                    f"`NXTB-10` : {received_data['NXTB-10']['max_bps_unit']} ({received_data['NXTB-10']['diff_emoji']}{received_data['NXTB-10']['diff_unit']})\n"
+                    f"`NXTB-5` : {received_data['NXTB-5']['max_bps_unit']} ({received_data['NXTB-5']['diff_emoji']}{received_data['NXTB-5']['diff_unit']})\n"
+                    f"`NXTB-3` : {received_data['NXTB-3']['max_bps_unit']} ({received_data['NXTB-3']['diff_emoji']}{received_data['NXTB-3']['diff_unit']})\n"
+                ),
+                "mrkdwn_in": ["text", "title"]
+            }
+        ]
+    try:
+        response = client.chat_postMessage(channel=channel, blocks=blocks, attachments=attachments)
 
     except SlackApiError as e:
         if e.response['status_code'] == 429:
@@ -502,6 +506,122 @@ async def send_monitor_webhook_to_slack(request: Request):
             time.sleep(retry_after)
         else:
             print(f"failed_message_sending: {e.response['error']}, {e.response['status_code']}")
+
+
+@app.post("/webhook/slack/{net_gubn}")
+async def send_monitor_webhook_to_slack(net_gubn:str, request: Request):
+    received_data = await request.json()
+    print(f"daily_data: {received_data}")
+    market = received_data["market"]
+    time_range = ""
+    emoji = ""
+    if market == "프리":
+        market = "프리장"
+        time_range = "07:58~08:01"
+        emoji = ":sun:"
+    elif market == "정규":
+        market = "정규장"
+        time_range = "08:58~09:01"
+        emoji = ":gogo_dancer:"
+    elif market == "에프터":
+        market = "에프터장"
+        time_range = "15:38~15:41"
+        emoji = ":sunset:"
+
+    # data = received_data["data"]
+    # print(f"Received data: {data}")
+    # channel = "network-test"
+    channel = "network-monitor"
+
+    convert_to_message_format(received_data, net_gubn, market, time_range, emoji)
+
+    # try:
+    #     response = client.chat_postMessage(
+    #         channel=channel,  # 예: "#general" 또는 "C12345678"
+    #         # text= f"*[{market}] 회원사 장시간 MAX 트래픽*",
+    #         blocks=[
+    #             {
+    #                 "type": "section",
+    #                 "text":{
+    #                     "type": "mrkdwn",
+    #                     "text": f"*{emoji} [{market}-{time_range}] 주문망 트래픽*"
+    #                 }
+    #             }
+    #         ],
+    #         attachments=[
+    #             {
+    #                 "color": "#439FE0",
+    #                 "title": f"회원사_1그룹",
+    #                 "text": (
+    #                     f"`전체증권사` : {received_data['ALL_SECUTIES']['max_bps_unit']} ({received_data['ALL_SECUTIES']['diff_emoji']}{received_data['ALL_SECUTIES']['diff_unit']})\n"
+    #                     f"`KB [100M]` : {received_data['KB']['max_bps_unit']} ({received_data['KB']['diff_emoji']}{received_data['KB']['diff_unit']})\n"
+    #                     f"`KR_HQ [100M]` : {received_data['KR_HQ']['max_bps_unit']} ({received_data['KR_HQ']['diff_emoji']}{received_data['KR_HQ']['diff_unit']})\n"
+    #                     f"`KR_KT [100M]` : {received_data['KR_KT']['max_bps_unit']} ({received_data['KR_KT']['diff_emoji']}{received_data['KR_KT']['diff_unit']})\n"
+    #                     f"`MR [200M]` : {received_data['MR']['max_bps_unit']} ({received_data['MR']['diff_emoji']}{received_data['MR']['diff_unit']})\n"
+    #                     f"`KW [100M]` : {received_data['KW']['max_bps_unit']} ({received_data['KW']['diff_emoji']}{received_data['KW']['diff_unit']})\n"
+    #                     f"`SH [50M]` : {received_data['SH']['max_bps_unit']} ({received_data['SH']['diff_emoji']}{received_data['SH']['diff_unit']})\n"
+    #                     f"`NH [50M]` : {received_data['NH']['max_bps_unit']} ({received_data['NH']['diff_emoji']}{received_data['NH']['diff_unit']})\n"
+    #                     f"`SS [50M]` : {received_data['SS']['max_bps_unit']} ({received_data['SS']['diff_emoji']}{received_data['SS']['diff_unit']})\n"
+    #                     f"`KY [50M]` : {received_data['KY']['max_bps_unit']} ({received_data['KY']['diff_emoji']}{received_data['KY']['diff_unit']})\n"
+    #                     f"`YU [50M]` : {received_data['YU']['max_bps_unit']} ({received_data['YU']['diff_emoji']}{received_data['YU']['diff_unit']})\n"
+    #                     f"`TS [50M]` : {received_data['TS']['max_bps_unit']} ({received_data['TS']['diff_emoji']}{received_data['TS']['diff_unit']})\n"
+    #                 ),
+    #                 "mrkdwn_in": ["text", "title"]
+    #             },
+    #             {
+    #                 "color": "#90EE90",
+    #                 "title": f"회원사_2그룹",
+    #                 "text": (
+    #                     f"`DA [50M]` : {received_data['DA']['max_bps_unit']} ({received_data['DA']['diff_emoji']}{received_data['DA']['diff_unit']})\n"
+    #                     f"`DB [50M]` : {received_data['DB']['max_bps_unit']} ({received_data['DB']['diff_emoji']}{received_data['DB']['diff_unit']})\n"
+    #                     f"`BN [50M]` : {received_data['BN']['max_bps_unit']} ({received_data['BN']['diff_emoji']}{received_data['BN']['diff_unit']})\n"
+    #                     f"`EU [50M]` : {received_data['EU']['max_bps_unit']} ({received_data['EU']['diff_emoji']}{received_data['EU']['diff_unit']})\n"
+    #                     f"`HD [50M]` : {received_data['HD']['max_bps_unit']} ({received_data['HD']['diff_emoji']}{received_data['HD']['diff_unit']})\n"
+    #                     f"`HN [50M]` : {received_data['HN']['max_bps_unit']} ({received_data['HN']['diff_emoji']}{received_data['HN']['diff_unit']})\n"
+    #                     f"`HW [50M]` : {received_data['HW']['max_bps_unit']} ({received_data['HW']['diff_emoji']}{received_data['HW']['diff_unit']})\n"
+    #                     f"`KA [50M]` : {received_data['KA']['max_bps_unit']} ({received_data['KA']['diff_emoji']}{received_data['KA']['diff_unit']})\n"
+    #                     f"`LS [50M]` : {received_data['LS']['max_bps_unit']} ({received_data['LS']['diff_emoji']}{received_data['LS']['diff_unit']})\n"
+    #                     f"`ME [50M]` : {received_data['ME']['max_bps_unit']} ({received_data['ME']['diff_emoji']}{received_data['ME']['diff_unit']})\n"
+    #                     f"`SK [50M]` : {received_data['SK']['max_bps_unit']} ({received_data['SK']['diff_emoji']}{received_data['SK']['diff_unit']})\n"                        
+    #                     f"`SY [50M]` : {received_data['SY']['max_bps_unit']} ({received_data['SY']['diff_emoji']}{received_data['SY']['diff_unit']})\n"
+    #                     f"`IM [50M]` : {received_data['IM']['max_bps_unit']} ({received_data['IM']['diff_emoji']}{received_data['IM']['diff_unit']})\n"
+    #                 ),
+    #                 "mrkdwn_in": ["text", "title"]
+    #             },
+    #             {
+    #                 "color": "#9370DB",
+    #                 "title": f"PB이용사",
+    #                 "text": (
+    #                     f"`BK [50M]` : {received_data['BK']['max_bps_unit']} ({received_data['BK']['diff_emoji']}{received_data['BK']['diff_unit']})\n"
+    #                     f"`DO [50M]` : {received_data['DO']['max_bps_unit']} ({received_data['DO']['diff_emoji']}{received_data['DO']['diff_unit']})\n"
+    #                     f"`DS [50M]` : {received_data['DS']['max_bps_unit']} ({received_data['DS']['diff_emoji']}{received_data['DS']['diff_unit']})\n"
+    #                     f"`HY [50M]` : {received_data['HY']['max_bps_unit']} ({received_data['HY']['diff_emoji']}{received_data['HY']['diff_unit']})\n"
+    #                     f"`IB [50M]` : {received_data['IB']['max_bps_unit']} ({received_data['IB']['diff_emoji']}{received_data['IB']['diff_unit']})\n"
+    #                     f"`LD [50M]` : {received_data['LD']['max_bps_unit']} ({received_data['LD']['diff_emoji']}{received_data['LD']['diff_unit']})\n"
+    #                     f"`WR [50M]` : {received_data['WR']['max_bps_unit']} ({received_data['WR']['diff_emoji']}{received_data['WR']['diff_unit']})\n"
+    #                 ),
+    #                 "mrkdwn_in": ["text", "title"]
+    #             },
+    #             {
+    #                 "color": "#D2B48C",
+    #                 "title": f"대외기관",
+    #                 "text": (
+    #                     f"`FIMS [1G]` : {received_data['FIMS']['max_bps_unit']} ({received_data['FIMS']['diff_emoji']}{received_data['FIMS']['diff_unit']})\n"                        
+    #                     f"`KRX [2G]` : {received_data['KRX']['max_bps_unit']} ({received_data['KRX']['diff_emoji']}{received_data['KRX']['diff_unit']})\n"
+    #                     f"`STOCK-NET [45M]` : {received_data['STOCK-NET']['max_bps_unit']} ({received_data['STOCK-NET']['diff_emoji']}{received_data['STOCK-NET']['diff_unit']})\n"
+    #                 ),
+    #                 "mrkdwn_in": ["text", "title"]
+    #             }
+    #         ]
+    #     )
+
+    # except SlackApiError as e:
+    #     if e.response['status_code'] == 429:
+    #         retry_after = int(e.response.headers.get("Retry-After", 1))
+    #         print(f"Rate limited. Retrying after {retry_after} seconds...")
+    #         time.sleep(retry_after)
+    #     else:
+    #         print(f"failed_message_sending: {e.response['error']}, {e.response['status_code']}")
 
 
 def send_to_slack_message(channel, message_title, message_body):
