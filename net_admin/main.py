@@ -390,7 +390,7 @@ async def send_zabbix_webhook_to_slack(request: Request):
     )
 
 
-@app.post("/webhook/slack")
+@app.post("/webhook/slack/{net_gubn}")
 async def send_monitor_webhook_to_slack(request: Request):
     received_data = await request.json()
     print(f"daily_data: {received_data}")
