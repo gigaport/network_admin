@@ -406,7 +406,7 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
         attachments=[
                 {
                     "color": "#439FE0",
-                    "title": f"회원사_1그룹",
+                    "title": f"<회원사_1그룹>",
                     "text": (
                         f"`전체증권사` : {received_data['ALL_SECUTIES']['max_bps_unit']} ({received_data['ALL_SECUTIES']['diff_emoji']}{received_data['ALL_SECUTIES']['diff_unit']})\n"
                         f"`KB [100M]` : {received_data['KB']['max_bps_unit']} ({received_data['KB']['diff_emoji']}{received_data['KB']['diff_unit']})\n"
@@ -425,7 +425,7 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                 },
                 {
                     "color": "#90EE90",
-                    "title": f"회원사_2그룹",
+                    "title": f"<회원사_2그룹>",
                     "text": (
                         f"`DA [50M]` : {received_data['DA']['max_bps_unit']} ({received_data['DA']['diff_emoji']}{received_data['DA']['diff_unit']})\n"
                         f"`DB [50M]` : {received_data['DB']['max_bps_unit']} ({received_data['DB']['diff_emoji']}{received_data['DB']['diff_unit']})\n"
@@ -445,7 +445,7 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                 },
                 {
                     "color": "#9370DB",
-                    "title": f"PB이용사",
+                    "title": f"<PB이용사>",
                     "text": (
                         f"`BK [50M]` : {received_data['BK']['max_bps_unit']} ({received_data['BK']['diff_emoji']}{received_data['BK']['diff_unit']})\n"
                         f"`DO [50M]` : {received_data['DO']['max_bps_unit']} ({received_data['DO']['diff_emoji']}{received_data['DO']['diff_unit']})\n"
@@ -459,7 +459,7 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
                 },
                 {
                     "color": "#D2B48C",
-                    "title": f"대외기관",
+                    "title": f"<대외기관>",
                     "text": (
                         f"`FIMS [1G]` : {received_data['FIMS']['max_bps_unit']} ({received_data['FIMS']['diff_emoji']}{received_data['FIMS']['diff_unit']})\n"                        
                         f"`KRX [2G]` : {received_data['KRX']['max_bps_unit']} ({received_data['KRX']['diff_emoji']}{received_data['KRX']['diff_unit']})\n"
@@ -482,7 +482,7 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
         attachments=[
             {
                 "color": "#90EE90",
-                "title": f"시세상품",
+                "title": f"<시세상품>",
                 "text": (
                     f"`NXTA-COM` : {received_data['NXTA-COM']['max_bps_unit']} ({received_data['NXTA-COM']['diff_emoji']}{received_data['NXTA-COM']['diff_unit']})\n"
                     f"`NXTA-10` : {received_data['NXTA-10']['max_bps_unit']} ({received_data['NXTA-10']['diff_emoji']}{received_data['NXTA-10']['diff_unit']})\n"
