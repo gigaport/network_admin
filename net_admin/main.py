@@ -405,10 +405,17 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
         ]
         attachments=[
                 {
+                    "color": "#FF6666",
+                    "title": f"<회원사_1그룹>",
+                    "text": (
+                        f"`전체증권사 [{received_data['ALL_SECUTIES']['bd_usage']}/40G]` : {received_data['ALL_SECUTIES']['max_bps_unit']} ({received_data['ALL_SECUTIES']['diff_emoji']}{received_data['ALL_SECUTIES']['diff_unit']})"
+                    ),
+                    "mrkdwn_in": ["text", "title"]
+                },
+                {
                     "color": "#439FE0",
                     "title": f"<회원사_1그룹>",
                     "text": (
-                        f"`전체증권사 [{received_data['ALL_SECUTIES']['bd_usage']}/40G]` : {received_data['ALL_SECUTIES']['max_bps_unit']} ({received_data['ALL_SECUTIES']['diff_emoji']}{received_data['ALL_SECUTIES']['diff_unit']})\n"
                         f"`KB [{received_data['KB']['bd_usage']}/100M]` : {received_data['KB']['max_bps_unit']} ({received_data['KB']['diff_emoji']}{received_data['KB']['diff_unit']})\n"
                         f"`KR_HQ [{received_data['KR_HQ']['bd_usage']}/100M]` : {received_data['KR_HQ']['max_bps_unit']} ({received_data['KR_HQ']['diff_emoji']}{received_data['KR_HQ']['diff_unit']})\n"
                         f"`KR_KT [{received_data['KR_KT']['bd_usage']}/100M]` : {received_data['KR_KT']['max_bps_unit']} ({received_data['KR_KT']['diff_emoji']}{received_data['KR_KT']['diff_unit']})\n"
