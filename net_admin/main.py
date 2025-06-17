@@ -406,7 +406,7 @@ def convert_to_message_format(received_data, net_gubn, market, time_range, emoji
         attachments=[
                 {
                     "color": "#FF6666",
-                    "title": f"<회원사_1그룹>",
+                    "title": f"<전체증권사>",
                     "text": (
                         f"`전체증권사 [{received_data['ALL_SECUTIES']['bd_usage']}/40G]` : {received_data['ALL_SECUTIES']['max_bps_unit']} ({received_data['ALL_SECUTIES']['diff_emoji']}{received_data['ALL_SECUTIES']['diff_unit']})"
                     ),
