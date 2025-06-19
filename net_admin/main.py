@@ -383,10 +383,17 @@ async def send_zabbix_webhook_to_slack(request: Request):
     if any(keyword not in data["event_name"] for keyword in ZABBIX_MUTE) :
         send_to_slack_message(channel, main_text, message_body)
 
+    response_data = {
+        "result": True,
+        "response": {
+            "code": 200,
+            "message": "[OK]send to message."
+        }
+    }
 
     return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"result": "success", "detail": "전송송처리가 완료되었습니다."}
+        content=response_data,
+        headers={"Content-type": "application/json; charset=utf-8"}
     )
 
 
