@@ -393,7 +393,7 @@ async def send_zabbix_webhook_to_slack(request: Request):
 
     return JSONResponse(
         content=response_data,
-        headers={"Content-type": "application/json; charset=utf-8"}
+        headers={"Content-Type": "application/json; charset=utf-8"}
     )
 
 
