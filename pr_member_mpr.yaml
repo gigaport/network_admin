@@ -6,7 +6,7 @@ testbed:
       password: Sprtmxm1@3
 
 devices:
-  ky_r_px_ayks_n_mpr_01:
+  ky_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
