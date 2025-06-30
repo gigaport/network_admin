@@ -6,7 +6,7 @@ testbed:
       password: Sprtmxm1@3
 
 devices:
-  PPKY_MPR_L3_01:
+  ky_r_px_ayks_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -16,7 +16,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPSH_MPR_L3_01:
+  sh_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -26,7 +26,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPSH_MPR_L3_03:
+  sh_1_px_ydkt_n_mpr_03:
     os: nxos
     type: switch
     connections:
@@ -36,7 +36,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM", "B-10", "B-COM"]
-  PPKR_MPR_L3_01:
+  kr_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -46,7 +46,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-3", "A-10", "A-COM", "B-3", "B-10", "B-COM"]
-  PPKR_MPR_L3_03:
+  kr_2_px_ydkr_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -56,7 +56,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM", "B-10", "B-COM"]
-  PPDS_MPR_L3_01:
+  da_1_px_wrda_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -66,7 +66,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPMR_MPR_L3_01:
+  mr_1_px_ydmr_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -76,7 +76,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPSY_MPR_L3_01:
+  sy_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -86,7 +86,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPEU_MPR_L3_01:
+  eu_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -96,7 +96,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPME_MPR_L3_01:
+  me_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -106,7 +106,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPNH_MPR_L3_01:
+  nh_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -116,7 +116,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPNH_MPR_L3_03:
+  nh_2_px_ydnh_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -126,7 +126,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPKB_MPR_L3_01:
+  kb_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -136,7 +136,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPKB_MPR_L3_03:
+  kb_2_px_kpkb_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -146,7 +146,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPHW_MPR_L3_01:
+  hw_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -156,7 +156,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPHD_MPR_L3_01:
+  hd_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -166,7 +166,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPYU_MPR_L3_01:
+  yu_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -176,7 +176,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPSK_MPR_L3_01:
+  sk_1_px_ydsk_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -186,7 +186,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPSS_MPR_L3_01:
+  ss_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -196,7 +196,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPDB_MPR_L3_01:
+  db_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -206,7 +206,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPIM_MPR_L3_01:
+  im_1_px_ydim_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -216,7 +216,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPKW_MPR_L3_01:
+  kw_2_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -226,7 +226,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPKW_MPR_L3_03:
+  kw_3_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -236,7 +236,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPHN_MPR_L3_03:
+  hn_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -246,7 +246,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPHN_MPR_L3_01:
+  hn_2_px_crhn_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -256,7 +256,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPLS_MPR_L3_01:
+  ls_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -266,7 +266,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPKA_MPR_L3_01:
+  ka_1_px_kslg_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -276,7 +276,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPDO_MPR_L3_01:
+  do_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -286,7 +286,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPDO_MPR_L3_03:
+  do_2_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -296,7 +296,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPTS_MPR_L3_01:
+  ts_1_px_yslg_n_mpr_01:
     os: nxos
     type: switch
     connections:
@@ -306,7 +306,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  PPPB_MPR_L3_01:
+  pb_1_px_ydkx_n_mpr_01:
     os: nxos
     type: switch
     connections:
