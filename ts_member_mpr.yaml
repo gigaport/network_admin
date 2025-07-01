@@ -206,7 +206,7 @@ devices:
     custom:
       groups: ["test"]
       join_products: ["A-10", "A-COM"]
-  kw_3_tx_mdkt_n_mpr_01:
+  kw_3_tx_ydkt_n_mpr_01:
     os: nxos
     type: switch
     connections:
