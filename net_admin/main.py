@@ -265,7 +265,7 @@ async def send_zabbix_webhook_to_slack(request: Request):
         attachment_color = "#3bc95c"
         message_body = {
                 "color": attachment_color,
-                "mrkdwn_in": ["fields"],
+                "mrkdwn_in": ["text", "fields"],
                 "fields": [
                     {
                         "title": "대상장비",
@@ -324,7 +324,7 @@ async def send_zabbix_webhook_to_slack(request: Request):
         if dic_problem_line is None: ## 일반 장애 시
             message_body = {
                 "color": attachment_color,
-                "mrkdwn_in": ["fields"],
+                "mrkdwn_in": ["text", "fields"],
                 "fields": [
                     {
                         "title": "대상장비",
@@ -369,7 +369,7 @@ async def send_zabbix_webhook_to_slack(request: Request):
         else : ## 회선 장애 시
             message_body = {
                 "color": attachment_color,
-                "mrkdwn_in": ["fields"],
+                "mrkdwn_in": ["text", "fields"],
                 "fields": [
                     {
                         "title": "대상장비",
