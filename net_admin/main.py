@@ -209,7 +209,6 @@ async def send_planka_webhook_to_slack(request: Request):
     attachments=[
         {
             "color": "#90EE90",
-            "title": f"{data['event']}",
             "text": (
                 f"사용자명: {data['user']['name']}\n"
                 f"보드명: {data['data']['included']['boards'][0]['name']}\n"
