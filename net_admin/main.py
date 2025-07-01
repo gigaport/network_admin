@@ -195,9 +195,48 @@ async def send_planka_webhook_to_slack(request: Request):
     data = await request.json()
     print(f'[planka_alert_webhook_body] : {data}')
 
+    channel = "network-업무진행사항"
+
+    blocks=[
+        {
+            "type": "section",
+            "text":{
+                "type": "mrkdwn",
+                "text": f"*{data['event']}*"
+            }
+        }
+    ]
+    attachments=[
+        {
+            "color": "#90EE90",
+            "title": f"{data['event']}",
+            "text": (
+                f"사용자명: {data['user']['name']}\n"
+                f"보드명: {data['data']['included']['boards'][0]['name']}\n"
+                f"구분: {data['data']['included']['lists'][0]['name']}\n"
+                f"카드명: {data['data']['item']['name']}\n"
+                f"카드설명: {data['data']['item']['description']}\n"
+                f"목표일: {data['data']['item']['dueDate']}\n"
+
+            ),
+            "mrkdwn_in": ["text", "title"]
+        }
+    ]
+
+    try:
+        response = client.chat_postMessage(channel=channel, blocks=blocks, attachments=attachments)
+
+    except SlackApiError as e:
+        if e.response['status_code'] == 429:
+            retry_after = int(e.response.headers.get("Retry-After", 1))
+            print(f"Rate limited. Retrying after {retry_after} seconds...")
+            time.sleep(retry_after)
+        else:
+            print(f"failed_message_sending: {e.response['error']}, {e.response['status_code']}")
+
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"result": "success", "detail": "전송송처리가 완료되었습니다."}
+        content={"result": "success", "detail": "전송처리가 완료되었습니다."}
     )
 
 
@@ -210,7 +249,7 @@ async def send_zabbix_webhook_to_slack(request: Request):
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"result": "success", "detail": "전송송처리가 완료되었습니다."}
+        content={"result": "success", "detail": "전송처리가 완료되었습니다."}
     )
 
 @app.post("/webhook/zabbix")
