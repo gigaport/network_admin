@@ -226,7 +226,7 @@ async def send_planka_webhook_to_slack(request: Request):
     elif data['event'] == 'taskUpdate' or data['event'] == 'taskCreate':
         attachments=[
             {
-                "color": "#90EE95",
+                "color": "#faf697",
                 "text": (
                     f"사용자명: {data['user']['name']}\n"
                     f"보드명: {data['data']['included']['boards'][0]['name']}\n"
@@ -242,7 +242,7 @@ async def send_planka_webhook_to_slack(request: Request):
     elif data['event'] == 'commentUpdate' or data['event'] == 'commentCreate':
         attachments=[
             {
-                "color": "#90EE95",
+                "color": "#97f4fa",
                 "text": (
                     f"사용자명: {data['user']['name']}\n"
                     f"보드명: {data['data']['included']['boards'][0]['name']}\n"
