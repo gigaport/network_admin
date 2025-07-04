@@ -247,7 +247,7 @@ async def send_planka_webhook_to_slack(request: Request):
                     f"구분: {data['data']['included']['lists'][0]['name']}\n"
                     f"카드명: {data['data']['included']['cards'][0]['name']}\n\n"
                     f"Comment: \n"
-                    f"```{data['data']['item']['text']}\n```"
+                    f"```{data['data']['item']['text']}```"
                 ),
                 "mrkdwn_in": ["text", "title"]
             }
