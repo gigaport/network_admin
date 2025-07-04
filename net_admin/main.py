@@ -206,21 +206,54 @@ async def send_planka_webhook_to_slack(request: Request):
             }
         }
     ]
-    attachments=[
-        {
-            "color": "#90EE90",
-            "text": (
-                f"사용자명: {data['user']['name']}\n"
-                f"보드명: {data['data']['included']['boards'][0]['name']}\n"
-                f"구분: {data['data']['included']['lists'][0]['name']}\n"
-                f"카드명: {data['data']['item']['name']}\n"
-                f"카드설명: {data['data']['item']['description']}\n"
-                f"목표일: {data['data']['item']['dueDate']}\n"
 
-            ),
-            "mrkdwn_in": ["text", "title"]
-        }
-    ]
+    if data['event'] == 'cardUpdate' or data['event'] == 'cardCreate':
+        attachments=[
+            {
+                "color": "#90EE90",
+                "text": (
+                    f"사용자명: {data['user']['name']}\n"
+                    f"보드명: {data['data']['included']['boards'][0]['name']}\n"
+                    f"구분: {data['data']['included']['lists'][0]['name']}\n"
+                    f"카드명: {data['data']['item']['name']}\n"
+                    f"카드설명: {data['data']['item']['description']}\n"
+                    f"목표일: {data['data']['item']['dueDate']}\n"
+
+                ),
+                "mrkdwn_in": ["text", "title"]
+            }
+        ]
+    elif data['event'] == 'taskUpdate' or data['event'] == 'taskCreate':
+        attachments=[
+            {
+                "color": "#90EE95",
+                "text": (
+                    f"사용자명: {data['user']['name']}\n"
+                    f"보드명: {data['data']['included']['boards'][0]['name']}\n"
+                    f"구분: {data['data']['included']['lists'][0]['name']}\n"
+                    f"Task명: {data['data']['item']['name']}\n"
+                    f"완료여부: {data['data']['item']['isCompleted']}\n"
+                    f"목표일: {data['data']['item']['dueDate']}\n"
+
+                ),
+                "mrkdwn_in": ["text", "title"]
+            }
+        ]
+    elif data['event'] == 'commentUpdate' or data['event'] == 'commentCreate':
+        attachments=[
+            {
+                "color": "#90EE95",
+                "text": (
+                    f"사용자명: {data['user']['name']}\n"
+                    f"보드명: {data['data']['included']['boards'][0]['name']}\n"
+                    f"구분: {data['data']['included']['lists'][0]['name']}\n"
+                    f"카드명: {data['data']['included']['cards'][0]['name']}\n"
+                    f"Comment: {data['data']['item']['text']}\n"
+                ),
+                "mrkdwn_in": ["text", "title"]
+            }
+        ]
+
 
     try:
         response = client.chat_postMessage(channel=channel, blocks=blocks, attachments=attachments)
