@@ -233,7 +233,6 @@ async def send_planka_webhook_to_slack(request: Request):
                     f"구분: {data['data']['included']['lists'][0]['name']}\n"
                     f"Task명: {data['data']['item']['name']}\n"
                     f"완료여부: {data['data']['item']['isCompleted']}\n"
-                    f"목표일: {data['data']['item']['dueDate']}\n"
 
                 ),
                 "mrkdwn_in": ["text", "title"]
