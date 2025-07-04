@@ -231,6 +231,7 @@ async def send_planka_webhook_to_slack(request: Request):
                     f"사용자명: {data['user']['name']}\n"
                     f"보드명: {data['data']['included']['boards'][0]['name']}\n"
                     f"구분: {data['data']['included']['lists'][0]['name']}\n"
+                    f"카드명: *{data['data']['included']['cards'][0]['name']}*\n"
                     f"Task명: *{data['data']['item']['name']}*\n"
                     f"완료여부: `{data['data']['item']['isCompleted']}`\n"
                 ),
@@ -245,7 +246,7 @@ async def send_planka_webhook_to_slack(request: Request):
                     f"사용자명: {data['user']['name']}\n"
                     f"보드명: {data['data']['included']['boards'][0]['name']}\n"
                     f"구분: {data['data']['included']['lists'][0]['name']}\n"
-                    f"카드명: {data['data']['included']['cards'][0]['name']}\n\n"
+                    f"카드명: *{data['data']['included']['cards'][0]['name']}*\n\n"
                     f"Comment: \n"
                     f"```{data['data']['item']['text']}```"
                 ),
