@@ -1,4 +1,4 @@
-import json, logging, re, time, html, sys, asyncio, requests
+import json, logging, re, time, html, sys, asyncio, requests, os
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from fastapi import FastAPI
@@ -24,7 +24,7 @@ from genie.libs.parser.nxos.show_pim import ShowIpPimRp
 # 스레드풀 생성
 executor = ThreadPoolExecutor(max_workers=60)
 
-slack_token = "***REMOVED***9015318325377-9019974153362-woHLnGBnxMBrwG9I1Z5EiPKX"
+slack_token = os.getenv("SLACK_TOKEN")
 client = WebClient(token=slack_token)
 
 TODAY_STR = datetime.today().strftime('%Y-%m-%d')
