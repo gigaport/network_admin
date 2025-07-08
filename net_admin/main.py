@@ -291,6 +291,10 @@ async def send_zabbix_webhook_to_slack(request: Request):
     print(f'[zabbix_alert_webhook_body] : {data}')
 
     channel = "network-alert-critical"
+
+    # event_name 필드가 "*"가 아닌 경우에만 채널을 변경
+    if data['event_name'] not in "*" :
+        channel = "network-alert-endpoint"
     
     if data['event_value'] == '0' : ## 장애해소
         main_text = f":green-check-mark: {data['hostname']} >> {data['event_name']}"
