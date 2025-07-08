@@ -17,7 +17,7 @@ E_THIRTY_SECONDS_AGO = int(THIRTY_SECONDS_AGO.timestamp())
 pre_from_time_str = "2025-05-20 07:58"
 regular_from_time_str = "2025-05-20 08:58"
 after_from_time_str = "2025-05-20 15:38"
-test_from_time_str = "2025-05-20 23:39"
+test_from_time_str = "2025-05-20 23:48"
 to_time_str   = "2025-05-20 08:51"
 bind_value    = 61
 # ===========================
