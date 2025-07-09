@@ -1,4 +1,5 @@
 import json, logging, re, time, html, sys, asyncio, uvicorn, os
+from dotenv import load_dotenv
 from repynery import Repynery
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -25,7 +26,10 @@ from genie.libs.parser.nxos.show_interface import ShowInterfaceStatus
 from genie.libs.parser.nxos.show_mcast import ShowIpMrouteVrfAll
 from genie.libs.parser.nxos.show_pim import ShowIpPimRp
 
+# .env 파일에서 환경 변수 로드
+load_dotenv()
 
+# FastAPI 애플리케이션 생성
 app = FastAPI(root_path="/api")
 
 # SLACK
