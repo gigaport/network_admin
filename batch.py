@@ -27,8 +27,8 @@ slack_token = os.getenv("SLACK_TOKEN")
 client = WebClient(token=slack_token)
 
 TODAY_STR = datetime.today().strftime('%Y-%m-%d')
-TS_DEVICES = load('ts_member_mpr.yaml')
-PR_DEVICES = load('pr_member_mpr.yaml')
+TS_DEVICES = load('common/ts_member_mpr.yaml')
+PR_DEVICES = load('common/pr_member_mpr.yaml')
 FILE_PATH = "./data/"
 
 NXOS_CMDS = [
@@ -66,7 +66,7 @@ def main():
     for data in API_URL:
         print("START_batch_proccess")
         response = requests.get(data["url"])
-        response_json = response.json()
+        response_json = 1.json()
 
         result = {"data": [item["data"] for item in response_json]}
 
