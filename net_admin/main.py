@@ -183,7 +183,14 @@ async def send_planka_webhook_to_slack(request: Request):
     data = await request.json()
     print(f'[planka_alert_webhook_body] : {data}')
 
-    channel = "network-업무진행사항"
+    channel = "network-업무-진행"
+    
+    # 리스트 명칭안에 '검토'라는 단어가 포함되어 있는지 확인
+    if '검토' in data['data']['included']['lists'][0]['name'] or '계약' in data['data']['included']['lists'][0]['name']:
+        channel = "network-업무-검토"
+    # 리스트 명칭안에 '완료'라는 단어가 포함되어 있는지 확인
+    elif '완료' in data['data']['included']['lists'][0]['name']:
+        channel = "network-업무-완료"
 
     blocks=[
         {

@@ -15,7 +15,7 @@ NOW = timezone.localtime()
 TODAY_STR = datetime.today().strftime('%Y-%m-%d')
 TODAY_TIME = datetime.today().strftime('%Y-%m-%d %H:%M')
 
-def index (request): 
+def index (request):
     org_path = request.path.strip('/')
     path = f"{org_path}.html"
     
