@@ -40,8 +40,8 @@ TODAY_TIME = datetime.today().strftime('%Y-%m-%d %H:%M')
 executor = ThreadPoolExecutor(max_workers=60)
 
 TODAY_STR = datetime.today().strftime('%Y-%m-%d')
-TS_DEVICES = load('../ts_member_mpr.yaml')
-PR_DEVICES = load('../pr_member_mpr.yaml')
+TS_DEVICES = load('../common/ts_member_mpr.yaml')
+PR_DEVICES = load('../common/pr_member_mpr.yaml')
 FILE_PATH = "./data/"
 
 # pyATS 로거 설정 (로그 출력 비활성화)
