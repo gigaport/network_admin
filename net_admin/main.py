@@ -276,11 +276,11 @@ async def send_planka_webhook_to_slack(request: Request):
 
 
 @app.post("/webhook/grafana")
-async def send_zabbix_webhook_to_slack(request: Request):
+async def send_grafana_webhook_to_slack(request: Request):
     print(f'[grafana_alert_webhook_request] : {request}')
 
     data = await request.json()
-    print(f'[grafana_alert_webhook_body] : {data}')
+    print(f'[grafana_alert_webhook_body]ß : {data}')
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,
@@ -864,9 +864,9 @@ def send_message_to_slack(channel:str, message_info: Dict):
 @app.get("/collect/{target}")
 async def collect_data(target: str):
     if target == "pr":
-        targets = load('../pr_member_mpr.yaml')
+        targets = load('../common/pr_member_mpr.yaml')
     elif target == "ts":
-        targets = load('../ts_member_mpr.yaml')
+        targets = load('../common/ts_member_mpr.yaml')
     else:
         return JSONResponse(content={"error": "알 수 없는 대상"}, status_code=404)
 
@@ -1178,58 +1178,3 @@ def parse_uptime(uptime:str):
     return total_days
 
 
-# @app.get("/lampad")
-# async def execute_collect():
-#     kst = timezone(timedelta(hours=9))
-#     kst_now = datetime.now(kst)
-#     epoch_kst_now = int(kst_now.timestamp())
-#     kst_from = kst_now - timedelta(seconds=120)
-#     epoch_kst_from = int(kst_from.timestamp())
-
-#     loop = asyncio.get_event_loop()
-#     tasks = [
-#         loop.run_in_executor(executor, collect_data, tag, epoch_kst_from, epoch_kst_now)
-#         for tag in tag_values
-#     ]
-
-#     results = await asyncio.gather(*tasks)
-#     return results
-
-# def collect_data(tag, epoch_kst_from, epoch_kst_now):
-#     print(f"\n=== Processing Tag: {tag} ===")
-# #    print(f"kst_now : {E_NOW_DATETIME}, E_THIRTY_SECONDS_AGO : {E_THIRTY_SECONDS_AGO}")
-
-#     # 데이터 요청
-#     error = r1.request_data_generation(feedname, {
-#         'from': epoch_kst_from,
-#         'to': epoch_kst_now,
-#         'type': 'bps',
-#         'base': 'bytes',
-#         'tags': tag
-#     })
-#     if error != '':
-#         print(f"Error for tag {tag}: {error}")
-
-#     # 결과 조회
-#     get_parameters = {'bind': bind_value}
-#     status = r1.get_result({})
-#     while status != 200:
-#         if status < 300:
-#             status = r1.get_result(get_parameters)
-#         else:
-#             print(f"Failed to get result for tag {tag}. Status code: {status}")
-#             continue
-
-#     # 결과 저장
-#     try:
-#         decoded = r1.result.decode('utf-8')
-#         fixed_json = re.sub(r'(\w+):"', r'"\1":"', decoded)
-#         fixed_json = re.sub(r'(\w+):', r'"\1":', fixed_json)
-#         data = json.loads(fixed_json)
-#         data[0]['tag'] = tag
-#         print(f">> {tag} : {data[0]}")
-
-#         return data[0]
-    
-#     except Exception as e:
-#         print(f"❌ Failed to process result for tag {tag}: {e}")
