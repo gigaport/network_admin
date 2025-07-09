@@ -66,7 +66,7 @@ def main():
     for data in API_URL:
         print("START_batch_proccess")
         response = requests.get(data["url"])
-        response_json = 1.json()
+        response_json = response.json()
 
         result = {"data": [item["data"] for item in response_json]}
 
