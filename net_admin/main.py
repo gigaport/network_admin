@@ -251,8 +251,12 @@ async def send_planka_webhook_to_slack(request: Request):
                 ),
                 "mrkdwn_in": ["text", "title"]
             }
-        ]
-
+        ]ß
+    else:
+        return JSONResponse(   
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"result": "error", "detail": "지원하지 않는 이벤트입니다."}
+        )
 
     try:
         response = client.chat_postMessage(channel=channel, blocks=blocks, attachments=attachments)

@@ -5,8 +5,9 @@ db.sqlite3
 .log
 .pot
 .env
-.venv
+.venvß
 *.bak
+*.log
 
 /staticfiles
 /media
