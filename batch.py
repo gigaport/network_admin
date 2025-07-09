@@ -193,12 +193,12 @@ def send_slack_message(message_info: Dict):
     except SlackApiError as e:
         print("메시지 전송 실패:", e.response["error"])
 
-
+ß
 def check_multicast_info(market_gubn, members_mroute):
-    path = f"./net_admin/members_info.json"
+    path = f"./common/members_info.json"
     members_info:Dict = openJsonFile(path)
 
-    path = f"./net_admin/{market_gubn}_mpr_multicast_info.json"
+    path = f"./common/{market_gubn}_mpr_multicast_info.json"
     mpr_multicast_info:Dict = openJsonFile(path)
 
     ## 데이터 유무 검증
