@@ -1,6 +1,5 @@
 import json, logging, re, time, html, sys, asyncio, uvicorn, os
 from dotenv import load_dotenv
-from repynery import Repynery
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from fastapi import FastAPI, Request, status
@@ -140,21 +139,6 @@ LINE_INFO = [
     {'id':345443, 'name':'하나은행_환전 (백업회선)', 'isp':'LGU+', 'speed':'20M', 'no':'5002-5875-0288', 'owner':'토스증권', 'location':'', 'manager':'이승환 차장', 'tel':'02-3466-4863', 'mobile':'', 'email':'nuri1998@hanafn.com', 'isp_tel':'1588-0114'},
     {'id':41564, 'name':'연합인포 (백업회선)', 'isp':'LGU+', 'speed':'30M', 'no':'5002-2906-2603', 'owner':'토스증권', 'location':'', 'manager':'정진홍 차장', 'tel':'010-8722-5104', 'mobile':'', 'email':'jhjung2@yna.co.kr', 'isp_tel':'1588-0114'},
 ]
-
-# === [ 사용자 설정 영역 ] ===
-feedname = "COR_ASN"
-tag_values = ["ALL_SECUTIES","KB","KR_HQ","KR_KT","MR", "KW", "SH","NH","SS","KRX","STOCK-NET"]  # 여러 태그 지정 (리스트로 작성)
-bind_value = 121
-
-# 서버 접속 및 로그인
-# print("Log in")
-# r1 = Repynery(False, "172.24.32.47", 8080, "lampad", "Sprtmxm1@3")
-# if not r1.login():
-#     print("Failed to login. Check connection information")
-#     exit(-1)
-# else:
-#     print(f'Logged in. Token: {r1.token}, Tag: {r1.tag}')
-
 
 
 @app.get("/")
@@ -337,16 +321,6 @@ async def send_zabbix_webhook_to_slack(request: Request):
                         "value": f"`{data['event_duration']}`",
                         "short": False,
                     }
-                    # {
-                    #     "title": "발생내용",
-                    #     "value": f"{data['event_name']}",
-                    #     "short": False,
-                    # },
-                    # {
-                    #     "title": "현재상태",
-                    #     "value": f"`{data['opdata']}`",
-                    #     "short": False,
-                    # },
                 ],
                 "event_name":{
                     "title": "발생내용",
