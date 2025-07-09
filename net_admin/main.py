@@ -251,7 +251,7 @@ async def send_planka_webhook_to_slack(request: Request):
                 ),
                 "mrkdwn_in": ["text", "title"]
             }
-        ]ß
+        ]
     else:
         return JSONResponse(   
             status_code=status.HTTP_400_BAD_REQUEST,
