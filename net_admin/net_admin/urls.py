@@ -21,9 +21,9 @@ from django.urls import path, include
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('', include('app.urls')),
-    path('multicast/', include('app.multicast.urls')),
-    path('pr_multicast/', include('app.multicast.urls')),
-    path('ts_multicast/', include('app.multicast.urls')),
-    path('pr_info_multicast/', include('app.multicast.urls')),
+    path('multicast/', include('multicast.urls')),
+    path('pr_multicast/', include('multicast.urls')),
+    path('ts_multicast/', include('multicast.urls')),
+    path('pr_info_multicast/', include('multicast.urls')),
     path('index', include('app.urls')),
 ]
