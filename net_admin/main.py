@@ -754,6 +754,7 @@ def send_message_to_slack(channel:str, message_info: Dict):
 
 @app.get("/collect/{target}")
 async def collect_data(target: str):
+    print(f"[collect_data] target: {target}")
     if target == "pr":
         targets = load('../common/pr_member_mpr.yaml')
     elif target == "ts":
