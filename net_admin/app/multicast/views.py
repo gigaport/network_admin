@@ -54,16 +54,16 @@ def init (request):
 
         ## 회원사 or 정보이용사 정보 가져오기 ##
         if sub_menu == "pr_multicast" or sub_menu == "ts_multicast":
-            path = f"../../common/members_info.json"
+            path = f"../common/members_info.json"
         elif sub_menu == "pr_info_multicast":
-            path = f"../../common/information_info.json"
+            path = f"../common/information_info.json"
 
         client_info:Dict = openJsonFile(path)
         
         if sub_menu == "pr_multicast" or sub_menu == "pr_info_multicast": 
-            path = f"../../common/pr_mpr_multicast_info.json"
+            path = f"../common/pr_mpr_multicast_info.json"
         elif sub_menu == "ts_multicast": 
-            path = f"../../common/ts_mpr_multicast_info.json"
+            path = f"../common/ts_mpr_multicast_info.json"
 
         mpr_multicast_info:Dict = openJsonFile(path)
 
