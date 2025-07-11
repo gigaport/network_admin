@@ -4,7 +4,6 @@
 import requests
 import json
 import os
-import sys
 from dotenv import load_dotenv
 from typing import Dict, Any 
 from requests.auth import HTTPBasicAuth
@@ -16,11 +15,8 @@ NETBOX_TOKEN = os.getenv("NETBOX_TOKEN")
 NETBOX_URL = os.getenv("NETBOX_URL", "http://172.30.32.221:80")
 
 def main():
-    tag = sys.argv[1] if len(sys.argv) > 1 else ""
-    manufacturer = sys.argv[2] if len(sys.argv) > 2 else ""
-
     try:
-        device_info = get_netbox_device_info(tag=tag, manufacturer=manufacturer)    
+        device_info = get_netbox_device_info()
         print(f"Device Info: {device_info}")
     except Exception as e:
         print(f"Error fetching device info: {e}")
