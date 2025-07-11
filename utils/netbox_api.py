@@ -42,7 +42,7 @@ def get_netbox_device_info() -> Dict[str, Any]:
         return response.json()
     else:
         raise Exception(f"Failed to fetch data from NetBox: {response.status_code} - {response.text}")
-    1
+    
 
 if __name__ == "__main__":
     main()
