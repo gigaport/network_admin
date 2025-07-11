@@ -22,7 +22,7 @@ def main():
         print(f"Error fetching device info: {e}")
 
 # tag값이 없을경우 전체 장비 정보를 가져옵니다.
-def get_netbox_device_info(tag: str = "network") -> Dict[str, Any]:
+def get_netbox_device_info(tag: str = "", manufacturer: str = "") -> Dict[str, Any]:
     """
     NetBox API를 사용하여 네트워크 장비 정보를 가져옵니다.
     
@@ -39,8 +39,18 @@ def get_netbox_device_info(tag: str = "network") -> Dict[str, Any]:
     # tag 값이 없을경우 전체 장비 정보를 가져옵니다.
     # 예시: tag 값이 'test'인 장비 정보를 가져옵니다.
     # response = requests.get(f"{NETBOX_URL}/api/dcim/devices/?tag=test", headers=headers)
-
-    response = requests.get(f"{NETBOX_URL}/api/dcim/devices/?tag={tag}", headers=headers)
+    # manufacturer = "Cisco" 값도 추가하여 특정 제조사 장비만 가져올 수 있습니다.
+    # response = requests.get(f"{NETBOX_URL}/api/dcim/devices/?manufacturer=Cisco&tag={tag}", headers=headers)
+    # tag 값이 없을경우 전체 장비 정보를 가져옵니다.
+    if not tag:
+        response = requests.get(f"{NETBOX_URL}/api/dcim/devices/", headers=headers)
+    else:
+        # tag 값이 있을 경우 해당 tag를 가진 장비 정보를 가져옵니다.
+        # 예시: tag 값이 'network'인 장비 정보를 가져옵니다.
+        # 2023-10-30 현재 NetBox API에서 tag 필터링은 지원하지 않습니다.
+        # 따라서, tag 값을 사용하여 필터링할 수 없습니다.
+        # 대신, 모든 장비 정보를 가져온 후, 클라이언트 측에서 필터링해야 합니다.
+        response = requests.get(f"{NETBOX_URL}/api/dcim/devices/?tag={tag}&manufacturer={manufacturer}", headers=headers)
 
     if response.status_code == 200:
         print(f"Successfully fetched data from NetBox: {response.status_code}")
