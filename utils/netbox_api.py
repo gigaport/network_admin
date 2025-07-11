@@ -21,7 +21,8 @@ def main():
     except Exception as e:
         print(f"Error fetching device info: {e}")
 
-def get_netbox_device_info() -> Dict[str, Any]:
+# tag값이 없을경우 전체 장비 정보를 가져옵니다.
+def get_netbox_device_info(tag: str = "NETWORK") -> Dict[str, Any]:
     """
     NetBox API를 사용하여 네트워크 장비 정보를 가져옵니다.
     
@@ -34,7 +35,12 @@ def get_netbox_device_info() -> Dict[str, Any]:
         'Content-Type': 'application/json',
     }
 
-    response = requests.get(f"{NETBOX_URL}/api/dcim/devices/", headers=headers)
+    # tag 값을 사용하여 특정 장비 정보를 가져옵니다.
+    # tag 값이 없을경우 전체 장비 정보를 가져옵니다.
+    # 예시: tag 값이 'test'인 장비 정보를 가져옵니다.
+    # response = requests.get(f"{NETBOX_URL}/api/dcim/devices/?tag=test", headers=headers)
+
+    response = requests.get(f"{NETBOX_URL}/api/dcim/devices/?tag={tag}", headers=headers)
 
     if response.status_code == 200:
         print(f"Successfully fetched data from NetBox: {response.status_code}")
