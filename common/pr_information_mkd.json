@@ -1,0 +1,272 @@
+{
+  "devices": {
+    "ib_1_px_ydib_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.68.1.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-10",
+          "A-COM"
+        ]
+      }
+    },
+    "ib_1_px_ydib_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.68.2.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-10",
+          "A-COM"
+        ]
+      }
+    },
+    "yn_1_px_ghyn_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.202.1.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    },
+    "yn_1_px_ghyn_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.202.2.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    },
+    "wr_1_px_mdkt_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.79.1.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-10",
+          "A-COM"
+        ]
+      }
+    },
+    "wr_1_px_mdkt_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.79.2.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-10",
+          "A-COM"
+        ]
+      }
+    },
+    "bl_1_px_mdkt_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.203.1.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    },
+    "bl_1_px_mdkt_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.203.2.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    },
+    "bl_2_px_mdkt_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.203.1.6",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    },
+    "bl_2_px_mdkt_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.203.2.6",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    },
+    "kg_1_px_kslg_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.204.1.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    },
+    "kg_1_px_kslg_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.204.2.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    },
+    "sa_1_px_sysa_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.29.1.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-10",
+          "A-COM"
+        ]
+      }
+    },
+    "sa_1_px_sysa_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.29.2.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-10",
+          "A-COM"
+        ]
+      }
+    },
+    "ld_1_px_ydld_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.52.1.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-10",
+          "A-COM"
+        ]
+      }
+    },
+    "ld_1_px_ydld_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.52.2.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-10",
+          "A-COM"
+        ]
+      }
+    },
+    "tm_1_px_scsk_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.201.1.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    },
+    "tm_1_px_scsk_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.201.2.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    },
+    "ic_1_px_ydkt_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.204.1.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    },
+    "ic_2_px_ydkt_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.204.2.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM"
+        ]
+      }
+    }
+  }
+}

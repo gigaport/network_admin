@@ -266,7 +266,7 @@ devices:
     custom:
       groups: ["test"]
       join_products: ["A-10", "A-COM"]
-  ts_1_tx_yslg_c_com_01:
+  ts_1_tx_yslg_n_com_01:
     os: nxos
     type: switch
     connections:
