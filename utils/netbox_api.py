@@ -22,7 +22,7 @@ def main():
         print(f"Error fetching device info: {e}")
 
 # tag값이 없을경우 전체 장비 정보를 가져옵니다.
-def get_netbox_device_info(tag: str = "NETWORK") -> Dict[str, Any]:
+def get_netbox_device_info(tag: str = "network") -> Dict[str, Any]:
     """
     NetBox API를 사용하여 네트워크 장비 정보를 가져옵니다.
     
