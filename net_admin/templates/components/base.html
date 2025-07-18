@@ -119,6 +119,60 @@
                         <div class="d-flex align-items-center"><span class="nav-link-text">[정보이용사-본가동] 시세현황</span>
                         </div>
                       </a>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "ts_info_multicast" %} active {% endif %}" href="/ts_info_multicast">
+                        <div class="d-flex align-items-center"><span class="nav-link-text">[정보이용사-테스트] 시세현황</span>
+                        </div>
+                      </a>
+                    </ul>
+                  </div>
+                </div>
+            <!-- </ul>
+            <ul class="navbar-nav flex-column" id="navbarVerticalNav"> -->
+              <!-- <li class="nav-item">
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-home" role="button" data-bs-toggle="collapse" aria-expanded="true" aria-controls="nv-home">
+                    <div class="d-flex align-items-center">
+                      <div class="dropdown-indicator-icon-wrapper"><span class="fas fa-caret-right dropdown-indicator-icon"></span></div><span class="nav-link-icon"><span data-feather="pie-chart"></span></span><span class="nav-link-text">Home</span>
+                    </div>
+                  </a>
+                  <div class="parent-wrapper label-1">
+                    <ul class="nav collapse parent show" data-bs-parent="#navbarVerticalCollapse" id="nv-home">
+                      <li class="collapsed-nav-item-title d-none">Home
+                      </li>
+                      <li class="nav-item"><a class="nav-link active" href="index.html">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">E commerce</span>
+                          </div>
+                        </a>
+                    </ul>
+                  </div>
+                </div>
+              </li> -->
+              <li class="nav-item">
+                <!-- label-->
+                <p class="navbar-vertical-label">네트워크 정보메뉴
+                </p>
+                <hr class="navbar-vertical-line" />
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-SWINFO" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-SWINFO">
+                    <div class="d-flex align-items-center">
+                      <div class="dropdown-indicator-icon-wrapper"><span class="fas fa-caret-right dropdown-indicator-icon"></span></div><span class="nav-link-icon"><span data-feather="database"></span></span><span class="nav-link-text">스위치 정보제공</span>
+                    </div>
+                  </a>
+                  <div class="parent-wrapper label-1">
+                    <ul class="nav collapse parent {%  if parent_menu == "network_status_check" %} show {% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-SWINFO">
+                      <li class="collapsed-nav-item-title d-none">스위치정보</li>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "interface" %} active {% endif %}" href="/interface">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">인터페이스정보</span>
+                          </div>
+                        </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "arp" %} active {% endif %}" href="/arp">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">ARP정보</span>
+                          </div>
+                        </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "mac_address" %} active {% endif %}" href="/mac_address">
+                        <div class="d-flex align-items-center"><span class="nav-link-text">MAC어드레스정보</span>
+                        </div>
+                      </a>
                     </ul>
                   </div>
                 </div>

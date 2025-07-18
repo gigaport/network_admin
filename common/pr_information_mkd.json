@@ -137,7 +137,7 @@
     "kg_1_px_kslg_a_mkd_01": {
       "os": "eos",
       "type": "switch",
-      "ip": "99.204.1.2",
+      "ip": "99.205.1.2",
       "custom": {
         "groups": [
           "product"
@@ -150,7 +150,7 @@
     "kg_1_px_kslg_a_mkd_02": {
       "os": "eos",
       "type": "switch",
-      "ip": "99.204.2.2",
+      "ip": "99.205.2.2",
       "custom": {
         "groups": [
           "product"
@@ -251,7 +251,8 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "A-COM",
+          "A-10"
         ]
       }
     },
@@ -264,7 +265,36 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "A-COM",
+          "A-10"
+        ]
+      }
+    },
+    "cp_1_px_ydcp_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.72.1.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM",
+          "A-10"
+        ]
+      }
+    },
+    "cp_1_px_ydcp_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.72.2.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM",
+          "A-10"
         ]
       }
     }

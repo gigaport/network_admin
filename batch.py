@@ -53,11 +53,11 @@ IOSXE_CMDS = [
 API_URL = [
     {
         "market_gubn":"pr",
-        "url":"http://127.0.0.1:8000/api/collect/pr"
+        "url":"http://127.0.0.1:8000/api/v1/network/collect/multicast/cisco/pr"
     },
     {
         "market_gubn":"ts",
-        "url":"http://127.0.0.1:8000/api/collect/ts"
+        "url":"http://127.0.0.1:8000/api/v1/network/collect/multicast/cisco/ts"
     }
 ]
 
@@ -69,6 +69,8 @@ def main():
         response_json = response.json()
 
         result = {"data": [item["data"] for item in response_json]}
+        # json result를 보기좋게 출력
+        # print(f"[{data['market_gubn']}] result: {json.dumps(result, indent=4, ensure_ascii=False)}")
 
         ## 확인필요 결과가 있을경우 슬랙으로 메세지 전송
         check_multicast_info(data["market_gubn"], result)
@@ -148,6 +150,10 @@ def openJsonFile(path):
 
 def merge_multicast_group_count(members_mroute:list, mpr_multicast_info:Dict):
     for idx, device in enumerate(members_mroute):
+        # products 키값 유무 확인하는 코드
+        if "products" not in device:
+            print(f"Device {device['device_name']} does not have 'products' key.")
+            break
         products = device["products"]
         total = 0
 

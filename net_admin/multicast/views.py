@@ -32,7 +32,7 @@ def init (request):
     today_str = datetime.today().strftime('%Y-%m-%d')
     today_time = datetime.today().strftime('%Y-%m-%d %H:%M')
 
-    print(f'[call_init_today] ==> {today_str}, {today_time}, {now} \n')
+    print(f'[CALL_INIT_TODAY] : {today_str}, {today_time}, {now} \n')
     response_data = []
 
     if request.method == "GET":
@@ -46,37 +46,52 @@ def init (request):
         elif sub_menu == "pr_info_multicast":
             market_gubn = "pr_information"
 
-        print(f"sub_menu => {sub_menu}, market_gubn => {market_gubn}")
+        print(f"[SUB_MENU] : {sub_menu}, [MARKET_GUBN] : {market_gubn}")
 
-        path = f"../data/{market_gubn}_mroute_{today_str}.json"
-        print(f"PATH : {path}")
-        members_mroute:Dict = openJsonFile(path)
+        # market_gubn이 pr_information인 경우 (Arista 멀티캐스트 정보 수집)
+        if market_gubn == "pr_information":
+            api_url = "http://127.0.0.1:8000/api/v1/network/collect/multicast/arista/pr"
+            print(f"[CALL_API] ==> {api_url}")
+            response = requests.get(api_url)
+            if response.status_code == 200:
+                data = response.json()
+                print(f"[API_RESPONSE] : {data}")
+                response_data = data
+            else:
+                print(f"[API_ERROR] : {response.status_code} - {response.text}")
+                return HttpResponse(status=response.status_code, content=response.text)
+        # market_gubn이 pr_members 또는 ts_members인 경우 (cisco 멀티캐스트 정보 수집)
+        else:
+            path = f"../data/{market_gubn}_mroute_{today_str}.json"
+            print(f"PATH : {path}")
+            members_mroute:Dict = openJsonFile(path)
 
-        ## 회원사 or 정보이용사 정보 가져오기 ##
-        if sub_menu == "pr_multicast" or sub_menu == "ts_multicast":
-            path = f"../common/members_info.json"
-        elif sub_menu == "pr_info_multicast":
-            path = f"../common/information_info.json"
+            ## 회원사 or 정보이용사 정보 가져오기 ##
+            if sub_menu == "pr_multicast" or sub_menu == "ts_multicast":
+                path = f"../common/members_info.json"
+            elif sub_menu == "pr_info_multicast":
+                path = f"../common/information_info.json"
 
-        client_info:Dict = openJsonFile(path)
-        
-        if sub_menu == "pr_multicast" or sub_menu == "pr_info_multicast": 
-            path = f"../common/pr_mpr_multicast_info.json"
-        elif sub_menu == "ts_multicast": 
-            path = f"../common/ts_mpr_multicast_info.json"
+            client_info:Dict = openJsonFile(path)
+            
+            if sub_menu == "pr_multicast" or sub_menu == "pr_info_multicast": 
+                path = f"../common/pr_mpr_multicast_info.json"
+            elif sub_menu == "ts_multicast": 
+                path = f"../common/ts_mpr_multicast_info.json"
 
-        mpr_multicast_info:Dict = openJsonFile(path)
+            mpr_multicast_info:Dict = openJsonFile(path)
 
-        ## 데이터 유무 검증
-        if members_mroute and client_info and mpr_multicast_info:
-        ## 01. member_info <- 시세 멀티캐스트그룹 수신 개수 삽입
-        ## 02. member_mroute <- member_info 정보 삽입
-            merge_members_mroute = merge_multicast_group_count(members_mroute['data'], mpr_multicast_info)
-            # print(f"[merge_members_info]\n{merge_members_info}\n\n")
-            # print(f"[members_mroute['data']]\n{members_mroute['data']}")
+            ## 데이터 유무 검증
+            if members_mroute and client_info and mpr_multicast_info:
+            ## 01. member_info <- 시세 멀티캐스트그룹 수신 개수 삽입
+            ## 02. member_mroute <- member_info 정보 삽입
+                merge_members_mroute = merge_multicast_group_count(members_mroute['data'], mpr_multicast_info)
+                # print(f"[merge_members_info]\n{merge_members_info}\n\n")
+                # print(f"[members_mroute['data']]\n{members_mroute['data']}")
 
-            response_data = create_member_sise_info(merge_members_mroute, client_info, today_time)
-    
+                response_data = create_member_sise_info(merge_members_mroute, client_info, today_time)
+
+        print(f"SUB_MENU => {sub_menu}, MARKET_GUBN => {market_gubn}")
     
     # data meta info setting
     # meta = {'page': 1, 'pages': 1, 'perpage': -1, 'total': len(json_data['device_info']), 'sort': 'asc', 'field': 'id'}
@@ -196,7 +211,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, updated_time
         print(f"ALARM_ICON: {alarm_icon}")
         
         temp = {
-            "id" : idx+1,
+            # "id" : idx+1,
             "updated_time": updated_time,
             "member_no": member_no,
             "member_code": member_code,

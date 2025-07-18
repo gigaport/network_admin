@@ -19,8 +19,14 @@
             response_data = response;
             
             const table = document.getElementById('multicast_table');
+
+            if (currentPath == 'pr_multicast' || currentPath == 'ts_multicast') {
             document.getElementById("contents_title").innerText = 'last updated : '+ response_data[0]['updated_time'];
-  
+            }
+            else if (currentPath == 'pr_info_multicast') {
+                document.getElementById("contents_title").innerText = '정보이용사는 실시간 정보';
+            }
+
             if (table) {
                 const options = {
                     page: 100,
