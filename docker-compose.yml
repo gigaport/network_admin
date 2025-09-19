@@ -1,0 +1,135 @@
+version: '3.8'
+
+x-common-env: &common_env
+  TZ: Asia/Seoul
+
+services:
+  postgres-db:
+    image: postgres:13
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: nxt_nms_db
+      POSTGRES_USER: nextrade
+      POSTGRES_PASSWORD: Sprtmxm1@3
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_config:/etc/postgresql
+    command: >
+      postgres 
+      -c hba_file=/etc/postgresql/pg_hba.conf
+      -c config_file=/etc/postgresql/postgresql.conf
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # FastAPI 서비스
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile.netview_fastapi
+    container_name: netview_fastapi
+    env_file: .env
+    environment:
+      <<: *common_env
+      PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      PYTHONPATH: /app
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./fastapi:/app
+      - ./common:/app/common:ro
+      - ~/.ssh:/root/.ssh:ro
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload --log-level info
+    depends_on:
+      - redis
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7
+    container_name: redis
+    environment:
+      <<: *common_env
+    networks:
+      - app-network
+
+  # 배치 작업 서비스
+  batch:
+    build:
+      context: .
+      dockerfile: Dockerfile.batch
+    container_name: network-admin-batch
+    env_file: .env
+    environment:
+      <<: *common_env
+      PYTHONPATH: /app
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./common:/app/common:ro
+      - ~/.ssh:/root/.ssh:ro
+    depends_on:
+      - fastapi
+      - postgres-db
+    networks:
+      - app-network
+    restart: unless-stopped
+
+# Django 웹 애플리케이션
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile.netview_django
+      target: production
+    image: netview_django:latest
+    container_name: netview_django
+    environment:
+      <<: *common_env
+      POSTGRES_DB: nxt_nms_db
+      POSTGRES_USER: nextrade
+      POSTGRES_PASSWORD: Sprtmxm1@3
+      POSTGRES_HOST: postgres-db
+      POSTGRES_PORT: 5432
+      DJANGO_SETTINGS_MODULE: net_admin.settings
+      PYTHONPATH: /app
+    ports:
+      - "8080:8080"  # Django 웹 인터페이스
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./common:/app/common
+      - ./net_admin/static:/app/net_admin/static
+      - ./net_admin/staticfiles:/app/net_admin/staticfiles
+      - ~/.ssh:/root/.ssh:ro
+    depends_on:
+      - postgres-db
+    networks:
+      - app-network
+    restart: unless-stopped
+    command: >
+      bash -c "
+        cd /app/net_admin &&
+        python manage.py migrate &&
+        python manage.py collectstatic --noinput &&
+        python manage.py runserver 0.0.0.0:8080
+      "
+
+volumes:
+  postgres_data:
+    driver: local
+  # redis_data:
+  #   driver: local
+  # ssh_keys:
+  #   driver: local
+  # batch_logs:
+  #   driver: local
+
+networks:
+  app-network:
+    driver: bridge
+

@@ -66,17 +66,17 @@ devices:
     custom:
       groups: ["test"]
       join_products: ["A-10", "A-COM"]
-  sy_1_tx_mdkt_c_com_01:
+  sy_r_tx_ydsy_c_com_01:
     os: iosxe
     type: switch
     connections:
       default:
         protocol: ssh
-        ip: 50.6.1.51
+        ip: 50.6.9.41
     custom:
       groups: ["test"]
       join_products: ["A-10", "A-COM"]
-  eu_1_tx_ydkt_n_mpr_01:
+  eu_1_tx_ydkt_c_mpr_01:
     os: iosxe
     type: switch
     connections:
@@ -216,7 +216,7 @@ devices:
     custom:
       groups: ["test"]
       join_products: ["A-10", "A-COM"]
-  hn_2_tx_crhn_n_mpr_01:
+  hn_2_tx_crhn_c_mpr_01:
     os: iosxe
     type: switch
     connections:
@@ -256,7 +256,7 @@ devices:
     custom:
       groups: ["test"]
       join_products: ["A-10", "A-COM"]
-  do_2_tx_mdkt_n_mpr_01:
+  do_2_tx_mdkt_c_mpr_01:
     os: iosxe
     type: switch
     connections:
@@ -286,7 +286,7 @@ devices:
     custom:
       groups: ["test"]
       join_products: ["A-10", "A-COM"]
-  pb_1_tx_ydkx_c_com_01:
+  pb_1_tx_ydkx_n_com_01:
     os: nxos
     type: switch
     connections:

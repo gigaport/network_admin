@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app',
-    'multicast'
+    'multicast',
+    'information',
 ]
 
 MIDDLEWARE = [
@@ -85,11 +86,11 @@ WSGI_APPLICATION = 'net_admin.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'nxt_nms_db',
-        'USER': 'nextrade',
-        'PASSWORD': 'Sprtmxm1@3',
-        'HOST': '172.30.32.200',
-        'PORT': '5432',
+        'NAME': os.environ.get('POSTGRES_DB', 'nxt_nms_db'),
+        'USER': os.environ.get('POSTGRES_USER', 'nextrade'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'Sprtmxm1@3'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'postgres-db'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
 

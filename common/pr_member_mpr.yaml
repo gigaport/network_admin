@@ -16,6 +16,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
+  ky_2_px_ydkt_n_mpr_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.1.2.21
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
   sh_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -36,6 +46,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM", "B-10", "B-COM"]
+  sh_r_pr_issh_c_com_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.2.9.51
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
   kr_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -66,6 +86,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
+  da_r_pr_jgda_n_com_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.4.9.51
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
   mr_1_px_ydmr_n_mpr_01:
     os: nxos
     type: switch
@@ -76,6 +106,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
+  mr_r_pr_nhlg_c_com_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.5.9.51
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
   sy_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -83,6 +123,16 @@ devices:
       default:
         protocol: ssh
         ip: 50.6.1.21
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
+  sy_r_pr_ydsy_c_com_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.6.9.51
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -106,6 +156,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
+  me_2_px_ydkt_n_mpr_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.10.2.21
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
   nh_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -123,6 +183,16 @@ devices:
       default:
         protocol: ssh
         ip: 50.12.2.21
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
+  nh_r_px_uwnh_n_mpr_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.12.9.21
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -146,6 +216,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
+  kb_r_px_ydkb_c_mpr_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.17.9.21
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
   hw_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -153,6 +233,16 @@ devices:
       default:
         protocol: ssh
         ip: 50.21.1.21
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
+  hw_r_px_yihw_n_mpr_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.21.9.21
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -166,6 +256,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
+  hd_r_pr_pjhd_c_com_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.22.9.51
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
   yu_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -173,6 +273,16 @@ devices:
       default:
         protocol: ssh
         ip: 50.24.1.21
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
+  yu_r_pr_bdkt_n_mpr_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.24.9.21
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -186,6 +296,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
+  sk_r_pr_pksk_c_com_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.25.9.51
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
   ss_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -196,6 +316,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
+  ss_r_pr_ccss_c_com_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.30.9.51
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
   db_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -203,6 +333,16 @@ devices:
       default:
         protocol: ssh
         ip: 50.31.1.21
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
+  db_2_px_yddb_n_mpr_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.31.2.21
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -236,6 +376,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
+  kw_r_pr_scsk_c_com_01:
+    os: iosxe
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.50.9.51
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
   hn_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -256,6 +406,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
+  hn_r_px_jjhn_n_mpr_02:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.56.9.22
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
   ls_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -273,6 +433,16 @@ devices:
       default:
         protocol: ssh
         ip: 50.69.1.21
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
+  ka_r_px_pkka_n_mpr_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.69.9.21
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
@@ -303,6 +473,16 @@ devices:
       default:
         protocol: ssh
         ip: 50.77.1.21
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM"]
+  ts_r_pr_pclg_n_mpr_02:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.77.9.22
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]

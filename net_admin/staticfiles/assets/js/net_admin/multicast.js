@@ -18,6 +18,11 @@
         success: function(response){
             response_data = response;
             
+            const togglePaginationButtonDisable = (button, disabled) => {
+                button.disabled = disabled;
+                button.classList[disabled ? 'add' : 'remove']('disabled');
+            };
+
             const table = document.getElementById('multicast_table');
 
             if (currentPath == 'pr_multicast' || currentPath == 'ts_multicast') {
@@ -57,8 +62,8 @@
                             check_result_badge
                         } = values;
                         return `
-                            <tr class="member_no hover-actions-trigger btn-reveal-trigger position-static">
-                            <td class="py-2  ps-3 align-middle white-space-nowrap text-center">
+                            <tr class="tr_list hover-actions-trigger btn-reveal-trigger position-static">
+                            <td class="member_no py-2  ps-3 align-middle white-space-nowrap text-center">
                                 ${member_no}
                             </td>
                             <td class="member_code py-2 align-middle text-center fw-bold">

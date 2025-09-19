@@ -1,23 +1,62 @@
+# Byte-compiled / optimized / DLL files
 *.pyc
 __pycache__/
-db.sqlite3
-.so
-.log
-.pot
-.env
-.venvß
-*.bak
-*.log
+*.py[cod]
+*$py.class
 
+# Django stuff
+db.sqlite3
+*.log
+local_settings.py
+
+# Static files
 /staticfiles
 /media
+
+# Environments
+.env
+.venv/
 venv/
 env/
-.venv/
 .ENV/
+
+# Project specific
 /data
-*.sqlite3
-db.sqlite3
-gunicorn.sock
-.txt
+/logs
+batch.log
+*.Zone.Identifier
+
+# Backup files
+*.bak
+
+# Container and Podman specific
+postgres_config/
+ssh_keys/
+
+# Generated container files
+Containerfile.prod
+podman-compose.override.yml
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Text files
 *.txt
+.txt
+
+# Socket files
+gunicorn.sock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

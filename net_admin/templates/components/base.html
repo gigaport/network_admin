@@ -28,6 +28,9 @@
     <script src="{% static 'assets/js/config.js' %}"></script>
     <script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
 
+    <!-- DataTables CSS & JS -->
+    <link href="{% static 'assets/css/datatables.min.css' %}" rel="stylesheet">
+    <script src="{% static 'assets/js/datatables.min.js' %}"></script>
 
     <!-- ===============================================-->
     <!--    Stylesheets-->
@@ -111,21 +114,24 @@
                         </a>
                       </li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "ts_multicast" %} active {% endif %}" href="/ts_multicast">
-                          <div class="d-flex align-items-center"><span class="nav-link-text">[회원사-테스트] 시세현황</span>
+                            <div class="d-flex align-items-center"><span class="nav-link-text">[회원사-테스트] 시세현황</span>
+                            </div>
+                          </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "pr_info_multicast" %} active {% endif %}" href="/pr_info_multicast">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">[정보이용사-본가동] 시세현황</span>
                           </div>
                         </a>
                       </li>
-                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "pr_info_multicast" %} active {% endif %}" href="/pr_info_multicast">
-                        <div class="d-flex align-items-center"><span class="nav-link-text">[정보이용사-본가동] 시세현황</span>
-                        </div>
-                      </a>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "ts_info_multicast" %} active {% endif %}" href="/ts_info_multicast">
-                        <div class="d-flex align-items-center"><span class="nav-link-text">[정보이용사-테스트] 시세현황</span>
-                        </div>
-                      </a>
+                          <div class="d-flex align-items-center"><span class="nav-link-text">[개발중 정보이용사-테스트]</span>
+                          </div>
+                        </a>
+                      </li>
                     </ul>
                   </div>
                 </div>
+              </li>
             <!-- </ul>
             <ul class="navbar-nav flex-column" id="navbarVerticalNav"> -->
               <!-- <li class="nav-item">
@@ -157,25 +163,64 @@
                     </div>
                   </a>
                   <div class="parent-wrapper label-1">
-                    <ul class="nav collapse parent {%  if parent_menu == "network_status_check" %} show {% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-SWINFO">
+                    <ul class="nav collapse parent {%  if parent_menu == "network_information" %} show {% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-SWINFO">
                       <li class="collapsed-nav-item-title d-none">스위치정보</li>
-                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "interface" %} active {% endif %}" href="/interface">
-                          <div class="d-flex align-items-center"><span class="nav-link-text">인터페이스정보</span>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "pr_info_interface" %} active {% endif %}" href="/pr_info_interface">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">[본가동] 인터페이스정보</span>
                           </div>
                         </a>
                       </li>
-                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "arp" %} active {% endif %}" href="/arp">
-                          <div class="d-flex align-items-center"><span class="nav-link-text">ARP정보</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "mac_address" %} active {% endif %}" href="/mac_address">
-                        <div class="d-flex align-items-center"><span class="nav-link-text">MAC어드레스정보</span>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "ts_info_interface" %} active {% endif %}" href="/ts_info_interface">
+                        <div class="d-flex align-items-center"><span class="nav-link-text">[테스트] 인터페이스정보</span>
                         </div>
                       </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "pr_info_arp" %} active {% endif %}" href="/pr_info_arp">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">[본가동] ARP정보</span>
+                          </div>
+                        </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "ts_info_arp" %} active {% endif %}" href="/ts_info_arp">
+                        <div class="d-flex align-items-center"><span class="nav-link-text">[테스트] ARP정보</span>
+                        </div>
+                      </a>
+                      </li>
                     </ul>
                   </div>
                 </div>
+              </li>
+              <li class="nav-item">
+                <!-- label-->
+                <p class="navbar-vertical-label">관리자 메뉴
+                </p>
+                <hr class="navbar-vertical-line" />
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-ADMIN" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-ADMIN">
+                    <div class="d-flex align-items-center">
+                      <div class="dropdown-indicator-icon-wrapper"><span class="fas fa-caret-right dropdown-indicator-icon"></span></div><span class="nav-link-icon"><span data-feather="settings"></span></span><span class="nav-link-text">관리자 메뉴</span>
+                    </div>
+                  </a>
+                  <div class="parent-wrapper label-1">
+                    <ul class="nav collapse parent {%  if parent_menu == "network_status_check" %} show {% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-ADMIN">
+                      <li class="collapsed-nav-item-title d-none">스위치정보</li>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "switch" %} active {% endif %}" href="/switch">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">스위치 정보관리</span>
+                          </div>
+                        </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "etc" %} active {% endif %}" href="/etc">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">기타 설정</span>
+                          </div>
+                        </a>
+                      </li>
+                      <!-- <li class="nav-item"><a class="nav-link {%  if sub_menu == "mac_address" %} active {% endif %}" href="/mac_address">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">MAC어드레스정보</span>
+                          </div>
+                        </a>
+                      </li> -->
+                    </ul>
+                  </div>
+                </div>
+              </li>
             </ul>
           </div>
         </div>

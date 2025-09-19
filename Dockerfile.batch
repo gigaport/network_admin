@@ -1,0 +1,52 @@
+FROM python:3.11-slim
+
+# 시스템 업데이트 및 필수 패키지 설치
+RUN apt-get update && apt-get install -y \
+    cron \
+    openssh-client \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# 작업 디렉터리 설정
+WORKDIR /app
+
+# Python 의존성 파일 복사 및 설치
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 배치 작업 관련 파일들 복사
+COPY net_admin/batch.py /app/
+COPY fastapi/utils /app/utils/
+
+# 로그 디렉터리 생성
+RUN mkdir -p /app/logs
+
+# 환경변수 설정
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# crontab 설정 파일 복사 및 설정
+COPY batch-cron /etc/cron.d/batch-cron
+RUN chmod 0644 /etc/cron.d/batch-cron
+RUN crontab /etc/cron.d/batch-cron
+
+# Python 심볼릭 링크 생성 (존재하면 무시)
+RUN ln -sf /usr/local/bin/python3 /usr/local/bin/python || true
+
+# Python 경로 확인 및 시작 스크립트 생성
+RUN which python3 > /tmp/python_path && \
+    echo '#!/bin/bash' > /app/start.sh && \
+    echo 'echo "Starting batch container..."' >> /app/start.sh && \
+    echo 'echo "Python path: $(which python3)"' >> /app/start.sh && \
+    echo 'mkdir -p /app/logs' >> /app/start.sh && \
+    echo 'touch /app/logs/batch.log' >> /app/start.sh && \
+    echo 'service cron start' >> /app/start.sh && \
+    echo 'echo "Cron service started"' >> /app/start.sh && \
+    echo 'cd /app' >> /app/start.sh && \
+    echo '/usr/local/bin/python3 batch.py >> /app/logs/batch.log 2>&1 || echo "Initial batch run completed"' >> /app/start.sh && \
+    echo 'echo "Container is ready..."' >> /app/start.sh && \
+    echo 'while true; do sleep 60; echo "$(date): Container running"; done' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+# 컨테이너 시작 명령
+CMD ["/bin/bash", "/app/start.sh"]

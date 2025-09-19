@@ -1,0 +1,10 @@
+# 네트워크 배치 작업 crontab
+# 매분마다 batch.py 실행
+* * * * * cd /app && /usr/local/bin/python3 batch.py >> /app/logs/batch.log 2>&1
+
+# 매일 자정에 로그 파일 정리 (30일 이상 된 로그 파일 삭제)
+0 0 * * * find /app/logs -name "*.log" -type f -mtime +30 -delete
+
+# 매주 일요일 새벽 3시에 data 디렉터리 정리 (30일 이상 된 JSON 파일 삭제)
+0 3 * * 0 find /app/data -name "*.json" -type f -mtime +30 -delete
+

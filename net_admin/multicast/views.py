@@ -50,7 +50,7 @@ def init (request):
 
         # market_gubn이 pr_information인 경우 (Arista 멀티캐스트 정보 수집)
         if market_gubn == "pr_information":
-            api_url = "http://127.0.0.1:8000/api/v1/network/collect/multicast/arista/pr"
+            api_url = "http://fastapi:8000/api/v1/network/collect/multicast/arista/pr"
             print(f"[CALL_API] ==> {api_url}")
             response = requests.get(api_url)
             if response.status_code == 200:
