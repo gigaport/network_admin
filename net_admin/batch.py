@@ -136,6 +136,8 @@ def check_multicast_info(market_gubn, members_mroute):
     path = f"/app/common/{market_gubn}_mpr_multicast_info.json"
     mpr_multicast_info:Dict = OpenJsonFile(path)
 
+    logger.info(f"[DEBUG] rws_check_multicast_info")
+
     ## 데이터 유무 검증
     if members_mroute and members_info and mpr_multicast_info:
     ## 01. member_info <- 시세 멀티캐스트그룹 수신 개수 삽입
@@ -167,6 +169,8 @@ def merge_multicast_group_count(members_mroute:list, mpr_multicast_info:Dict):
 
 
 def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:str):
+    logger.info(f"[DEBUG] rws_create_member_sise_info")
+
     result = []
     member_no = 0
     member_code = ""
@@ -274,14 +278,14 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
 def SaveToMulticastJson(data, market_gubn):
     logger.info("SaveToMulticastJson...")
     ## write json
-    file_name = f"{FILE_PATH}{market_gubn}_members_mroute_{TODAY_STR}.json"
+    file_name = f"{FILE_PATH}{market_gubn}_members_mroute.json"
 
     with open(file_name, 'w', encoding='utf-8') as json_file:
         json.dump(data, json_file, indent=4, ensure_ascii=False)
 
 def SaveToCommonInfoJson(data, market_gubn):
     logger.info("SaveToCommonInfoJson...")
-    file_name = f"{FILE_PATH}{market_gubn}_cisco_common_info_{TODAY_STR}.json"
+    file_name = f"{FILE_PATH}{market_gubn}_cisco_common_info.json"
     logger.info("[DEBUG] 파일명: %s", file_name)
     logger.info("[DEBUG] 데이터 타입: %s", type(data))
     logger.info("[DEBUG] 데이터 길이: %s", len(data) if isinstance(data, (list, dict)) else 'N/A')
@@ -304,13 +308,13 @@ def SaveToCommonInfoJson(data, market_gubn):
 
 def SaveToInterfaceJson(data, market_gubn):
     logger.info("SaveToInterfaceJson...")
-    file_name = f"{FILE_PATH}{market_gubn}_cisco_interface_info_{TODAY_STR}.json"
+    file_name = f"{FILE_PATH}{market_gubn}_cisco_interface_info.json"
     with open(file_name, 'w', encoding='utf-8') as json_file:
         json.dump(data, json_file, indent=4, ensure_ascii=False)
 
 def SaveToArpJson(data, market_gubn):
     logger.info("SaveToArpJson...")
-    file_name = f"{FILE_PATH}{market_gubn}_cisco_arp_info_{TODAY_STR}.json"
+    file_name = f"{FILE_PATH}{market_gubn}_cisco_arp_info.json"
     with open(file_name, 'w', encoding='utf-8') as json_file:
         json.dump(data, json_file, indent=4, ensure_ascii=False)
 

@@ -336,7 +336,7 @@ except Exception as e:
 # 편의 함수들
 def send_message(channel: str, text: str, **kwargs) -> Dict[str, Any]:
     """간단한 메시지 전송 함수"""
-    if not slack_client:
+    if not send_message:
         logger.warning("Slack 클라이언트가 사용할 수 없습니다.")
         return {"ok": False, "warning": "Slack client not available"}
     return slack_client.send_message(channel, text, **kwargs)

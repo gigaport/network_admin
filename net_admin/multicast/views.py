@@ -62,7 +62,7 @@ def init (request):
                 return HttpResponse(status=response.status_code, content=response.text)
         # market_gubn이 pr_members 또는 ts_members인 경우 (cisco 멀티캐스트 정보 수집)
         else:
-            path = f"../data/{market_gubn}_mroute_{today_str}.json"
+            path = f"../data/{market_gubn}_mroute.json"
             print(f"PATH : {path}")
             members_mroute:Dict = openJsonFile(path)
 

@@ -40,6 +40,21 @@ CHANNEL_MAPPINGS = {
         "계약": "network-업무-검토",
         "완료": "network-업무-완료",
         "진행": "network-업무-진행"
+    },
+    "데이터베이스": {
+        "진행": "database-업무-진행",
+        "완료": "database-업무-완료",
+        "검토": "database-업무-검토",
+        "이슈": "database-업무-이슈",
+        "예정": "database-업무-예정",
+        "기타": "database-업무-기타"
+    },
+    "정보보안": {
+        "진행": "security-업무-진행",
+        "완료": "security-업무-완료",
+        "검토": "security-업무-검토",
+        "예정": "security-업무-예정",
+        "기타": "security-업무-기타"
     }
 }
 
@@ -55,9 +70,9 @@ class WebhookHandler:
             for keyword, channel in mappings.items():
                 if keyword in list_name:
                     return channel
-            # 기본값 반환
-            return mappings.get("진행", mappings.get("예정", "network-업무-진행"))
-        return "network-업무-진행"
+                # 기본값 반환
+                return mappings.get("기타", "unknown")
+        return "unknown"
     
     @staticmethod
     def create_planka_attachment(event_type: str, data: Dict) -> Dict:
