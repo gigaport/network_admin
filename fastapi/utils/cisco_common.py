@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta
 from pprint import pprint
 from urllib.parse import quote
 from typing import List, Dict, Tuple, Union, Optional
+from contextlib import redirect_stdout, redirect_stderr
 ## Netmiko 라이브러리
 from netmiko import ConnectHandler
 ## 장비관리 라이브러리
@@ -27,6 +28,9 @@ from genie.libs.parser.nxos.show_interface import ShowInterfaceDescription
 from genie.libs.parser.nxos.show_arp import ShowIpArp as ShowIpArpNxos
 # .env 파일에서 환경 변수 로드
 load_dotenv()
+
+# 로거 설정
+logger = logging.getLogger(__name__)
 
 # TIME
 KST = timezone(timedelta(hours=9))
@@ -116,7 +120,7 @@ def main():
 
 # geneie parser를 사용하여 정보를 수집하기 위한 첫번째 단계
 def Execute_GenieParser(device_name, cmd):
-    print(f"[00.network device {device_name} executing command...]")
+    logger.info(f"[00.network device {device_name} executing command...]")
     
     # 장비 정보 로드
     device_info = SelectToDeviceYAML(device_name)
@@ -125,7 +129,7 @@ def Execute_GenieParser(device_name, cmd):
 
     # 장비에 연결
     device_info = ConnectToDevice(device_info)
-    print(f"[01.network device {device_info.name} connected...]")
+    logger.info(f"[01.network device {device_info.name} connected...]")
     if not device_info:
         return None
 
@@ -143,10 +147,10 @@ def Execute_GenieParser(device_name, cmd):
 
     # parser가 None인 경우, 지원하지 않는 명령어이므로 종료
     if parser is None:
-        print(f"[ERROR] Unsupported command: {cmd}")
+        logger.error(f"[ERROR] Unsupported command: {cmd}")
         return None
     else:
-        print(f"[01-1.PARSER] ==> {parser.__class__.__name__} selected for command: {cmd}")
+        logger.info(f"[01-1.PARSER] ==> {parser.__class__.__name__} selected for command: {cmd}")
 
     # 명령어 실행
     cmd_response = Execute_Command(device_info, cli_command)
@@ -159,27 +163,27 @@ def Execute_GenieParser(device_name, cmd):
     # 연결 해제
     if device_info.connected:
         device_info.disconnect()
-        print("network device disconnected...")
+        # logger.info("network device disconnected...")
 
     return parsed_output
 
 
 # geneie parser를 사용하여 정보를 수집할 네트워크 장비를 지정
 def SelectToDeviceYAML(device_name):
-    print(f"[00.network device {device_name} selecting...]")
+    logger.info(f"[00.network device {device_name} selecting...]")
     data = load('/app/common/pr_member_mpr.yaml')
     try:
         device_info = data.devices[device_name]
-        print(f"[INFO] Device {device_info} found in PR devices.")
+        logger.info(f"[INFO] Device {device_info} found in PR devices.")
     except KeyError:
         try:
             device_info = data.devices[device_name]
         except KeyError:
-            print(f"[ERROR] Device {device_name} not found in TS or PR devices.")
+            logger.error(f"[ERROR] Device {device_name} not found in TS or PR devices.")
             return None
 
     if not device_info:
-        print(f"[ERROR] Device {device_name} not found.")
+        logger.error(f"[ERROR] Device {device_name} not found.")
         return None
 
     return device_info
@@ -187,7 +191,7 @@ def SelectToDeviceYAML(device_name):
 
 # geneie parser를 사용하기 위해 장비에 연결하는 함수
 def ConnectToDevice(device_info):
-    print(f"[01.network device {device_info.name} connecting...]")
+    # logger.info(f"[01.network device {device_info.name} connecting...]")
 
     """
     pyATS는 connect메서드 실행 시 자동으로 terminal timeout 설정을 무한(0)으로 설정한다.
@@ -206,8 +210,13 @@ def ConnectToDevice(device_info):
 
 # 명령어를 실행하는 함수
 def Execute_Command(device_info, cli_command):
-    print(f"[02.network device {device_info.name} executing command...]")
-    cmd_response = device_info.execute(cli_command, log=False)
+    # logger.info(f"[02.network device {device_info.name} executing command...]")
+    
+    # Python 레벨에서 stdout/stderr 차단 (더 안전함)
+    with open(os.devnull, 'w') as devnull:
+        with redirect_stdout(devnull), redirect_stderr(devnull):
+            cmd_response = device_info.execute(cli_command, log=False)
+    
     return cmd_response
 
 
@@ -250,11 +259,11 @@ def GetParserByCommand(cmd):
         return None
 
 def GetCiscoCommonInfo(device_info, device_name):
-    print(f"[DEBUG] {device_name} COLLECTING COMMON INFO...]")
+    # logger.info(f"[DEBUG] {device_name} COLLECTING COMMON INFO...]")2
 
     # 장비에 연결
     device_info = ConnectToDevice(device_info)
-    print(f"[DEBUG] {device_name} CONNECTED...")
+    # logger.info(f"[DEBUG] {device_name} CONNECTED...")
     if not device_info:
         return None
 
@@ -268,7 +277,7 @@ def GetCiscoCommonInfo(device_info, device_name):
     elif device_info.os == 'iosxe':
         cmds = IOSXE_CMDS
     else:
-        print(f"[ERROR] Unsupported OS: {device_info.os}")
+        logger.error(f"[ERROR] Unsupported OS: {device_info.os}")
         return {"error": f"Unsupported OS: {device_info.os}"}   
 
     for cmd in cmds:
@@ -276,26 +285,26 @@ def GetCiscoCommonInfo(device_info, device_name):
 
         # cmd_response 정상 체크
         if cmd_response is None:
-            print(f"[ERROR] Failed to execute command: {device_name}, {cmd['value']}")
+            logger.error(f"[ERROR] Failed to execute command: {device_name}, {cmd['value']}")
             continue
 
         # nxos이고, show_mac_address_dynamic 명령어 실행 시 genieparser 지원이 되지 않으므로 (없음) 별도 처리 필요
         # 명령어 실행 결과를 파싱하여 파싱된 데이터와 명령어로 실행한 아웃풋 값을 리턴
         if device_info.os == 'nxos' and cmd['key'] == 'show_mac_address_dynamic':
-            print(f"[DEBUG] {device_name} PARSING MAC_ADDRESS_DYNAMIC...")
+            logger.debug(f"[DEBUG] {device_name} PARSING MAC_ADDRESS_DYNAMIC...")
             # parsed_output, org_output = ParseMacAddressDynamic(cmd_response)
         else:
-            print(f"[DEBUG] {device_name} PARSING {cmd['key']}...")
-            print(f"[DEBUG] CMD_RESPONSE: {cmd_response}", flush=True)
+            logger.debug(f"[DEBUG] {device_name} PARSING {cmd['key']}...")
+            logger.debug(f"[DEBUG] CMD_RESPONSE: {cmd_response}")
             parser = GetParserByCommand(cmd['key'])
             if parser is None:
-                print(f"[ERROR] Unsupported command: {cmd['key']}")
+                logger.error(f"[ERROR] Unsupported command: {cmd['key']}")
                 continue
             # 파싱된 데이터와 명령어로 실행한 아웃풋 값을 리턴
             parsed_output, org_output = ParsePyatsToJson(parser, cmd_response)
 
             if parsed_output is None:
-                print(f"[ERROR] Failed to parse command output for {cmd['key']}")
+                logger.error(f"[ERROR] Failed to parse command output for {cmd['key']}")
                 continue
 
         cmd_response_list.append({
@@ -304,13 +313,13 @@ def GetCiscoCommonInfo(device_info, device_name):
             "org_output": org_output
         })
 
-    print(f"[DEBUG] {device_name} COMMAND RESPONSE COLLECTED...")
+    # logger.info(f"[DEBUG] {device_name} COMMAND RESPONSE COLLECTED...")
 
 
     # 연결 해제
     if device_info.connected:
         device_info.disconnect()
-        print("network device disconnected...")
+        # logger.info("network device disconnected...")
 
     data = {
         "device_name": device_name,
@@ -338,7 +347,7 @@ def ParseMacAddressDynamic(cmd_response):
     """
 
     # cmd_response raw 값을 그대로 출력
-    print(f"[DEBUG] CMD_RESPONSE_DYNAMIC: {cmd_response}", flush=True)
+    logger.debug(f"[DEBUG] CMD_RESPONSE_DYNAMIC: {cmd_response}")
     output = cmd_response.replace('\n', '\\n').replace('\r', '\\r')
     output = html.escape(output)
 
@@ -360,7 +369,7 @@ def ParseMacAddressDynamic(cmd_response):
             "PORTS": ports
         })
 
-    print(f"[DEBUG] PARSED MAC_ADDRESS_DYNAMIC: {parsed_result}", flush=True)
+    logger.debug(f"[DEBUG] PARSED MAC_ADDRESS_DYNAMIC: {parsed_result}")
 
 
     return parsed_result, output

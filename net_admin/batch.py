@@ -1,6 +1,4 @@
 import json, logging, re, time, html, sys, asyncio, requests, os
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pprint import pprint
@@ -28,8 +26,8 @@ logger = logging.getLogger(__name__)
 # 스레드풀 생성
 executor = ThreadPoolExecutor(max_workers=60)
 
-slack_token = os.getenv("SLACK_TOKEN")
-client = WebClient(token=slack_token)
+# FastAPI 웹훅 URL 설정
+WEBHOOK_BASE_URL = "http://fastapi:8000/api/v1/webhook"
 
 TODAY_STR = datetime.today().strftime('%Y-%m-%d')
 FILE_PATH = "/app/data/"
@@ -91,41 +89,37 @@ def main():
 
 
 def send_slack_message(message_info: Dict):
+    """웹훅을 통해 Slack 메시지 전송"""
     logger.info("Slack 메시지 전송 요청: %s", message_info)
-    if message_info['market_gubn'] == "pr":
-        market_gubn = "가동"
-    elif message_info['market_gubn'] == "ts":
-        market_gubn = "테스트"
-    elif message_info['market_gubn'] == "dr":
-        market_gubn = "DR"
-    channel = "#network-alert-multicast"
+    
     try:
-        response = client.chat_postMessage(
-            channel=channel,  # 예: "#general" 또는 "C12345678"
-            text= f":alert: *({market_gubn}){message_info['member_name']} 시세수신 이상* :alert:",
-            attachments=[
-                {
-                    "color": "danger",
-                    "title": f"대상회원사 : `{message_info['member_name']}`",
-                    "text": (
-                        f"*- 장비이름: {message_info['device_name']}*\n"
-                        f"- 가입상품: `{message_info['products']}`\n"
-                        f"- PIM_RP: {message_info['pim_rp']}\n"
-                        f"- 기준 mroute: {message_info['product_cnt']}\n"
-                        f"- 현재 mroute: {message_info['mroute_cnt']}\n"
-                        f"- 현재 oif_cnt: {message_info['oif_cnt']}\n"
-                        f"- RPF_NBR: `{message_info['rpf_nbr']}`\n"
-                    ),
-                    "mrkdwn_in": ["text", "title"]
-                }
-            ]
+        # 웹훅 URL 구성
+        webhook_url = f"{WEBHOOK_BASE_URL}/batch/multicast"
+        
+        # HTTP 요청으로 웹훅 호출
+        response = requests.post(
+            webhook_url,
+            json=message_info,
+            headers={'Content-Type': 'application/json'},
+            timeout=10
         )
-        logger.info("메시지 전송 성공: %s", response["ts"])
-        time.sleep(1)
-
-
-    except SlackApiError as e:
-        logger.error("메시지 전송 실패: %s", e.response["error"])
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('result'):
+                logger.info("웹훅을 통한 메시지 전송 성공: %s", result.get('message', 'Success'))
+            else:
+                logger.error("웹훅 응답 오류: %s", result.get('detail', 'Unknown error'))
+        else:
+            logger.error("웹훅 호출 실패 - 상태코드: %s, 응답: %s", response.status_code, response.text)
+            
+    except requests.exceptions.RequestException as e:
+        logger.error("웹훅 요청 실패: %s", e)
+    except Exception as e:
+        logger.error("메시지 전송 중 예상치 못한 오류: %s", e)
+    
+    # 전송 후 잠시 대기 (과도한 요청 방지)
+    time.sleep(1)
 
 # 멀티캐스트 정보 확인
 # market_gubn: pr, ts

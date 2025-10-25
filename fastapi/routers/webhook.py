@@ -50,11 +50,8 @@ CHANNEL_MAPPINGS = {
         "기타": "database-업무-기타"
     },
     "정보보안": {
-        "진행": "security-업무-진행",
-        "완료": "security-업무-완료",
-        "검토": "security-업무-검토",
-        "예정": "security-업무-예정",
-        "기타": "security-업무-기타"
+        "진행": "security-회원사-작업",
+        "완료": "security-worknote"
     }
 }
 
@@ -63,9 +60,19 @@ class WebhookHandler:
     """웹훅 처리를 위한 핸들러 클래스"""
     
     @staticmethod
-    def get_channel_for_project(project_name: str, list_name: str) -> str:
+    def get_channel_for_project(project_name: str, list_name: str, board_name: str) -> str:
         """프로젝트와 리스트명에 따른 채널 결정"""
         if project_name in CHANNEL_MAPPINGS:
+            # project_name이 "정보보안"일 경우는 보드명으로 전송할 채널을 구분
+            # 보드명이 "WORK NOTE"일 경우는 "security-worknote"로 전송
+            # 보드명이 "회원사 작업"일 경우는 "security-회원사-작업"로 전송
+            if project_name == "정보보안":
+                if board_name == "WORK NOTE":
+                    return "security-worknote"
+                elif board_name == "회원사 작업":
+                    return "security-회원사-작업"
+                else:
+                    return "unknown"
             mappings = CHANNEL_MAPPINGS[project_name]
             for keyword, channel in mappings.items():
                 if keyword in list_name:
@@ -130,12 +137,15 @@ async def send_planka_webhook_to_slack(request: Request):
     """Planka 웹훅 처리"""
     try:
         data = await request.json()
-        logger.info(f"Planka 웹훅 수신: {data}")
+        logger.info(f"Planka 웹훅 데이터: {data}")
         
         # 채널 결정
         project_name = data['data']['included']['projects'][0]['name']
         list_name = data['data']['included']['lists'][0]['name']
-        channel = WebhookHandler.get_channel_for_project(project_name, list_name)
+        board_name = data['data']['included']['boards'][0]['name']
+        channel = WebhookHandler.get_channel_for_project(project_name, list_name, board_name)
+
+        logger.info(f"프로젝트: {project_name}, 리스트: {list_name}, 보드: {board_name}, 채널: {channel}")
         
         # 이벤트 타입 확인
         event_type = data['event']
@@ -307,10 +317,15 @@ async def send_zabbix_webhook_to_slack(request: Request):
         # 회원사 스위치 구분
         hostname = data.get('hostname', '')
         event_name = data.get('event_name', '')
+        severity = data.get('severity', '')
         
         if any(keyword in hostname for keyword in ["mpr", "ord", "com"]):
             if bool(re.search(r'\(\s*\)', event_name)):
                 channel = "network-alert-endpoint"
+        
+        # severity가 Informational이면 network-alert-normal 채널로 전송
+        if severity == "Informational":
+            channel = "network-alert-normal"
         
         # 메시지 구성 및 전송
         if not any(keyword in event_name for keyword in ZABBIX_MUTE_KEYWORDS):
@@ -422,30 +437,44 @@ def send_zabbix_message(channel: str, data: Dict):
         if is_resolved:
             title = f":green-check-mark: {hostname} >> {event_name}"
             color = "#3bc95c"
-            fields = [
-                {"title": "대상장비", "value": f"`{hostname}`", "short": True},
-                {"title": "대상그룹", "value": f"`{host_group}`", "short": True},
-                {"title": "LEVEL", "value": f"`{severity}`", "short": True},
-                {"title": "발생일시", "value": f"{event_date} {event_time}", "short": True},
-                {"title": "경과시간", "value": f"`{event_duration}`", "short": False}
-            ]
+            # fields = [
+            #     {"title": "대상장비", "value": f"`{hostname}`", "short": True},
+            #     {"title": "대상그룹", "value": f"`{host_group}`", "short": True},
+            #     {"title": "LEVEL", "value": f"`{severity}`", "short": True},
+            #     {"title": "발생일시", "value": f"{event_date} {event_time}", "short": True},
+            #     {"title": "경과시간", "value": f"`{event_duration}`", "short": False}
+            # ]
         else:
             title = f":critical: {hostname} >> {event_name}"
             color = "#e71c1c"
-            fields = [
-                {"title": "대상장비", "value": f"`{hostname}`", "short": True},
-                {"title": "대상그룹", "value": f"`{host_group}`", "short": True},
-                {"title": "LEVEL", "value": f"`{severity}`", "short": True},
-                {"title": "발생일시", "value": f"{event_date} {event_time}", "short": True}
-            ]
+            # fields = [
+            #     {"title": "대상장비", "value": f"`{hostname}`", "short": True},
+            #     {"title": "대상그룹", "value": f"`{host_group}`", "short": True},
+            #     {"title": "LEVEL", "value": f"`{severity}`", "short": True},
+            #     {"title": "발생일시", "value": f"{event_date} {event_time}", "short": True}
+            # ]
 
         # 구조화된 메시지 전송
         sections = [
             {
-                "title": "",
-                "fields": fields,
-                "color": color,
-                "mrkdwn_in": ["text", "fields"]
+                "title": "대상장비",
+                "value": f"`{hostname}`",
+                "short": True
+            },
+            {
+                "title": "LEVEL",
+                "value": f"`{severity}`",
+                "short": True
+            },
+            {
+                "title": "발생일시",
+                "value": f"{event_date} {event_time}",
+                "short": True
+            },
+            {
+                "title": "경과시간",
+                "value": f"`{event_duration}`",
+                "short": True
             },
             {
                 "title": "발생내용",
@@ -548,6 +577,87 @@ def _format_group_data(received_data: Dict, group_keys: List[str]) -> str:
             )
     
     return "\n".join(text_lines)
+
+
+@router.post("/batch/multicast")
+async def send_batch_multicast_alert(request: Request):
+    """배치 작업 멀티캐스트 알림 웹훅 처리"""
+    try:
+        data = await request.json()
+        logger.info(f"배치 멀티캐스트 알림 수신: {data}")
+        
+        # 필수 필드 검증
+        required_fields = ['market_gubn', 'member_name', 'device_name', 'pim_rp', 'products', 'product_cnt', 'mroute_cnt', 'oif_cnt', 'rpf_nbr']
+        missing_fields = [field for field in required_fields if field not in data or data[field] is None]
+        
+        if missing_fields:
+            logger.warning(f"필수 필드 누락: {missing_fields}")
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "result": False,
+                    "error": "Missing required fields",
+                    "detail": f"Required fields missing: {missing_fields}"
+                }
+            )
+        
+        # 시장 구분 한글 변환
+        market_gubn = data['market_gubn']
+        if market_gubn == "pr":
+            market_name = "가동"
+        elif market_gubn == "ts":
+            market_name = "테스트"
+        elif market_gubn == "dr":
+            market_name = "DR"
+        else:
+            market_name = market_gubn
+        
+        # 채널 설정
+        channel = "#network-alert-multicast"
+        
+        # 메시지 구성
+        title = f":alert: *({market_name}){data['member_name']} 시세수신 이상* :alert:"
+        
+        fields = [
+            {"title": "대상회원사", "value": f"`{data['member_name']}`", "short": True},
+            {"title": "장비이름", "value": f"*{data['device_name']}*", "short": True},
+            {"title": "가입상품", "value": f"`{data['products']}`", "short": True},
+            {"title": "PIM_RP", "value": f"{data['pim_rp']}", "short": True},
+            {"title": "기준 mroute", "value": f"{data['product_cnt']}", "short": True},
+            {"title": "현재 mroute", "value": f"{data['mroute_cnt']}", "short": True},
+            {"title": "현재 oif_cnt", "value": f"{data['oif_cnt']}", "short": True},
+            {"title": "RPF_NBR", "value": f"`{data['rpf_nbr']}`", "short": True}
+        ]
+        
+        # Slack 메시지 전송
+        send_alert(
+            channel=channel,
+            title=title,
+            message="",
+            color="danger",
+            fields=fields
+        )
+        
+        logger.info(f"배치 멀티캐스트 알림 전송 완료: {data['member_name']} -> {channel}")
+        
+        return JSONResponse(
+            content={
+                "result": True,
+                "status": "success",
+                "message": "멀티캐스트 알림이 성공적으로 전송되었습니다."
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"배치 멀티캐스트 알림 처리 오류: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "result": False,
+                "error": "Internal server error",
+                "detail": str(e)
+            }
+        )
 
 
 @router.post("/slack/{net_gubn}")

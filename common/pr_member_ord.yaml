@@ -1,0 +1,54 @@
+testbed:
+  name: NxtNetwork
+  credentials:
+    default:
+      username: "nwcfg"
+      password: Sprtmxm1@3
+
+devices:
+  ky_1_px_mdkt_n_ord_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.1.1.11
+    custom:
+      groups: ["product"]
+  ky_1_px_mdkt_n_ord_02:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.1.1.12
+    custom:
+      groups: ["product"]
+  ky_1_px_mdkt_n_mpr_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.1.1.21
+    custom:
+      groups: ["product"]
+  ky_1_px_mdkt_n_mpr_02:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.1.1.22
+    custom:
+      groups: ["product"]
+  ky_1_tx_mdkt_c_com_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.1.1.51
+    custom:
+      groups: ["dev"]
+  

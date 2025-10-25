@@ -97,6 +97,7 @@ services:
       POSTGRES_PORT: 5432
       DJANGO_SETTINGS_MODULE: net_admin.settings
       PYTHONPATH: /app
+      PYTHONUNBUFFERED: 1
     ports:
       - "8080:8080"  # Django 웹 인터페이스
     volumes:
@@ -105,6 +106,7 @@ services:
       - ./common:/app/common
       - ./net_admin/static:/app/net_admin/static
       - ./net_admin/staticfiles:/app/net_admin/staticfiles
+      - ./net_admin/templates:/app/net_admin/templates
       - ~/.ssh:/root/.ssh:ro
     depends_on:
       - postgres-db

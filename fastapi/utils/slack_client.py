@@ -26,7 +26,10 @@ class SlackClient:
             self.client = None
             return
         
-        self.client = WebClient(token=self.token)
+        self.client = WebClient(
+            token=self.token,
+            proxy="http://172.16.4.217:5001"
+        )
     
     def send_message(
         self, 

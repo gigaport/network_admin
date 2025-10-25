@@ -42,7 +42,7 @@
                     targets: 0,
                     width: '10%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fw-bold fs-8');
+                        $(td).addClass('text-center device_name py-2 align-middle fw-bold');
                     },
                     render: function(data, type, row, meta) {
                         return data;
@@ -52,7 +52,7 @@
                     targets: 1,
                     width: '6%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center');
+                        $(td).addClass('text-center device_name py-2 align-middle');
                     },
                     render: function(data, type, row, meta) {
                         return data;
@@ -62,7 +62,7 @@
                     targets: 2,
                     width: '4%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center');
+                        $(td).addClass('text-center device_name py-2 align-middle');
                     },
                     render: function(data, type, row, meta) {
                         return data;
@@ -72,7 +72,7 @@
                     targets: 3,
                     width: '10%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fw-bold fs-8');
+                        $(td).addClass('text-center device_name py-2 align-middle fw-bold');
                     },
                     render: function(data, type, row, meta) {
                         let status_data = row.interface_status;
@@ -85,6 +85,8 @@
                             return '<span class="label-warning">' + data + '</span>';
                         } else if (status_data.includes('disabled')) {
                             return '<span class="label-warning">' + data + '</span>';
+                        } else if (status_data.includes('down')) {
+                            return '<span class="text-danger">' + data + '</span>';
                         } else {
                             return data;
                         }
@@ -94,7 +96,7 @@
                     targets: 4,
                     width: '20%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fs-8');
+                        $(td).addClass('text-left device_name py-2 align-middle');
                     },
                     render: function(data, type, row, meta) {
                         return data;
@@ -104,14 +106,15 @@
                     targets: 5,
                     width: '10%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fs-8 fw-bold');
+                        $(td).addClass('text-center device_name py-2 align-middle fw-bold');
                     },
                     render: function(data, type, row, meta) {
                         var status = {
 							'connected': {'title': 'connected', 'class': 'primary'},
 							'notconnect': {'title': 'notconnect', 'class': 'danger'},
 							'xcvrAbsen': {'title': 'xcvrAbsen', 'class': 'warning'},
-							'disabled': {'title': 'disabled', 'class': 'warning'}
+							'disabled': {'title': 'disabled', 'class': 'warning'},
+                            'down': {'title': 'down', 'class': 'danger'}
 						};
 						if (typeof status[data] == 'undefined') {
 							return data;
@@ -123,7 +126,7 @@
                     targets: 6,
                     width: '10%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fs-8');
+                        $(td).addClass('text-center device_name py-2 align-middle');
                     },
                     render: function(data, type, row, meta) {
                         return data;
@@ -133,7 +136,7 @@
                     targets: 7,
                     width: '10%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fs-8');
+                        $(td).addClass('text-center device_name py-2 align-middle');
                     },
                     render: function(data, type, row, meta) {
                         return data;
@@ -143,7 +146,7 @@
                     targets: 8,
                     width: '10%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fs-8');
+                        $(td).addClass('text-center device_name py-2 align-middle');
                     },
                     render: function(data, type, row, meta) {
                         return data;
@@ -153,7 +156,7 @@
                     targets: 9,
                     width: '10%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fs-8');
+                        $(td).addClass('text-center device_name py-2 align-middle');
                     },
                     render: function(data, type, row, meta) {
                         return data;

@@ -165,6 +165,11 @@
                   <div class="parent-wrapper label-1">
                     <ul class="nav collapse parent {%  if parent_menu == "network_information" %} show {% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-SWINFO">
                       <li class="collapsed-nav-item-title d-none">스위치정보</li>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "info_lldp" %} active {% endif %}" href="/info_lldp">
+                        <div class="d-flex align-items-center"><span class="nav-link-text">인터페이스 LLDP정보</span>
+                        </div>
+                      </a>
+                      </li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "pr_info_interface" %} active {% endif %}" href="/pr_info_interface">
                           <div class="d-flex align-items-center"><span class="nav-link-text">[본가동] 인터페이스정보</span>
                           </div>

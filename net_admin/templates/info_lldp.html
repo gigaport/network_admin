@@ -4,6 +4,8 @@
 {% block styles %}
 <!-- DataTables CSS -->
 <link rel="stylesheet" href="{% static 'assets/css/datatables.min.css' %}">
+<!-- DataTables Buttons CSS -->
+<link rel="stylesheet" href="{% static 'assets/css/buttons.dataTables.min.css' %}">
 {% endblock %}
 
     {% block content %}
@@ -12,13 +14,17 @@
           <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item"><a href="#!">네트워크 정보메뉴</a></li>
             <li class="breadcrumb-item"><a href="#!">스위치 정보제공</a></li>
-            <li class="breadcrumb-item active">[본가동] 인터페이스정보</li>
+            <li class="breadcrumb-item active">인터페이스 LLDP정보</li>
           </ol>
         </nav>
         <div class="mb-9">
           <div class="row g-3 mb-4">
             <div class="col-auto">
-              <h2 id="contents_title" class="mb-0">[본가동] 인터페이스 정보</h2>
+              <h2 id="contents_title" class="mb-0">인터페이스 LLDP정보</h2>
+            </div>
+            <div class="col-auto ms-auto">
+              <!-- Export 버튼들이 여기에 자동으로 추가됩니다 -->
+              <div id="export-buttons"></div>
             </div>
           </div>
           <!-- <ul class="nav nav-links mb-3 mb-lg-2 mx-n3">
@@ -70,31 +76,25 @@
                   <table class="table table-sm fs-9 mb-0" id="interface_table">
                     <thead>
                       <tr>
-                        <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="device_name" style="width:10%;">장비호스트네임</th>
-                        <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="device_ip" style="width:6%;">장비접속IP</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="device_os" style="width:4%;">장비OS</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="interface_no" style="width:10%;">인터페이스</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="interface_description" style="width:20%;">Description</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="interface_status" style="width:10%;">인터페이스상태</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="interface_vlan" style="width:10%;">VLAN</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="interface_duplex" style="width:10%;">Duplex</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="interface_speed" style="width:10%;">Speed</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="interface_type" style="width:10%">Type</th>
+                        <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="device_id" style="width:2%;">장비ID</th>
+                        <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="device_ip" style="width:10%;">장비접속IP</th>
+                        <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="hostname" style="width:15%;">장비시스템명</th>
+                        <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="local_ifname" style="width:10%;">인터페이스명</th>
+                        <th class="sort align-middle text-center" scope="col" data-sort="local_ifdesc" style="width:30%;">인터페이스설명</th>
+                        <th class="sort align-middle text-center" scope="col" data-sort="remote_hostname" style="width:20%;">원격장비호스트네임</th>
+                        <th class="sort align-middle text-center" scope="col" data-sort="remote_port" style="width:13%;">원격포트</th>
                       </tr>
                     </thead>
                     <!-- tfoot 내용은 전부 가운데 정렬 -->
                     <tfoot class="sort text-center" style="display: table-header-group">
                       <tr>
-                        <th class="text-center">장비호스트네임</th>
+                        <th class="text-center">장비ID</th>
                         <th class="text-center">장비접속IP</th>
-                        <th class="text-center">장비OS</th>
-                        <th class="text-center">인터페이스</th>
-                        <th class="text-center">Description</th>
-                        <th class="text-center">인터페이스상태</th>
-                        <th class="text-center">VLAN</th>
-                        <th class="text-center">Duplex</th>
-                        <th class="text-center">Speed</th>
-                        <th class="text-center">Type</th>
+                        <th class="text-center">장비시스템명</th>
+                        <th class="text-center">인터페이스명</th>
+                        <th class="text-center">인터페이스설명</th>
+                        <th class="text-center">원격장비호스트네임</th>
+                        <th class="text-center">원격포트</th>
                       </tr>
                     </tfoot>
                     <tbody class="list" id="order-table-body">
@@ -284,7 +284,11 @@
     <script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
     <!-- DataTables JS -->
     <script src="{% static 'assets/js/datatables.min.js' %}"></script>
-    
+    <!-- JSZip (Excel export 필수) -->
+    <script src="{% static 'assets/js/jszip.min.js' %}"></script>
+    <!-- DataTables Buttons -->
+    <script src="{% static 'assets/js/dataTables.buttons.min.js' %}"></script>
+    <script src="{% static 'assets/js/buttons.html5.min.js' %}"></script>
     <script src="{% static 'vendors/popper/popper.min.js' %}"></script>
     <script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
     <script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
@@ -294,5 +298,5 @@
     <script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
     <script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
     <script src="{% static 'assets/js/phoenix.js' %}"></script>
-    <script src="{% static 'assets/js/net_admin/interface.js' %}"></script>
+    <script src="{% static 'assets/js/net_admin/lldp.js' %}"></script>
     {% endblock %}

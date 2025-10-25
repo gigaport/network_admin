@@ -1,9 +1,10 @@
 {% extends 'components/base.html' %}
 {% load static %}
 
-  <!-- {% block styles %}
-
-  {% endblock %} -->
+{% block styles %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="{% static 'assets/css/datatables.min.css' %}">
+{% endblock %}
 
     {% block content %}
       <div class="content">
@@ -25,7 +26,7 @@
             <li class="nav-item"><a class="nav-link" href="#"><span>정상확인 </span><span class="text-body-tertiary fw-semibold">(28)</span></a></li>
             <li class="nav-item"><a class="nav-link" href="#"><span>확인필요 </span><span class="text-body-tertiary fw-semibold">(2)</span></a></li>
           </ul> -->
-          <div id="orderTable" data-list='{"valueNames":["device_name","device_ip","device_os","interface_no","interface_description","interface_status","interface_vlan","interface_duplex","interface_speed","interface_type"]}'>
+          <div id="orderTable">
             <div class="mb-4">
               <div class="row g-3">
                 <!-- <div class="col-auto">
@@ -279,20 +280,19 @@
     <!-- ===============================================-->
     <!--    JavaScripts-->
     <!-- ===============================================-->
+    <!-- jQuery 먼저 포함 (다른 스크립트들이 의존) -->
+    <script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+    <!-- DataTables JS -->
+    <script src="{% static 'assets/js/datatables.min.js' %}"></script>
+    
     <script src="{% static 'vendors/popper/popper.min.js' %}"></script>
     <script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
     <script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
     <script src="{% static 'vendors/is/is.min.js' %}"></script>
     <script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
     <script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
-    <script src="{% static 'vendors/list.js/list.min.js' %}"></script>
     <script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
     <script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
     <script src="{% static 'assets/js/phoenix.js' %}"></script>
     <script src="{% static 'assets/js/net_admin/interface.js' %}"></script>
-    <!-- jQuery 먼저 포함 -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <!-- DataTables CSS & JS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     {% endblock %}

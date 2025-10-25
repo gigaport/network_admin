@@ -242,20 +242,6 @@
         ]
       }
     },
-    "ic_1_px_ydkt_a_mkd_01": {
-      "os": "eos",
-      "type": "switch",
-      "ip": "99.204.1.2",
-      "custom": {
-        "groups": [
-          "product"
-        ],
-        "join_products": [
-          "A-COM",
-          "A-10"
-        ]
-      }
-    },
     "ic_2_px_ydkt_a_mkd_01": {
       "os": "eos",
       "type": "switch",

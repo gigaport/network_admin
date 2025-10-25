@@ -39,7 +39,7 @@
                     targets: 0,
                     width: '15%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fw-bold fs-8');
+                        $(td).addClass('text-center device_name py-2 align-middle fw-bold');
                     },
                     render: function(data, type, row, meta) {
                         return data;
@@ -49,7 +49,7 @@
                     targets: 1,
                     width: '10%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center');
+                        $(td).addClass('text-center device_name py-2 align-middle');
                     },
                     render: function(data, type, row, meta) {
                         return data;
@@ -59,7 +59,7 @@
                     targets: 2,
                     width: '10%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center');
+                        $(td).addClass('text-center device_name py-2 align-middle');
                     },
                     render: function(data, type, row, meta) {
                         return data;
@@ -69,7 +69,7 @@
                     targets: 3,
                     width: '15%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fw-bold fs-8');
+                        $(td).addClass('text-center device_name py-2 align-middle fw-bold');
                     },
                     render: function(data, type, row, meta) {
                         return '<span class="text-success">' + data + '</span>';
@@ -79,7 +79,7 @@
                     targets: 4,
                     width: '20%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fw-bold fs-8');
+                        $(td).addClass('text-center device_name py-2 align-middle fw-bold');
                     },
                     render: function(data, type, row, meta) {
                         return '<span class="text-primary">' + data + '</span>';
@@ -89,7 +89,7 @@
                     targets: 5,
                     width: '20%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center fw-bold fs-8');
+                        $(td).addClass('text-center device_name py-2 align-middle fw-bold');
                     },
                     render: function(data, type, row, meta) {
                         return '<span class="text-primary">' + data + '</span>';
@@ -99,7 +99,7 @@
                     targets: 6,
                     width: '10%',
                     createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle text-center');
+                        $(td).addClass('text-center device_name py-2 align-middle');
                     },
                     render: function(data, type, row, meta) {
                         return data;

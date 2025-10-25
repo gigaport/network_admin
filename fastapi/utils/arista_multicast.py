@@ -1,4 +1,4 @@
-import pytz, json, os
+import pytz, json, os, logging
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -7,6 +7,9 @@ from utils.slack_message_proxy import SendMulticastNotificationToSlack
 
 # .env 파일에서 환경 변수 로드
 load_dotenv()
+
+# Logger 설정
+logger = logging.getLogger(__name__)
 
 NETWORK_ID = os.getenv('NETWORK_ID')
 NETWORK_PASSWD = os.getenv('NETWORK_PASSWD')
@@ -23,7 +26,7 @@ def GetAristaMulticastInfo(device_info):
     """    Arista 멀티캐스트 정보를 수집하는 함수
     device_info: Arista 장비 정보 (IP, 사용자명, 비밀번호 등)
     """
-    print(f"[DEBUG] GetAristaMulticastInfo >> {device_info}")
+    logger.debug(f"GetAristaMulticastInfo >> {device_info}")
 
     data = CallAristaAPI(device_info[1]['ip'], [
         'show ip mroute',
@@ -31,7 +34,7 @@ def GetAristaMulticastInfo(device_info):
         'show interfaces status'
     ])
 
-    # print(f"[DEBUG] arista_response_json >> {json.dumps(data, indent=4, ensure_ascii=False)}")
+    # logger.debug(f" arista_response_json >> {json.dumps(data, indent=4, ensure_ascii=False)}")
     
     # show ip mroute 명령어의 결과 처리
     # 0.0.0.0인 경우를 제외한 groupSources 갯수를 구하고,
@@ -43,10 +46,10 @@ def GetAristaMulticastInfo(device_info):
     connected_server_cnt = 0
 
     if data is None:
-        print("[ERROR] NO DATA RECEIVED FROM ARISTA API")
+        logger.error(" NO DATA RECEIVED FROM ARISTA API")
         return None
     
-    print(f"[DEBUG] ARISTA_DATA >> {data}")
+    logger.debug(f" ARISTA_DATA >> {data}")
 
     for idx, value in enumerate(data):
         # show ip mroute 명령어의 결과 처리
@@ -54,18 +57,18 @@ def GetAristaMulticastInfo(device_info):
             groups = value.get('groups', {})
             # 가져온 groups 정보를 순회하면서
             for group, group_info in groups.items():
-                print(f"[DEBUG] ARISTA_GROUP >> {group}")
+                logger.debug(f" ARISTA_GROUP >> {group}")
                 group_sources = group_info.get('groupSources', {})
-                print(f"[DEBUG] ARISTA_GROUP_SOURCES >> {group_sources}")
+                logger.debug(f" ARISTA_GROUP_SOURCES >> {group_sources}")
                 # groupSources가 0.0.0.0인 경우를 제외한 groupSources 갯수를 구하고,
                 # 해당 groupSources에 oifList키의 배열에 Vlan1100이 있는지 확인
                 for src_key, src_value in group_sources.items():
-                    print(f"[DEBUG] ARISTA_GROUP_SOURCE >> {src_key}")
+                    logger.debug(f" ARISTA_GROUP_SOURCE >> {src_key}")
                     if src_key != "0.0.0.0":
-                        print(f"[DEBUG] ARISTA_VALID_GROUP_SOURCE >> {src_key}")
+                        logger.debug(f" ARISTA_VALID_GROUP_SOURCE >> {src_key}")
                         valid_group_sources_count += 1
                         if any(x == 'Vlan1100' or x.startswith('Ethernet') for x in src_value.get('oifList', [])):
-                            print(f"[DEBUG] ARISTA_VLAN1100_IN_OIFLIST >> {src_key}")
+                            logger.debug(f" ARISTA_VLAN1100_IN_OIFLIST >> {src_key}")
                             oif_count += 1
                         # 첫번째 groupSources의 creationTime을 별도 저장
                         # creation_time을 kst datetime으로 변환하여 출력
@@ -78,53 +81,53 @@ def GetAristaMulticastInfo(device_info):
                             creation_time = creation_time.strftime('%Y-%m-%d %H:%M:%S')
                         else:
                             creation_time = "N/A"
-                        print(f"[DEBUG] ARISTA_CREATION_TIME >> {creation_time}")
+                        logger.debug(f" ARISTA_CREATION_TIME >> {creation_time}")
 
                         # 첫번째 rfpNeighbor의 정보를 가져옴
                         # rfpNeighbor는 groupSources의 첫번째 key에 해당하는 값에서 가져옴
                         # rfpNeighbor가 존재하는 경우에만 가져옴 value.get('rpf', {}).get('rpfNeighbor', {})
                         if rpf_neighbor is not None:
-                            print(f"[DEBUG] ARISTA_RPF_NEIGHBOR >> {rpf_neighbor}")
+                            logger.debug(f" ARISTA_RPF_NEIGHBOR >> {rpf_neighbor}")
                         else:
                             rpf_neighbor = src_value.get('rpf', {}).get('rpfNeighbor', {})
                             if rpf_neighbor:
-                                print(f"[DEBUG] ARISTA_RPF_NEIGHBOR >> {rpf_neighbor}")
+                                logger.debug(f" ARISTA_RPF_NEIGHBOR >> {rpf_neighbor}")
                             else:
-                                print("[DEBUG] ARISTA_RPF_NEIGHBOR IS EMPTY")
+                                logger.debug(" ARISTA_RPF_NEIGHBOR IS EMPTY")
             # 디버깅용 출력
-            print(f"[DEBUG] ARISTA_VALID_GROUP_SOURCES_COUNT >> {valid_group_sources_count}")
-            print(f"[DEBUG] ARISTA_OIF_COUNT >> {oif_count}")
-            print(f"[DEBUG] ARISTA_CREATION_TIME >> {creation_time}")
+            logger.debug(f" ARISTA_VALID_GROUP_SOURCES_COUNT >> {valid_group_sources_count}")
+            logger.debug(f" ARISTA_OIF_COUNT >> {oif_count}")
+            logger.debug(f" ARISTA_CREATION_TIME >> {creation_time}")
 
         # show ip pim rp 명령어의 결과 처리
         elif idx == 1:
             rendezvous_point = value.get('sparseMode', {}).get('crpSet', {}).get('224.0.0.0/4', {}).get('crp', {})
-            print(f"[DEBUG] ARISTA_RENDEZVOUS_POINT >> {rendezvous_point}")
+            logger.debug(f" ARISTA_RENDEZVOUS_POINT >> {rendezvous_point}")
             # rendezvous_point의 키 네임을 가져와서 그대로 저장
             rp_address = list(rendezvous_point.keys())[0] if rendezvous_point else "N/A"
-            print(f"[DEBUG] ARISTA_RP_ADDRESS >> {rp_address}")
+            logger.debug(f" ARISTA_RP_ADDRESS >> {rp_address}")
 
         # show interface status 명령어의 결과 처리
         elif idx == 2:
             # 현재 장비의 인터페이스 상태를 가져옴 (Ethernet1부터 12번포트까지)
             interface_status = value.get('interfaceStatuses', {})
-            print(f"[DEBUG] ARISTA_INTERFACE_STATUS >> {interface_status}")
+            logger.debug(f" ARISTA_INTERFACE_STATUS >> {interface_status}")
             for intf, status in interface_status.items():
-                print(f"[DEBUG] ARISTA_INTERFACE_STATUS >> {intf}: {status}")
+                logger.debug(f" ARISTA_INTERFACE_STATUS >> {intf}: {status}")
                 link_status = status.get('lineProtocolStatus', 'N/A')
                 # link_status가 'up'인 경우에 카운트를 올림
                 if link_status == 'up':
-                    print(f"[DEBUG] ARISTA_INTERFACE_UP >> {intf} is UP")
+                    logger.debug(f" ARISTA_INTERFACE_UP >> {intf} is UP")
                     connected_server_cnt += 1
                 else:
-                    print(f"[DEBUG] ARISTA_INTERFACE_DOWN >> {intf} is DOWN")
+                    logger.debug(f" ARISTA_INTERFACE_DOWN >> {intf} is DOWN")
 
             # 인터페이스 상태에서 Vlan1100의 상태를 확인
             vlan1100_status = interface_status.get('Vlan1100', {})
             if vlan1100_status:
-                print(f"[DEBUG] ARISTA_VLAN1100_STATUS >> {vlan1100_status}")
+                logger.debug(f" ARISTA_VLAN1100_STATUS >> {vlan1100_status}")
             else:
-                print("[DEBUG] ARISTA_VLAN1100_STATUS IS EMPTY")
+                logger.debug(" ARISTA_VLAN1100_STATUS IS EMPTY")
 
     response_json = {
         'valid_group_sources_count': valid_group_sources_count,
@@ -142,29 +145,29 @@ def GetAristaMulticastInfo(device_info):
 def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
     # information_info.json 파일에 등록된 멤버 정보를 가져와서
     # 멀티캐스트 정보에 추가하는 함수
-    print(f"[DEBUG] AddMemberInfoToAristaMulticastInfo >> {device_info}")
+    logger.debug(f" AddMemberInfoToAristaMulticastInfo >> {device_info}")
 
     # information_info.json 파일 경로
     information_info_path = Path('/app/common/information_info.json')
     if not information_info_path.exists():
-        print(f"[ERROR] INFORMATION_INFO_PATH DOES NOT EXIST: {information_info_path}")
+        logger.error(f" INFORMATION_INFO_PATH DOES NOT EXIST: {information_info_path}")
         return None
     with open(information_info_path, 'r', encoding='UTF-8') as file:
         information_info = json.load(file)
-    print(f"[DEBUG] INFORMATION_INFO >> {information_info}")
+    logger.debug(f" INFORMATION_INFO >> {information_info}")
 
     # pr_mpr_multicast_info.json 파일 경로
     pr_mpr_multicast_info_path = Path('/app/common/pr_mpr_multicast_info.json')
     if not pr_mpr_multicast_info_path.exists():
-        print(f"[ERROR] PR_MPR_MULTICAST_INFO_PATH DOES NOT EXIST: {pr_mpr_multicast_info_path}")
+        logger.error(f" PR_MPR_MULTICAST_INFO_PATH DOES NOT EXIST: {pr_mpr_multicast_info_path}")
         return None
     with open(pr_mpr_multicast_info_path, 'r', encoding='UTF-8') as file:
         pr_mpr_multicast_info = json.load(file)
-    print(f"[DEBUG] PR_MPR_MULTICAST_INFO >> {pr_mpr_multicast_info}")
+    logger.debug(f" PR_MPR_MULTICAST_INFO >> {pr_mpr_multicast_info}")
 
     # device_info에서 hostname을 가져와서 information_info에 swith_hostanme과 동일한 정보를 찾아서 멤버 정보를 가져옴
     device_hostname = device_info[0]
-    print(f"[DEBUG] DEVICE_HOSTNAME >> {device_hostname}")
+    logger.debug(f" DEVICE_HOSTNAME >> {device_hostname}")
 
     member_info = None
     member_no = None
@@ -174,9 +177,9 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
             member_no = member[0]
             break
     if not member_info:
-        print(f"[ERROR] NO MEMBER INFO FOUND: {device_hostname}")
+        logger.error(f" NO MEMBER INFO FOUND: {device_hostname}")
         return None
-    print(f"[DEBUG] MEMBER_NO, MEMBER_INFO >> {member_no}, {member_info}")
+    logger.debug(f" MEMBER_NO, MEMBER_INFO >> {member_no}, {member_info}")
 
     alarm_icon = None
     alarm = member_info.get('alarm', False)
@@ -190,7 +193,7 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
     product_cnt = 0
     device_info[1]['custom'] = device_info[1].get('custom', {})
     member_name = member_info.get('member_name', "N/A")
-    print(f'!!!!!!!!! {member_name}')
+    logger.debug(f'!!!!!!!!! {member_name}')
     products = member_info.get('member_products', [])
     join_products = device_info[1]['custom'].get('join_products', [])
     rp_address = multicast_info.get('rp_address', "N/A")
@@ -198,16 +201,16 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
     oif_cnt = multicast_info.get('oif_count', 0)
     rpf_nbr = multicast_info.get('rpf_neighbor', "N/A")
 
-    print(f"[DEBUG] JOIN_PRODUCTS >> {join_products}")
+    logger.debug(f" JOIN_PRODUCTS >> {join_products}")
 
     for product in join_products:
         for key, pr_mpr_info in pr_mpr_multicast_info.items():
-            # print(f"[DEBUG] pr_mpr_info >> {pr_mpr_info}")
+            # logger.debug(f" pr_mpr_info >> {pr_mpr_info}")
             # pr_mpr_info의 key값과 product가 일치하는지 확인
             if key == product:
-                print(f"[DEBUG] PR_MPR_INFO >> {pr_mpr_info}")
+                logger.debug(f" PR_MPR_INFO >> {pr_mpr_info}")
                 product_cnt += pr_mpr_info.get('multicast_group_count', 0)
-                print(f"[DEBUG] PRODUCT_CNT >> {product_cnt}")
+                logger.debug(f" PRODUCT_CNT >> {product_cnt}")
 
     ## 멀티캐스트 시세 정상 확인
     ## 시세상품 멀티캐스트 그룹 카운트 == 장비 mroute 카운트 == vlan 1100 OIF 카운트 비교
@@ -242,7 +245,7 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
             }
         ]
 
-        print(f'[DEBUG] ATTACHMENTS: {attachments}')
+        logger.debug(f'[DEBUG] ATTACHMENTS: {attachments}')
 
         # SendMulticastNotificationToSlack(message_title, attachments)
 
@@ -270,7 +273,7 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
         "check_result_badge": { "type": type, "icon": icon }
     }
 
-    print(f"[DEBUG] TEMP >> {temp}")
+    logger.debug(f" TEMP >> {temp}")
     return temp
 
 if __name__ == "__main__":

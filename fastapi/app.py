@@ -20,6 +20,22 @@ os.environ['UNICON_LOGGING_LEVEL'] = 'CRITICAL'
 os.environ['PYATS_DISABLE_LOGGING'] = '1'
 os.environ['GENIE_DISABLE_LOGGING'] = '1'
 
+# 애플리케이션 로깅 설정 (stdout으로 출력하여 podman logs에서 확인 가능)
+# basicConfig는 uvicorn에 의해 무시될 수 있으므로 force=True 사용
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ],
+    force=True  # Python 3.8+: 기존 핸들러를 제거하고 재설정
+)
+
+# 루트 로거와 애플리케이션 로거 레벨 명시적 설정
+logging.getLogger().setLevel(logging.INFO)
+logging.getLogger('routers').setLevel(logging.INFO)
+logging.getLogger('utils').setLevel(logging.INFO)
+
 # FastAPI 애플리케이션 생성
 app = FastAPI(
     title="Network Admin API",
@@ -78,13 +94,6 @@ def configure_pyats_logging():
         # 핸들러 제거
         for handler in logger.handlers[:]:
             logger.removeHandler(handler)
-    
-    # 루트 로거에서도 관련 로그 필터링
-    root_logger = logging.getLogger()
-    for handler in root_logger.handlers:
-        handler.addFilter(lambda record: not any(
-            record.name.startswith(name) for name in ['pyats', 'genie', 'unicon']
-        ))
 
 # 애플리케이션 시작 시 로그 설정 적용
 configure_pyats_logging()

@@ -35,7 +35,7 @@ devices:
         ip: 50.3.1.23
     custom:
       groups: ["test"]
-      join_products: ["A-3", "A-10", "A-COM", "B-3", "B-10", "B-COM"]
+      join_products: ["A-3", "A-5", "A-10", "A-COM", "B-3", "B-5", "B-10", "B-COM"]
   kr_2_tx_ydkr_n_mpr_01:
     os: nxos
     type: switch
