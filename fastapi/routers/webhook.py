@@ -324,7 +324,7 @@ async def send_zabbix_webhook_to_slack(request: Request):
                 channel = "network-alert-endpoint"
         
         # severity가 Informational이면 network-alert-normal 채널로 전송
-        if severity == "Informational":
+        if severity == "Information":
             channel = "network-alert-normal"
         
         # 메시지 구성 및 전송
@@ -433,48 +433,33 @@ def send_zabbix_message(channel: str, data: Dict):
         event_duration = data.get('event_duration', 'Unknown')
         
         is_resolved = str(event_value) == '0'
+
+        logger.info(f"Zabbix 메시지 수신: {hostname} - {event_name} - {event_value} - {severity} - {host_group} - {event_date} - {event_time} - {opdata} - {event_duration}")
         
         if is_resolved:
             title = f":green-check-mark: {hostname} >> {event_name}"
             color = "#3bc95c"
-            # fields = [
-            #     {"title": "대상장비", "value": f"`{hostname}`", "short": True},
-            #     {"title": "대상그룹", "value": f"`{host_group}`", "short": True},
-            #     {"title": "LEVEL", "value": f"`{severity}`", "short": True},
-            #     {"title": "발생일시", "value": f"{event_date} {event_time}", "short": True},
-            #     {"title": "경과시간", "value": f"`{event_duration}`", "short": False}
-            # ]
+            fields = [
+                {"title": "대상장비", "value": f"`{hostname}`", "short": True},
+                {"title": "대상그룹", "value": f"`{host_group}`", "short": True},
+                {"title": "LEVEL", "value": f"`{severity}`", "short": True},
+                {"title": "발생일시", "value": f"{event_date} {event_time}", "short": True},
+                {"title": "경과시간", "value": f"`{event_duration}`", "short": False}
+            ]
         else:
             title = f":critical: {hostname} >> {event_name}"
             color = "#e71c1c"
-            # fields = [
-            #     {"title": "대상장비", "value": f"`{hostname}`", "short": True},
-            #     {"title": "대상그룹", "value": f"`{host_group}`", "short": True},
-            #     {"title": "LEVEL", "value": f"`{severity}`", "short": True},
-            #     {"title": "발생일시", "value": f"{event_date} {event_time}", "short": True}
-            # ]
+            fields = [
+                {"title": "대상장비", "value": f"`{hostname}`", "short": True},
+                {"title": "대상그룹", "value": f"`{host_group}`", "short": True},
+                {"title": "LEVEL", "value": f"`{severity}`", "short": True},
+                {"title": "발생일시", "value": f"{event_date} {event_time}", "short": True}
+            ]
 
         # 구조화된 메시지 전송
         sections = [
             {
-                "title": "대상장비",
-                "value": f"`{hostname}`",
-                "short": True
-            },
-            {
-                "title": "LEVEL",
-                "value": f"`{severity}`",
-                "short": True
-            },
-            {
-                "title": "발생일시",
-                "value": f"{event_date} {event_time}",
-                "short": True
-            },
-            {
-                "title": "경과시간",
-                "value": f"`{event_duration}`",
-                "short": True
+                "fields": fields
             },
             {
                 "title": "발생내용",

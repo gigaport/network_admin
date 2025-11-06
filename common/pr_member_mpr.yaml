@@ -145,7 +145,7 @@ devices:
         ip: 50.8.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["A-10", "A-COM", "B-3", "B-COM"]
   me_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -476,13 +476,13 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
-  ts_r_pr_pclg_n_mpr_02:
+  ts_r_px_pclg_n_mpr_01:
     os: nxos
     type: switch
     connections:
       default:
         protocol: ssh
-        ip: 50.77.9.22
+        ip: 50.77.9.21
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]

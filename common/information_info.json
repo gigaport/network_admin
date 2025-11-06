@@ -98,5 +98,15 @@
     "switch_hostname": ["cp_1_px_ydcp_a_mkd_01", "cp_1_px_ydcp_a_mkd_02"],
     "alarm": true,
     "member_note":""
+  },
+  "206": {
+    "member_code": "IE",
+    "member_name": "ICE",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-COM"],
+    "switch_hostname": ["ie_1_px_scte_a_mkd_01", "ie_1_px_scte_a_mkd_02", "ie_2_px_sas1_a_mkd_01", "ie_2_px_sas1_a_mkd_02"],
+    "alarm": true,
+    "member_note":""
   }
 }

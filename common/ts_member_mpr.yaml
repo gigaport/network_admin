@@ -85,7 +85,7 @@ devices:
         ip: 50.8.1.23
     custom:
       groups: ["test"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["A-10", "A-COM", "B-3", "B-COM"]
   me_1_tx_mdkt_c_com_01:
     os: iosxe
     type: switch

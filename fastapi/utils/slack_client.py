@@ -255,7 +255,8 @@ class SlackClient:
                 "color": section.get("color", color),
                 "title": section.get("title", ""),
                 "text": section.get("text", ""),
-                "mrkdwn_in": ["text", "title"]
+                "mrkdwn_in": ["text", "title"],
+                "fields": section.get("fields", [])
             }
             attachments.append(attachment)
 

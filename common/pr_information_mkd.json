@@ -283,6 +283,62 @@
           "A-10"
         ]
       }
+    },
+    "ie_1_px_scte_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.206.1.6",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM",
+          "A-10"
+        ]
+      }
+    },
+    "ie_1_px_scte_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.206.2.6",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM",
+          "A-10"
+        ]
+      }
+    },
+    "ie_2_px_sas1_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.206.1.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM",
+          "A-10"
+        ]
+      }
+    },
+    "ie_2_px_sas1_a_mkd_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.206.2.2",
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM",
+          "A-10"
+        ]
+      }
     }
   }
 }

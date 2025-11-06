@@ -4,6 +4,8 @@
   })((function () { 'use strict';
     var response_data = {};
 
+    var loadingStartTime = Date.now(); // 로딩 시작 시간 기록
+    
     var initTable = function() {
         const data_back = document.getElementById("back_data");
         const currentPath = data_back ? data_back.dataset.submenu : 'info_lldp';
@@ -115,7 +117,7 @@
                         if (type === 'export') {
                             return data;
                         }
-                        return '<span class="text-success-subtle bg-dark dark__bg-gray-400 p-2 rounded-1">' + data + '</span>';
+                        return '<span class="badge-phoenix badge-phoenix-primary">' + data + '</span>';
                     }
                 },
                 {
@@ -157,12 +159,26 @@
                         if (type === 'export') {
                             return data;
                         }
-                        return '<span class="text-success-subtle bg-dark dark__bg-gray-400 p-2 rounded-1">' + data + '</span>';
+                        return '<span class="badge-phoenix badge-phoenix-danger">' + data + '</span>';
                     }
                 },
             ],
             initComplete: function(){
                 console.log("📊 DataTable has finished loading");
+                
+                // 로딩 화면을 최소 800ms는 표시하도록 설정
+                var loadingElapsedTime = Date.now() - loadingStartTime;
+                var minLoadingTime = 800; // 최소 로딩 시간 (ms)
+                var remainingTime = Math.max(0, minLoadingTime - loadingElapsedTime);
+                
+                setTimeout(function() {
+                    // 테이블 로딩 오버레이 제거
+                    $('#table-loading-overlay').fadeOut(400, function() {
+                        $(this).remove();
+                    });
+                    console.log("✅ 로딩 화면 제거 완료");
+                }, remainingTime);
+                
                 // Export 버튼들을 헤더 영역에 추가
                 table.buttons().container().appendTo('#export-buttons');
 				this.api().columns().every(function () {

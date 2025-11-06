@@ -1,10 +1,14 @@
 import pytz, sys
 import requests, json, codecs, threading, asyncio, paramiko, time, concurrent.futures, re, os
+import logging
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 # from deepdiff import DeepDiff
 from pathlib import Path
+
+# 로깅 설정
+logger = logging.getLogger(__name__)
 
 # .env 파일에서 환경 변수 로드
 load_dotenv()
@@ -46,11 +50,11 @@ def CallAristaAPI(ip, cmds, params=None):
         )
         # 상태 코드 확인
         if response.status_code != 200:
-            print(f"Error: Received status code {response.status_code}")
+            logger.error(f"Error: Received status code {response.status_code}")
             return None
         # 응답이 비어 있는지 확인
         if not response.text.strip():
-            print("Response body is empty")
+            logger.error("Response body is empty")
             return None
 
         # JSON 확인 및 파싱
@@ -59,26 +63,26 @@ def CallAristaAPI(ip, cmds, params=None):
                 response_json = response.json()
                 # return response_json
             except json.JSONDecodeError:
-                print("Failed to decode JSON")
-                print(f"Response Content: {response.text}")
+                logger.error("Failed to decode JSON")
+                logger.error(f"Response Content: {response.text}")
                 return None
         else:
-            print("Response is not JSON")
-            print(f"Response Content: {response.text}")
+            logger.error("Response is not JSON")
+            logger.error(f"Response Content: {response.text}")
             return None
 
     except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
+        logger.error(f"Request failed: {e}")
         return None
 
     response_json = response.json()
     if 'error' in response_json:
-        print(f"Error in response: {response_json['error']}")
+        logger.error(f"Error in response: {response_json['error']}")
         return None
     
     data = response_json.get('result', [])
     if not data:
-        print("No data found in response")
+        logger.warning("No data found in response")
         return None
 
     return data
