@@ -241,7 +241,12 @@ def CountValidOifAndGetMinUptime(data, device_os:str):
 
 
     if vaild_check:
-        min_uptime = min(uptimes, key=ParseUptime)
+        # uptimes 리스트가 비어있지 않은 경우에만 min_uptime 계산
+        if uptimes:
+            min_uptime = min(uptimes, key=ParseUptime)
+        else:
+            min_uptime = '확인필요'
+            print(f"[WARNING] No valid uptime data found. uptimes list is empty.")
 
         # print("vlan1100 개수", valid_oif_count)
         # print(f"min_uptimes : {min_uptime}")

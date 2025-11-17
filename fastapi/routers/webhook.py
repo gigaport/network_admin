@@ -231,6 +231,8 @@ async def send_syslog_webhook_to_slack(request: Request):
         
         if any(keyword in mnemonic for keyword in SYSLOG_ENDPOINT_MNEMONICS):
             channel = "#network-alert-endpoint"
+
+        
         
         # 메시지 전송
         _send_syslog_to_slack(channel, data)
@@ -318,11 +320,17 @@ async def send_zabbix_webhook_to_slack(request: Request):
         hostname = data.get('hostname', '')
         event_name = data.get('event_name', '')
         severity = data.get('severity', '')
+
+        logger.info(f"Zabbix 웹훅 수신: {hostname} - {event_name} - {severity}")
         
         if any(keyword in hostname for keyword in ["mpr", "ord", "com"]):
             if bool(re.search(r'\(\s*\)', event_name)):
                 channel = "network-alert-endpoint"
-        
+
+        if any(keyword in event_name for keyword in ["**"]):
+            channel = "network-alert-endpoint"
+            logger.info(f"endpoint 채널로 전송 : {event_name}")
+
         # severity가 Informational이면 network-alert-normal 채널로 전송
         if severity == "Information":
             channel = "network-alert-normal"
@@ -615,15 +623,15 @@ async def send_batch_multicast_alert(request: Request):
         ]
         
         # Slack 메시지 전송
-        send_alert(
-            channel=channel,
-            title=title,
-            message="",
-            color="danger",
-            fields=fields
-        )
+        # send_alert(
+        #     channel=channel,
+        #     title=title,
+        #     message="",
+        #     color="danger",
+        #     fields=fields
+        # )
         
-        logger.info(f"배치 멀티캐스트 알림 전송 완료: {data['member_name']} -> {channel}")
+        # logger.info(f"배치 멀티캐스트 알림 전송 완료: {data['member_name']} -> {channel}")
         
         return JSONResponse(
             content={
