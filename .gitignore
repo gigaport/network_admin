@@ -43,10 +43,6 @@ podman-compose.override.yml
 temp/
 tmp/
 
-# Text files
-*.txt
-.txt
-
 # Socket files
 gunicorn.sock
 
