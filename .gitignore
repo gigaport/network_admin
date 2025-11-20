@@ -29,7 +29,7 @@ batch.log
 *.bak
 
 # Container and Podman specific
-postgres_config/
+# postgres_config/
 ssh_keys/
 
 # Generated container files
