@@ -16,7 +16,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./postgres_config:/etc/postgresql
+      - ./postgres_config:/etc/postgresql:Z
     command: >
       postgres 
       -c hba_file=/etc/postgresql/pg_hba.conf
