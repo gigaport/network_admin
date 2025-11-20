@@ -14,11 +14,10 @@ local_settings.py
 /media
 
 # Environments
-.env
 .venv/
 venv/
 env/
-.ENV/
+
 
 # Project specific
 /data
