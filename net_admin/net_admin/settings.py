@@ -40,8 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app',
-    'multicast',
-    'information',
+    'multicast.apps.MulticastConfig',
+    'information.apps.InformationConfig',
 ]
 
 MIDDLEWARE = [
