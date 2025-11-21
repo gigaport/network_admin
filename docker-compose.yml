@@ -68,9 +68,9 @@ services:
       PYTHONPATH: /app
       PYTHONUNBUFFERED: 1
     volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-      - ./common:/app/common:ro
+      - ./data:/app/data:Z
+      - ./logs:/app/logs:Z
+      - ./common:/app/common:ro,Z
       - ~/.ssh:/root/.ssh:ro
     depends_on:
       - fastapi
