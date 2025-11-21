@@ -40,7 +40,7 @@ services:
     working_dir: /app
     volumes:
       - ./fastapi:/app:Z
-      - ./common:/app/common:ro,Z
+      - ./common:/app/common:Z
       - ~/.ssh:/root/.ssh:ro
     command: uvicorn app:app --host 0.0.0.0 --port 8000 --log-level info
     depends_on:
