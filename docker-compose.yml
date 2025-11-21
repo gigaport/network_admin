@@ -101,9 +101,9 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
       - ./common:/app/common
-      - ./net_admin/static:/app/net_admin/static
-      - ./net_admin/staticfiles:/app/net_admin/staticfiles
-      - ./net_admin/templates:/app/net_admin/templates
+      - ./net_admin/static:/app/net_admin/static:Z
+      - ./net_admin/staticfiles:/app/net_admin/staticfiles:Z
+      - ./net_admin/templates:/app/net_admin/templates:Z
       - ~/.ssh:/root/.ssh:ro
     depends_on:
       - postgres-db
