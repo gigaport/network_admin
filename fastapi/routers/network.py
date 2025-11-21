@@ -12,7 +12,7 @@ from genie.testbed import load
 from utils.cisco_interface import Execute_GenieParser
 from utils.arista_multicast import GetAristaMulticastInfo
 from utils.cisco_common import GetCiscoCommonInfo
-from utils.librenms import GetLibrenmsInfo
+from utils.librenms import GetLibrenmsLldp
 
 router = APIRouter(prefix="/network", tags=["Network"])
 
@@ -106,10 +106,10 @@ async def CollectAristaMulticast(target: str):
     return results
 
 
-@router.get("/collect/librenms/info")
-async def CollectLibrenmsInfo():
+@router.get("/collect/librenms/lldp")
+async def CollectLibrenmsLldp():
     logger.info("Librenms 정보 수집 시작")
-    results = GetLibrenmsInfo()
+    results = GetLibrenmsLldp()
     if not results:
         logger.error("Librenms 정보 수집 실패")
         raise HTTPException(status_code=404, detail="Librenms 정보 수집 실패")

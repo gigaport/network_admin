@@ -1,8 +1,9 @@
 import json, logging, re, time, html, sys, asyncio, uvicorn, os
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import quote
 from typing import List, Dict, Tuple, Union, Optional
@@ -51,9 +52,9 @@ app = FastAPI(
             "description": "API for handling webhooks from external services"
         }
     ],
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json",
+    docs_url=None,  # 커스텀 docs 엔드포인트 사용
+    redoc_url=None,  # 커스텀 redoc 엔드포인트 사용
+    openapi_url="/api/openapi.json"
 )
 
 # CORS 설정
@@ -64,6 +65,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Swagger UI 정적 파일 마운트 (폐쇄망 환경 대응)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(webhook_router, prefix="/api/v1")
 app.include_router(network_router, prefix="/api/v1")
@@ -97,6 +101,36 @@ def configure_pyats_logging():
 
 # 애플리케이션 시작 시 로그 설정 적용
 configure_pyats_logging()
+
+# 커스텀 Swagger UI (로컬 정적 파일 사용)
+@app.get("/api/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return HTMLResponse(content="""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link type="text/css" rel="stylesheet" href="/static/swagger-ui/swagger-ui.css">
+        <title>Network Admin API - Swagger UI</title>
+    </head>
+    <body>
+        <div id="swagger-ui"></div>
+        <script src="/static/swagger-ui/swagger-ui-bundle.js"></script>
+        <script src="/static/swagger-ui/swagger-ui-standalone-preset.js"></script>
+        <script>
+        const ui = SwaggerUIBundle({
+            url: '/api/openapi.json',
+            dom_id: '#swagger-ui',
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+            ],
+            layout: "BaseLayout",
+            deepLinking: true
+        })
+        </script>
+    </body>
+    </html>
+    """)
 
 # 헬스체크 엔드포인트
 @app.get("/health")

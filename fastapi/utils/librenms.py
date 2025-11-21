@@ -21,7 +21,7 @@ HEADERS = {
     "Accept": "application/json"
 }
 
-def GetLibrenmsInfo():
+def GetLibrenmsLldp():
     # 1) 전체 수집
     devices = RequestLibrenms("/devices", params={"columns": "device_id, hostname, sysName"}, array_key="devices")
     ports   = RequestLibrenms("/ports", params={"columns":"port_id,device_id,ifName,ifAlias,ifDescr"}, array_key="ports")
