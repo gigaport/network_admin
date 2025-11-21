@@ -120,7 +120,7 @@ async def CollectLibrenmsLldp():
     return results
 
 
-@router.get("/collect/librenms/vlan-ips")
+@router.get("/collect/librenms/vlan_ips")
 async def CollectLibrenmsVlanIps():
     """VLAN 인터페이스의 IP 할당 정보 수집"""
     logger.info("LibreNMS VLAN IP 정보 수집 시작")
