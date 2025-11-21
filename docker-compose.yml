@@ -127,7 +127,7 @@ services:
     environment:
       <<: *common_env
     ports:
-      - "172.25.32.200:3000:80"
+      - "3000:80"
     volumes:
       - ./net_admin/staticfiles:/app/staticfiles:ro
       - ./logs/nginx:/var/log/nginx
