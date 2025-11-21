@@ -41,7 +41,7 @@ services:
       - ./fastapi:/app
       - ./common:/app/common:ro
       - ~/.ssh:/root/.ssh:ro
-    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload --log-level info
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --log-level info
     depends_on:
       - redis
     networks:
@@ -126,7 +126,7 @@ services:
     environment:
       <<: *common_env
     ports:
-      - "172.25.32.200:8888:80"
+      - "172.25.32.200:3000:80"
     volumes:
       - ./net_admin/staticfiles:/app/staticfiles:ro
       - ./logs/nginx:/var/log/nginx
