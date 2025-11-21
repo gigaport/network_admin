@@ -51,9 +51,9 @@ app = FastAPI(
             "description": "API for handling webhooks from external services"
         }
     ],
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
 )
 
 # CORS 설정
