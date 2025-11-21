@@ -1,4 +1,4 @@
-import json, logging, re, time, html, sys, asyncio, os, textfsm
+import json, logging, re, time, html, sys, asyncio, os, textfsm, yaml
 from pprint import pprint
 from dotenv import load_dotenv
 from datetime import datetime, timezone, timedelta
@@ -37,8 +37,17 @@ KST = timezone(timedelta(hours=9))
 TODAY_TIME = datetime.today().strftime('%Y-%m-%d %H:%M')
 
 TODAY_STR = datetime.today().strftime('%Y-%m-%d')
-TS_DEVICES = load('/app/common/ts_member_mpr.yaml')
-PR_DEVICES = load('/app/common/pr_member_mpr.yaml')
+
+CONFIG_PATH = "/app/common/ts_member_mpr.yaml"
+
+with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    TS_DEVICES = yaml.safe_load(f)
+
+CONFIG_PATH = "/app/common/pr_member_mpr.yaml"
+
+with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    PR_DEVICES = yaml.safe_load(f)
+
 FILE_PATH = "./data/"
 
 # pyATS 로거 설정 (로그 출력 완전 비활성화)
