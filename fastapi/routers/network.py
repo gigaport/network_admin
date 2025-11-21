@@ -12,7 +12,7 @@ from genie.testbed import load
 from utils.cisco_interface import Execute_GenieParser
 from utils.arista_multicast import GetAristaMulticastInfo
 from utils.cisco_common import GetCiscoCommonInfo
-from utils.librenms import GetLibrenmsLldp
+from utils.librenms import GetLibrenmsLldp, GetLibrenmsVlanIps
 
 router = APIRouter(prefix="/network", tags=["Network"])
 
@@ -108,13 +108,28 @@ async def CollectAristaMulticast(target: str):
 
 @router.get("/collect/librenms/lldp")
 async def CollectLibrenmsLldp():
-    logger.info("Librenms 정보 수집 시작")
+    logger.info("Librenms LLDP 정보 수집 시작")
     results = GetLibrenmsLldp()
     if not results:
-        logger.error("Librenms 정보 수집 실패")
-        raise HTTPException(status_code=404, detail="Librenms 정보 수집 실패")
+        logger.error("Librenms LLDP 정보 수집 실패")
+        raise HTTPException(status_code=404, detail="Librenms LLDP 정보 수집 실패")
 
-    logger.info(f"Librenms 정보 수집 완료: {len(results)}개 장비")
+    logger.info(f"Librenms LLDP 정보 수집 완료: {len(results)}개")
+    logger.debug(f"수집 결과: {results}")
+
+    return results
+
+
+@router.get("/collect/librenms/vlan-ips")
+async def CollectLibrenmsVlanIps():
+    """VLAN 인터페이스의 IP 할당 정보 수집"""
+    logger.info("LibreNMS VLAN IP 정보 수집 시작")
+    results = GetLibrenmsVlanIps()
+    if not results:
+        logger.error("LibreNMS VLAN IP 정보 수집 실패")
+        raise HTTPException(status_code=404, detail="LibreNMS VLAN IP 정보 수집 실패")
+
+    logger.info(f"LibreNMS VLAN IP 정보 수집 완료: {len(results.get('data', []))}개 VLAN")
     logger.debug(f"수집 결과: {results}")
 
     return results

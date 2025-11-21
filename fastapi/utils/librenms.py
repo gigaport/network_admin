@@ -125,6 +125,111 @@ def GetLibrenmsLldp():
 
     return data
 
+def GetLibrenmsVlanIps():
+    """
+    LibreNMS API를 사용하여 VLAN 인터페이스의 IP 할당 정보 수집
+    """
+    # 1) 전체 데이터 수집
+    devices = RequestLibrenms("/devices", params={"columns": "device_id,hostname,sysName"}, array_key="devices")
+    ports = RequestLibrenms("/ports", params={"columns": "port_id,device_id,ifName,ifAlias"}, array_key="ports")
+
+    # IP 주소 정보 수집 - 여러 방법 시도
+    ip_addresses = []
+    try:
+        # 방법 1: /resources/ip/addresses
+        ip_addresses = RequestLibrenms("/resources/ip/addresses", array_key="addresses")
+        logger.info(f"Method 1 - /resources/ip/addresses: {len(ip_addresses)} addresses")
+    except Exception as e:
+        logger.warning(f"Method 1 failed: {e}")
+
+    if not ip_addresses:
+        try:
+            # 방법 2: 모든 장비의 IP 조회
+            logger.info(f"Method 2 starting - collecting IP addresses from {len(devices)} devices")
+            for device in devices:
+                device_id = device.get('device_id')
+                try:
+                    device_ips = RequestLibrenms(f"/devices/{device_id}/ip", array_key="addresses")
+                    ip_addresses.extend(device_ips)
+                except Exception as e:
+                    logger.debug(f"Failed to get IPs for device {device_id}: {e}")
+            logger.info(f"Method 2 - /devices/*/ip: {len(ip_addresses)} addresses from {len(devices)} devices")
+        except Exception as e:
+            logger.warning(f"Method 2 failed: {e}")
+
+    logger.info(f"Collected devices: {len(devices)}, ports: {len(ports)}, ip_addresses: {len(ip_addresses)}")
+
+    # 2) 맵 구성
+    devmap = {str(d["device_id"]): {"hostname": d.get("hostname"), "sysName": d.get("sysName")} for d in devices}
+    portmap = {str(p["port_id"]): {
+        "device_id": p["device_id"],
+        "ifName": p.get("ifName"),
+        "ifAlias": p.get("ifAlias")
+    } for p in ports}
+
+    # 3) VLAN 인터페이스만 필터링하여 데이터 조합
+    # device_id + vlan을 키로 사용하여 IP 주소 그룹화
+    vlan_ip_map = {}
+
+    for addr in ip_addresses:
+        port_id = str(addr.get("port_id"))
+        port_info = portmap.get(port_id)
+
+        if not port_info:
+            continue
+
+        ifname = port_info.get("ifName", "")
+
+        # VLAN 인터페이스만 필터링 (ifName에 "Vlan" 포함)
+        if "Vlan" not in ifname:
+            continue
+
+        # VLAN 번호 추출 (예: "Vlan2432" -> "2432")
+        vlan_match = re.search(r'Vlan(\d+)', ifname)
+        if not vlan_match:
+            continue
+
+        vlan_id = vlan_match.group(1)
+        device_id = str(port_info["device_id"])
+        ip_address = addr.get("ipv4_address")
+
+        if not ip_address:
+            continue
+
+        # device_id + vlan을 키로 사용
+        key = f"{device_id}_{vlan_id}"
+
+        if key not in vlan_ip_map:
+            dev_info = devmap.get(device_id, {})
+            vlan_ip_map[key] = {
+                "device_id": int(device_id) if device_id.isdigit() else None,
+                "device_ip": dev_info.get("hostname"),
+                "hostname": dev_info.get("sysName"),
+                "vlan": vlan_id,
+                "ip": []
+            }
+
+        vlan_ip_map[key]["ip"].append(ip_address)
+
+    # 4) main 필드 추가 (IP 중 .1 또는 .254로 끝나는 것이 있는지 체크)
+    out = []
+    for vlan_data in vlan_ip_map.values():
+        # IP 배열에서 마지막 octet이 1 또는 254인 것이 있는지 확인
+        has_main_ip = False
+        for ip in vlan_data["ip"]:
+            last_octet = ip.split('.')[-1]
+            if last_octet == '1' or last_octet == '254':
+                has_main_ip = True
+                break
+
+        vlan_data["main"] = "y" if has_main_ip else "n"
+        out.append(vlan_data)
+
+    logger.info(f"VLAN IP information collected: {len(out)} VLANs")
+    logger.debug(f"VLAN IP output: {json.dumps(out, indent=2, ensure_ascii=False)}")
+
+    return {"data": out}
+
 def RequestLibrenms(path, params=None, array_key=None):
     # LibreNMS API는 보통 count/limit/offset + 배열키 형태를 씁니다.
     params = params.copy() if params else {}
