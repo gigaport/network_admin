@@ -37,9 +37,10 @@ services:
       PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       PYTHONPATH: /app
       PYTHONUNBUFFERED: 1
+    working_dir: /app
     volumes:
-      - ./fastapi:/app
-      - ./common:/app/common:ro
+      - ./fastapi:/app:Z
+      - ./common:/app/common:ro,Z
       - ~/.ssh:/root/.ssh:ro
     command: uvicorn app:app --host 0.0.0.0 --port 8000 --log-level info
     depends_on:
