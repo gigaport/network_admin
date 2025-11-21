@@ -98,9 +98,9 @@ services:
       PYTHONPATH: /app
       PYTHONUNBUFFERED: 1
     volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-      - ./common:/app/common
+      - ./data:/app/data:Z
+      - ./logs:/app/logs:Z
+      - ./common:/app/common:Z
       - ./net_admin/static:/app/net_admin/static:Z
       - ./net_admin/staticfiles:/app/net_admin/staticfiles:Z
       - ./net_admin/templates:/app/net_admin/templates:Z
