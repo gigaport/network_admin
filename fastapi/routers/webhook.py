@@ -623,15 +623,15 @@ async def send_batch_multicast_alert(request: Request):
         ]
         
         # Slack 메시지 전송
-        # send_alert(
-        #     channel=channel,
-        #     title=title,
-        #     message="",
-        #     color="danger",
-        #     fields=fields
-        # )
-        
-        # logger.info(f"배치 멀티캐스트 알림 전송 완료: {data['member_name']} -> {channel}")
+        send_alert(
+            channel=channel,
+            title=title,
+            message="",
+            color="danger",
+            fields=fields
+        )
+
+        logger.info(f"배치 멀티캐스트 알림 전송 완료: {data['member_name']} -> {channel}")
         
         return JSONResponse(
             content={

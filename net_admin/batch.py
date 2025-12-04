@@ -224,6 +224,10 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
             check_result = '회원사연결서버없음'
             type = "primary"
             icon = "fas fa-check"
+        elif mroute_cnt > product_cnt:
+            check_result = '정상그룹개수초과'
+            type = "warning"
+            icon = "fas fa-exclamation-triangle"
         else:
             check_result = '확인필요'
             type = "danger"
@@ -241,7 +245,7 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
                 "connected_server_cnt": connected_server_cnt,
                 "check_result": check_result
             }
-            
+
             send_slack_message(info)
 
         temp = {
