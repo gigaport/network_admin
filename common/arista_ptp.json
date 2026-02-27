@@ -1,0 +1,26 @@
+{
+  "devices": {
+    "pyd_ptp_l3_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "172.28.172.36",
+      "auth": {
+      }
+    },
+    "pyd_ptp_l3_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "172.28.172.37"
+    },
+    "tyd_ptp_l3_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "172.29.172.36"
+    },
+    "tyd_ptp_l3_02": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "172.29.172.37"
+    }
+  }
+}

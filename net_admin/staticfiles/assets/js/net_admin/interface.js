@@ -1,507 +1,182 @@
 (function (factory) {
     typeof define === 'function' && define.amd ? define(factory) :
     factory();
-  })((function () { 'use strict';
-    var response_data = {};
-    const data_back = document.getElementById("back_data");
-    const currentPath = data_back.dataset.submenu;
+})((function () {
+    'use strict';
+
+    var interfaceTable = null;
+
+    function updateSummary(data) {
+        var devices = {};
+        var connected = 0;
+        var notConnect = 0;
+
+        data.forEach(function(r) {
+            if (r.device_name) devices[r.device_name] = true;
+            var status = (r.interface_status || '').toLowerCase();
+            if (status === 'connected') connected++;
+            else if (status === 'notconnect' || status === 'down') notConnect++;
+        });
+
+        $('#stat_total').text(data.length.toLocaleString());
+        $('#stat_devices').text(Object.keys(devices).length);
+        $('#stat_connected').text(connected.toLocaleString());
+        $('#stat_notconnect').text(notConnect.toLocaleString());
+
+        renderDeviceBarChart(data);
+    }
+
+    function renderDeviceBarChart(data) {
+        var deviceCounts = {};
+        data.forEach(function(r) {
+            var name = r.device_name || '-';
+            deviceCounts[name] = (deviceCounts[name] || 0) + 1;
+        });
+
+        var sorted = Object.keys(deviceCounts).sort(function(a, b) { return deviceCounts[b] - deviceCounts[a]; });
+        var top = sorted.slice(0, 20);
+        var max = top.length > 0 ? deviceCounts[top[0]] : 1;
+        var colors = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#84cc16', '#e11d48', '#7c3aed', '#0d9488', '#dc2626', '#a855f7', '#0891b2', '#16a34a', '#d97706', '#be123c'];
+
+        var html = '';
+        top.forEach(function(name, i) {
+            var count = deviceCounts[name];
+            var heightPct = Math.max(15, Math.round((count / max) * 100));
+            var color = colors[i % colors.length];
+            var shortName = name.length > 16 ? name.substring(0, 16) + '..' : name;
+            html += '<div class="text-center" style="flex: 1; min-width: 40px;">';
+            html += '  <div style="font-size: 0.6rem; color: #fff; font-weight: 700; margin-bottom: 3px;">' + count + '</div>';
+            html += '  <div style="height: ' + heightPct + '%; min-height: 12px; background: ' + color + '; border-radius: 4px 4px 0 0; opacity: 0.85; transition: opacity 0.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0.85"></div>';
+            html += '  <div style="font-size: 0.5rem; color: rgba(255,255,255,0.6); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="' + name + '">' + shortName + '</div>';
+            html += '</div>';
+        });
+
+        if (sorted.length > 20) { $('#stat_device_label').text('TOP 20 / ' + sorted.length + '개'); }
+        else { $('#stat_device_label').text(sorted.length + '개 장비'); }
+        $('#deviceBarChart').html(html);
+    }
 
     var initTable = function() {
-        var table = $('#interface_table').DataTable({
+        var data_back = document.getElementById("back_data");
+        var currentPath = data_back ? data_back.dataset.submenu : 'pr_info_interface';
+        var pageTitle = currentPath.includes('ts_') ? '테스트_인터페이스_' : '본가동_인터페이스_';
+
+        interfaceTable = $('#interface_table').DataTable({
             responsive: true,
             paging: true,
+            pageLength: 100,
             searching: true,
             ordering: true,
-            pageLength: 50,
-            lengthChange: false,
+            order: [],
+            language: {
+                search: "검색:",
+                lengthMenu: "페이지당 _MENU_ 개씩 표시",
+                info: "전체 _TOTAL_개 중 _START_-_END_개 표시",
+                infoEmpty: "데이터가 없습니다",
+                infoFiltered: "(전체 _MAX_개 중 필터링됨)",
+                paginate: { first: "처음", last: "마지막", next: "다음", previous: "이전" },
+                emptyTable: "검색 결과가 없습니다",
+                zeroRecords: "검색 결과가 없습니다",
+                loadingRecords: " "
+            },
+            dom: '<"row align-items-center"<"col-sm-12 col-md-3"l><"col-sm-12 col-md-9 d-flex justify-content-end align-items-center gap-2"fB>>' +
+                 '<"row"<"col-sm-12"tr>>' +
+                 '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            buttons: [
+                { extend: 'excel', text: '<i class="fa-solid fa-file-excel me-2"></i>Excel', className: 'btn btn-success btn-sm', title: pageTitle + new Date().toISOString().slice(0, 10), exportOptions: { columns: ':visible', modifier: { page: 'all' } } },
+                { extend: 'csv', text: '<i class="fa-solid fa-file-csv me-2"></i>CSV', className: 'btn btn-info btn-sm', title: pageTitle + new Date().toISOString().slice(0, 10), exportOptions: { columns: ':visible', modifier: { page: 'all' } } },
+                { extend: 'copy', text: '<i class="fa-solid fa-copy me-2"></i>복사', className: 'btn btn-secondary btn-sm', exportOptions: { columns: ':visible', modifier: { page: 'all' } } }
+            ],
             ajax: {
                 url: '/information/init',
                 type: 'GET',
-                data: {
-                    sub_menu: currentPath
+                data: { sub_menu: currentPath },
+                dataSrc: function(json) {
+                    if (json.data) { updateSummary(json.data); return json.data; }
+                    return [];
                 },
-                // dataType: 'json',
-                // success: function(response){
-                //     response_data = response;
-                // }
+                error: function(xhr, error, thrown) {
+                    console.error('AJAX Error:', error, thrown);
+                    showAlert('데이터 로드 중 오류가 발생했습니다.', 'danger');
+                }
             },
             columns: [
-                { data: 'device_name' }, // 0
-                { data: 'device_ip' }, // 1
-                { data: 'device_os' }, // 2
-                { data: 'interface_no' }, // 3
-                { data: 'interface_description' }, // 4
-                { data: 'interface_status' }, // 5
-                { data: 'interface_vlan' }, // 6
-                { data: 'interface_duplex' }, // 7
-                { data: 'interface_speed' }, // 8
-                { data: 'interface_type' }, // 9
+                { data: 'device_name' }, { data: 'device_ip' }, { data: 'device_os' },
+                { data: 'interface_no' }, { data: 'interface_description' }, { data: 'interface_status' },
+                { data: 'interface_vlan' }, { data: 'interface_duplex' }, { data: 'interface_speed' }, { data: 'interface_type' }
             ],
             columnDefs: [
-                {
-                    targets: 0,
-                    width: '10%',
-                    createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle fw-bold');
-                    },
-                    render: function(data, type, row, meta) {
-                        return data;
-                    }
-                },
-                {
-                    targets: 1,
-                    width: '6%',
-                    createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle');
-                    },
-                    render: function(data, type, row, meta) {
-                        return data;
-                    }
-                },
-                {
-                    targets: 2,
-                    width: '4%',
-                    createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle');
-                    },
-                    render: function(data, type, row, meta) {
-                        return data;
-                    }
-                },
-                {
-                    targets: 3,
-                    width: '10%',
-                    createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle fw-bold');
-                    },
-                    render: function(data, type, row, meta) {
-                        let status_data = row.interface_status;
-
-                        if (status_data.includes('connected')) {
-                            return '<span class="text-primary">' + data + '</span>';
-                        } else if (status_data.includes('notconnect')) {
-                            return '<span class="text-danger">' + data + '</span>';
-                        } else if (status_data.includes('xcvrAbsen')) {
-                            return '<span class="label-warning">' + data + '</span>';
-                        } else if (status_data.includes('disabled')) {
-                            return '<span class="label-warning">' + data + '</span>';
-                        } else if (status_data.includes('down')) {
-                            return '<span class="text-danger">' + data + '</span>';
-                        } else {
-                            return data;
-                        }
-                    }
-                },
-                {
-                    targets: 4,
-                    width: '20%',
-                    createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-left device_name py-2 align-middle');
-                    },
-                    render: function(data, type, row, meta) {
-                        return data;
-                    }
-                },
-                {
-                    targets: 5,
-                    width: '10%',
-                    createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle fw-bold');
-                    },
-                    render: function(data, type, row, meta) {
-                        var status = {
-							'connected': {'title': 'connected', 'class': 'primary'},
-							'notconnect': {'title': 'notconnect', 'class': 'danger'},
-							'xcvrAbsen': {'title': 'xcvrAbsen', 'class': 'warning'},
-							'disabled': {'title': 'disabled', 'class': 'warning'},
-                            'down': {'title': 'down', 'class': 'danger'}
-						};
-						if (typeof status[data] == 'undefined') {
-							return data;
-						}
-						return '<span class="badge fs-10 badge-phoenix badge-phoenix-' + status[data].class + '">' + status[data].title + '</span>';
-                    }
-                },
-                {
-                    targets: 6,
-                    width: '10%',
-                    createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle');
-                    },
-                    render: function(data, type, row, meta) {
-                        return data;
-                    }
-                },
-                {
-                    targets: 7,
-                    width: '10%',
-                    createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle');
-                    },
-                    render: function(data, type, row, meta) {
-                        return data;
-                    }
-                },
-                {
-                    targets: 8,
-                    width: '10%',
-                    createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle');
-                    },
-                    render: function(data, type, row, meta) {
-                        return data;
-                    }
-                },
-                {
-                    targets: 9,
-                    width: '10%',
-                    createdCell: function(td, cellData, rowData, row, col) {
-                        $(td).addClass('text-center device_name py-2 align-middle');
-                    },
-                    render: function(data, type, row, meta) {
-                        return data;
-                    }
-                },
+                { targets: 0, width: '10%', className: 'text-center py-2 align-middle', render: function(data, type) { if (type === 'export') return data; if (!data) return '-'; return '<span class="fw-bold" style="color: #1e293b;">' + data + '</span>'; } },
+                { targets: 1, width: '6%', className: 'text-center py-2 align-middle', render: function(data, type) { if (type === 'export') return data; if (!data) return '-'; return '<span style="color: #0ea5e9; font-weight: 500;">' + data + '</span>'; } },
+                { targets: 2, width: '4%', className: 'text-center py-2 align-middle', render: function(data, type) { if (type === 'export') return data; if (!data) return '-'; return '<span class="badge badge-phoenix badge-phoenix-secondary">' + data + '</span>'; } },
+                { targets: 3, width: '10%', className: 'text-center py-2 align-middle', render: function(data, type, row) {
+                    if (type === 'export') return data; if (!data) return '-';
+                    var status = (row.interface_status || '').toLowerCase();
+                    if (status === 'connected') return '<span class="fw-bold" style="color: #0ea5e9;">' + data + '</span>';
+                    if (status === 'notconnect' || status === 'down') return '<span class="fw-bold" style="color: #ef4444;">' + data + '</span>';
+                    if (status === 'xcvrabsen' || status === 'disabled') return '<span class="fw-bold" style="color: #f59e0b;">' + data + '</span>';
+                    return '<span class="fw-bold">' + data + '</span>';
+                } },
+                { targets: 4, width: '20%', className: 'text-start py-2 align-middle', render: function(data, type) { if (type === 'export') return data; if (!data) return '<span style="color: #cbd5e1;">-</span>'; return '<span style="color: #059669; font-weight: 600;">' + data + '</span>'; } },
+                { targets: 5, width: '10%', className: 'text-center py-2 align-middle', render: function(data, type) {
+                    if (type === 'export') return data; if (!data) return '-';
+                    var statusMap = { 'connected': 'primary', 'notconnect': 'danger', 'xcvrAbsen': 'warning', 'disabled': 'warning', 'down': 'danger' };
+                    var cls = statusMap[data];
+                    if (!cls) return '<span class="badge badge-phoenix badge-phoenix-secondary">' + data + '</span>';
+                    return '<span class="badge badge-phoenix badge-phoenix-' + cls + '">' + data + '</span>';
+                } },
+                { targets: 6, width: '10%', className: 'text-center py-2 align-middle', render: function(data, type) { if (type === 'export') return data; if (!data) return '<span style="color: #cbd5e1;">-</span>'; return '<span class="badge badge-phoenix badge-phoenix-info">' + data + '</span>'; } },
+                { targets: 7, width: '10%', className: 'text-center py-2 align-middle', render: function(data) { return data || '<span style="color: #cbd5e1;">-</span>'; } },
+                { targets: 8, width: '10%', className: 'text-center py-2 align-middle', render: function(data, type) { if (type === 'export') return data; if (!data) return '<span style="color: #cbd5e1;">-</span>'; return '<span class="fw-semibold">' + data + '</span>'; } },
+                { targets: 9, width: '10%', className: 'text-center py-2 align-middle', render: function(data) { return data || '<span style="color: #cbd5e1;">-</span>'; } }
             ],
-            initComplete: function(){
-                console.log("📊 DataTable has finished loading");
-                table.buttons().container().appendTo('#dropdown-inline');
-				this.api().columns().every(function () {
-                    let column = this;
-                    let title = column.footer().textContent;
+            initComplete: function() {
+                var overlay = document.getElementById('pageLoadingOverlay');
+                if (overlay) { overlay.style.opacity = '0'; setTimeout(function() { overlay.remove(); }, 400); }
 
-                    // Create input element
-                    let input = document.createElement('input');
-                    input.placeholder = title;
-                    column.footer().replaceChildren(input);
-
-                    // $('thead th').eq(column.index()).append(input);
-                    // $('tfoot').remove();  // 또는 hide()
-
-                    // Event listener for user input
-                    input.addEventListener('keyup', () => {
-                        if (column.search() !== this.value) {
-                            column.search(input.value).draw();
-                        }
+                $('#interface_table tfoot th').each(function() {
+                    var title = $(this).text();
+                    $(this).css({'font-size': '0.7rem', 'white-space': 'nowrap'});
+                    $(this).html('<input type="text" class="form-control form-control-sm" placeholder="' + title + ' 검색" style="font-size:0.65rem; padding:2px 4px;" />');
+                });
+                interfaceTable.columns().every(function() {
+                    var that = this;
+                    $('input', this.footer()).on('keyup change', function() {
+                        if (that.search() !== this.value) that.search(this.value).draw();
                     });
                 });
-                $("#interface_table").show();
-            },
+            }
         });
+
+        $('#summaryCards > div > div').css('transition', 'transform 0.25s ease, box-shadow 0.25s ease');
+        $('#summaryCards > div > div').on('mouseenter', function() {
+            $(this).css({ 'transform': 'translateY(-4px) scale(1.02)', 'box-shadow': '0 8px 25px rgba(0,0,0,0.2)' });
+        }).on('mouseleave', function() {
+            $(this).css({ 'transform': 'translateY(0) scale(1)', 'box-shadow': '' });
+        });
+    };
+
+    window.refreshTable = function() {
+        var spinner = $('<div class="position-fixed top-50 start-50 translate-middle" style="z-index: 10000;"><div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"><span class="visually-hidden">Loading...</span></div></div>');
+        $('body').append(spinner);
+        $('#interface_table tfoot input').val('');
+        if (interfaceTable) { interfaceTable.columns().search(''); interfaceTable.ajax.reload(function() { spinner.remove(); }, false); }
+        else { spinner.remove(); }
+    };
+
+    function showAlert(message, type) {
+        var icons = { success: 'fa-check-circle', danger: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+        var colors = { success: '#10b981', danger: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
+        var titles = { success: '완료', danger: '오류', warning: '알림', info: '안내' };
+        if (!$('#toastContainer').length) { $('body').append('<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>'); }
+        var toastId = 'toast_' + Date.now();
+        var toastHtml = '<div id="' + toastId + '" class="toast align-items-center border-0 shadow-lg" role="alert" data-bs-delay="3000" style="border-radius: 10px; overflow: hidden; border-left: 4px solid ' + (colors[type] || colors.info) + ' !important;"><div class="toast-header border-0" style="padding: 10px 14px;"><i class="fas ' + (icons[type] || icons.info) + ' me-2" style="color: ' + (colors[type] || colors.info) + '; font-size: 0.9rem;"></i><strong class="me-auto" style="font-size: 0.8rem; color: #1e293b;">' + (titles[type] || titles.info) + '</strong><button type="button" class="btn-close" data-bs-dismiss="toast" style="font-size: 0.55rem;"></button></div><div class="toast-body" style="padding: 0 14px 12px; font-size: 0.78rem; color: #475569;">' + message + '</div></div>';
+        $('#toastContainer').append(toastHtml);
+        var toastEl = document.getElementById(toastId);
+        var toast = new bootstrap.Toast(toastEl);
+        toast.show();
+        toastEl.addEventListener('hidden.bs.toast', function() { $(toastEl).remove(); });
     }
 
-
-    // $.ajax({
-    //     type:"GET",
-    //     async: false,
-    //     url:"/information/init",
-    //     dataType:"json",
-    //     data: {
-    //         sub_menu: currentPath
-    //     },
-
-    //     success: function(response){
-    //         response_data = response;
-            
-    //         const togglePaginationButtonDisable = (button, disabled) => {
-    //             button.disabled = disabled;
-    //             button.classList[disabled ? 'add' : 'remove']('disabled');
-    //         };
-
-    //         const table = document.getElementById('advanceAjaxTable');
-
-    //         if (table) {
-    //             const options = {
-    //                 page: 100,
-    //                 pagination: {
-    //                     item: "<li><button class='page' type='button'></button></li>"
-    //                 },
-    //                 item: values => {
-    //                     const {
-    //                         device_name,
-    //                         device_ip,
-    //                         device_os,
-    //                         interface_no,
-    //                         interface_description,
-    //                         interface_status,
-    //                         interface_vlan,
-    //                         interface_duplex,
-    //                         interface_speed,
-    //                         interface_type,
-    //                         interface_class
-    //                     } = values;
-    //                     return `
-    //                         <tr class="tr_list hover-actions-trigger btn-reveal-trigger position-static">
-    //                         <td class="device_name py-2 align-middle text-center fs-8 fw-bold">
-    //                             ${device_name}
-    //                         </td>
-    //                         <td class="device_ip py-2 align-middle text-center fs-8">
-    //                             ${device_ip}
-    //                         </td>
-    //                         <td class="device_os py-2 align-middle text-center fs-8">
-    //                             ${device_os}
-    //                         </td>
-    //                         <td class="interface_no py-2 align-middle text-center fs-8 fw-bold">
-    //                             <span class="${interface_class}">
-    //                             ${interface_no}
-    //                             </span>
-    //                         </td>
-    //                         <td class="interface_description py-2 align-middle fs-8 text-center">
-    //                             <span class="text-primary-darker">
-    //                             ${interface_description}
-    //                             </span>
-    //                         </td>
-    //                         <td class="interface_status py-2 align-middle text-center fs-8 fw-bold">
-    //                             <span class="${interface_class}">
-    //                             ${interface_status}
-    //                             </span>
-    //                         </td>
-    //                         <td class="interface_vlan py-2 align-middle text-center fs-8 fw-medium">
-    //                             <p class="mb-0">${interface_vlan}</p>
-    //                         </td>
-    //                         <td class="interface_duplex py-2 align-middle text-center fs-8">
-    //                             ${interface_duplex}
-    //                         </td>
-    //                         <td class="interface_speed py-2 align-middle text-center fs-8 fw-medium">
-    //                             ${interface_speed}
-    //                         </td>
-    //                         <td class="interface_type py-2 align-middle text-center fs-8 fw-medium">
-    //                             ${interface_type}
-    //                         </td>
-    //                         </tr>
-    //                     `;
-    //                     }
-    //                 };
-    //             const paginationButtonNext = table.querySelector(
-    //                 '[data-list-pagination="next"]'
-    //             );
-    //             const paginationButtonPrev = table.querySelector(
-    //                 '[data-list-pagination="prev"]'
-    //             );
-    //             const viewAll = table.querySelector('[data-list-view="*"]');
-    //             const viewLess = table.querySelector('[data-list-view="less"]');
-    //             const listInfo = table.querySelector('[data-list-info]');
-    //             const listFilter = document.querySelector('[data-list-filter]');
-        
-    //             const response_data_list = new window.List(table, options, response_data);
-        
-    //             // Fallback
-    //             response_data_list.on('updated', item => {
-    //                 const fallback =
-    //                     table.querySelector('.fallback') ||
-    //                     document.getElementById(options.fallback);
-            
-    //                 if (fallback) {
-    //                     if (item.matchingItems.length === 0) {
-    //                     fallback.classList.remove('d-none');
-    //                     } else {
-    //                     fallback.classList.add('d-none');
-    //                     }
-    //                 }
-    //             });
-        
-    //             const totalItem = response_data_list.items.length;
-    //             const itemsPerPage = response_data_list.page;
-    //             const btnDropdownClose = response_data_list.listContainer.querySelector('.btn-close');
-    //             let pageQuantity = Math.ceil(totalItem / itemsPerPage);
-    //             let numberOfcurrentItems = response_data_list.visibleItems.length;
-    //             let pageCount = 1;
-        
-    //             btnDropdownClose &&
-    //             btnDropdownClose.addEventListener('search.close', () =>
-    //                 response_data_list.fuzzySearch('')
-    //             );
-        
-    //             const updateListControls = () => {
-    //                 listInfo &&
-    //                     (listInfo.innerHTML = `${response_data_list.i} to ${numberOfcurrentItems} of ${totalItem}`);
-    //                 paginationButtonPrev &&
-    //                     togglePaginationButtonDisable(paginationButtonPrev, pageCount === 1);
-    //                 paginationButtonNext &&
-    //                     togglePaginationButtonDisable(
-    //                     paginationButtonNext,
-    //                     pageCount === pageQuantity
-    //                     );
-            
-    //                 if (pageCount > 1 && pageCount < pageQuantity) {
-    //                     togglePaginationButtonDisable(paginationButtonNext, false);
-    //                     togglePaginationButtonDisable(paginationButtonPrev, false);
-    //                 }
-    //             };
-    //             updateListControls();
-        
-    //             if (paginationButtonNext) {
-    //                 paginationButtonNext.addEventListener('click', e => {
-    //                     e.preventDefault();
-    //                     pageCount += 1;
-            
-    //                     const nextInitialIndex = response_data_list.i + itemsPerPage;
-    //                     nextInitialIndex <= response_data_list.size() &&
-    //                     response_data_list.show(nextInitialIndex, itemsPerPage);
-    //                     numberOfcurrentItems += response_data_list.visibleItems.length;
-    //                     updateListControls();
-    //                 });
-    //             }
-        
-    //             if (paginationButtonPrev) {
-    //                 paginationButtonPrev.addEventListener('click', e => {
-    //                     e.preventDefault();
-    //                     pageCount -= 1;
-            
-    //                     numberOfcurrentItems -= response_data_list.visibleItems.length;
-    //                     const prevItem = response_data_list.i - itemsPerPage;
-    //                     prevItem > 0 && response_data_list.show(prevItem, itemsPerPage);
-    //                     updateListControls();
-    //                 });
-    //             }
-        
-    //             const toggleViewBtn = () => {
-    //                 viewLess.classList.toggle('d-none');
-    //                 viewAll.classList.toggle('d-none');
-    //             };
-        
-    //             if (viewAll) {
-    //                 viewAll.addEventListener('click', () => {
-    //                     response_data_list.show(1, totalItem);
-    //                     pageQuantity = 1;
-    //                     pageCount = 1;
-    //                     numberOfcurrentItems = totalItem;
-    //                     updateListControls();
-    //                     toggleViewBtn();
-    //                 });
-    //             }
-    //             if (viewLess) {
-    //                 viewLess.addEventListener('click', () => {
-    //                     response_data_list.show(1, itemsPerPage);
-    //                     pageQuantity = Math.ceil(totalItem / itemsPerPage);
-    //                     pageCount = 1;
-    //                     numberOfcurrentItems = response_data_list.visibleItems.length;
-    //                     updateListControls();
-    //                     toggleViewBtn();
-    //             });
-    //             }
-    //             if (options.pagination) {
-    //                 table.querySelector('.pagination').addEventListener('click', e => {
-    //                     if (e.target.classList[0] === 'page') {
-    //                     pageCount = Number(e.target.innerText);
-    //                     updateListControls();
-    //                     }
-    //                 });
-    //             }
-    //             if (options.filter) {
-    //                 const { key } = options.filter;
-    //                 listFilter.addEventListener('change', e => {
-    //                     response_data_list.filter(item => {
-    //                     if (e.target.value === '') {
-    //                         return true;
-    //                     }
-    //                     return item
-    //                         .values()
-    //                         [key].toLowerCase()
-    //                         .includes(e.target.value.toLowerCase());
-    //                     });
-    //                 });
-    //             }
-    //         }
-    //     }
-    // });
-
-    // $('#kt_datatable tbody').on('click', 'a', function(e) {
-    //     e.preventDefault(); // 기본 동작 방지
-    //     console.log(received_data);
-    //     // 필요한 동작 수행
-    //     var route_id = $(this).text();
-    //     console.log(route_id);
-
-    //     var index = received_data.findIndex(obj => obj.subnet_rt_id === route_id);
-    //     // console.log(index);
-    //     var route_tables = received_data[index].subnet_rt;
-    //     var subnet_name = received_data[index].subnet_name;
-    //     document.getElementById("h5-subnet-routetable").innerText = 'SUBNET : ' + ' '+ subnet_name + ' || ROUTE_ID : ' + route_id;
-    //     // console.log(received_data[index]);
-    //     // console.log(route_tables.length);
-    //     // 기존 전체 row 삭제
-    //     $("#tbody-subnet-routetable tr").remove();
-
-    //     for (var i = 0; i < route_tables.length; i++){
-    //         // console.log(route_tables[i].DestinationCidrBlock);
-    //         if ("TransitGatewayId" in route_tables[i]) {
-    //             $('#table-subnet-routetable> tbody:last').append('<tr><td>' + route_tables[i].DestinationCidrBlock + '</td><td>' + route_tables[i].TransitGatewayId + '</td><td>' + route_tables[i].Origin + '</td><td>' + route_tables[i].State + '</td></tr>');
-    //         } else {
-    //             $('#table-subnet-routetable> tbody:last').append('<tr><td>' + route_tables[i].DestinationCidrBlock + '</td><td>' + route_tables[i].GatewayId + '</td><td>' + route_tables[i].Origin + '</td><td>' + route_tables[i].State + '</td></tr>');
-    //         }
-    //     }
-
-    //     $('#modal-subnet-routetable').modal();
-    //     // var row = table.row(tr);
-    //     // var data = row.data();
-    //     //
-    //     // // 클릭된 링크와 관련된 행의 데이터에 접근
-    //     // console.log(data);
-    // });
-  
-    // const advanceAjaxTableInit = () => {
-    //   const togglePaginationButtonDisable = (button, disabled) => {
-    //     button.disabled = disabled;
-    //     button.classList[disabled ? 'add' : 'remove']('disabled');
-    //   };
-    //   // Selectors
-      
-    // };
-  
-    // const { docReady } = window.phoenix.utils;
-    // docReady(advanceAjaxTableInit);
-
-    document.addEventListener('DOMContentLoaded', function(){
-        console.log("이벤트 감지됨", this.value);
-        // const searchInput = document.getElementById('search_mroute');
-        // const table = document.getElementById('multicast_table');
-        // const rows = table.querySelectorAll('tbody tr');
-
-        // searchInput.addEventListener("input", function(){
-        //     console.log("입력 감지됨", this.value);
-
-        //     const keyword = this.value.trim().toLowerCase();
-        //     let matchCount = 0;
-
-        //     rows.forEach(row => {
-        //         console.log("키워드", keyword);
-        //         if (keyword == '교'){
-        //             console.log("교로 매칭");
-        //         }
-        //         const rowText = row.innerHTML.replace(/\s+/g, ' ').toLowerCase();
-        //         const isMatch = rowText.includes(keyword);
-        //         row.computedStyleMap.display = isMatch ? "table-row" : "none";
-        //         console.log({currentDisplay: row.style.dislay});
-        //         if (isMatch) matchCount++;
-        //     });
-        // });
-
-        let buttons = document.querySelectorAll('.btn');
-        let modalEl = document.getElementById('modal_mroute');
-        let modalInstance = new bootstrap.Modal(modalEl);
-        let modal_body = modalEl.querySelector('.modal-body p');
-        let modal_title = document.getElementById('modal_title');
-
-        buttons.forEach(button => {
-            button.addEventListener('click', function(){
-                if (this.id == 'btn_mroute') {
-                    let infoContents = this.dataset.info;
-                    let infoTitle = this.dataset.title;
-                    let html_infoText = infoContents.replace(/\\r\\n|\\n|\\n|\\r/g, '<br>');
-                    modal_body.innerHTML = html_infoText;
-                    modal_title.innerHTML = infoTitle;
-                    modalInstance.show();
-                }
-            });
-        });
-    });
-    // setTimeout(function() {
-    //     window.location.reload();
-    // }, 60000);
-
-    initTable();
-
-  }));
-  //# sourceMappingURL=advance-ajax-table.js.map
-  
+    $(document).ready(function() { initTable(); });
+}));

@@ -1,0 +1,368 @@
+{% extends 'components/base.html' %}
+{% load static %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'assets/css/datatables.min.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/buttons.dataTables.min.css' %}">
+{% endblock %}
+
+{% block content %}
+  <!-- 로딩 오버레이 -->
+  <div id="pageLoadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9998; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.3); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 0.4s ease;">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div style="font-size: 0.85rem; color: #475569; font-weight: 500;">데이터를 불러오는 중...</div>
+    </div>
+  </div>
+  <div class="content">
+    <nav class="mb-3" aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="#!">회선계약 관리</a></li>
+        <li class="breadcrumb-item active">회원사 매입내역</li>
+      </ol>
+    </nav>
+    <div class="mb-9">
+      <div class="row g-3 mb-4" style="margin: 0 auto;">
+        <div class="col-auto">
+          <h2 class="mb-0">회원사 매입내역</h2>
+        </div>
+        <div class="col-auto ms-auto">
+          <button class="btn btn-sm btn-success me-2" onclick="showCreateModal()">
+            <i class="fas fa-plus me-1"></i>추가
+          </button>
+          <button class="btn btn-sm btn-primary" onclick="refreshTable()">
+            <i class="fas fa-sync-alt me-1"></i>새로고침
+          </button>
+        </div>
+      </div>
+
+      <!-- 요약 통계 카드 -->
+      <div class="row g-3 mb-4" id="summaryCards">
+        <!-- 전체 회선 -->
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #6366f1, #818cf8); box-shadow: 0 4px 15px rgba(99,102,241,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
+              <i class="fas fa-file-contract" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
+              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">전체 회선</span>
+            </div>
+            <div class="fw-bold" id="stat_total" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
+            <div id="stat_total_amount" style="font-size: 0.65rem; color: rgba(255,255,255,0.7); margin-top: 6px;">총 매입 -</div>
+          </div>
+        </div>
+        <!-- 총 매입금액 -->
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 4px 15px rgba(16,185,129,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
+              <i class="fas fa-won-sign" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
+              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">총 매입금액</span>
+            </div>
+            <div class="fw-bold" id="stat_grand_total" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</div>
+          </div>
+        </div>
+        <!-- KT 매입 -->
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); box-shadow: 0 4px 15px rgba(14,165,233,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
+              <i class="fas fa-network-wired" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
+              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">KT 매입</span>
+            </div>
+            <div class="fw-bold" id="stat_kt" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
+            <div id="stat_kt_amount" style="font-size: 0.65rem; color: rgba(255,255,255,0.7); margin-top: 6px;">매입 -</div>
+          </div>
+        </div>
+        <!-- LGU 매입 -->
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #d97706, #f59e0b); box-shadow: 0 4px 15px rgba(245,158,11,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
+              <i class="fas fa-network-wired" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
+              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">LGU 매입</span>
+            </div>
+            <div class="fw-bold" id="stat_lgu" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
+            <div id="stat_lgu_amount" style="font-size: 0.65rem; color: rgba(255,255,255,0.7); margin-top: 6px;">매입 -</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 차트 영역 -->
+      <div class="row g-3 mb-4">
+        <!-- 매입 TOP 5 회원사 (카드) -->
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm h-100" style="border-radius: 14px; overflow: hidden;">
+            <div class="card-body" style="padding: 18px 20px;">
+              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
+                <i class="fas fa-trophy me-2" style="color: #f59e0b;"></i>매입 TOP 5 회원사
+              </h6>
+              <div id="top5Cards" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- JS에서 동적 생성 -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 통신사별 매입 비율 -->
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm h-100" style="border-radius: 14px; overflow: hidden;">
+            <div class="card-body d-flex flex-column" style="padding: 18px 20px;">
+              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
+                <i class="fas fa-chart-pie me-2" style="color: #6366f1;"></i>통신사별 매입 비율
+              </h6>
+              <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                <canvas id="chartProvider"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 데이터센터별 매입 분포 -->
+        <div class="col-md-4">
+          <div class="card border-0 shadow-sm h-100" style="border-radius: 14px; overflow: hidden;">
+            <div class="card-body d-flex flex-column" style="padding: 18px 20px;">
+              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
+                <i class="fas fa-server me-2" style="color: #10b981;"></i>데이터센터별 매입
+              </h6>
+              <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                <canvas id="chartDC"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DataTable -->
+      <div class="card border-0 shadow-sm bg-body-emphasis" style="margin: 0 auto;">
+        <div class="card-body" style="padding: 2rem 1rem !important; min-height: 400px;">
+          <div class="table-responsive scrollbar">
+            <table class="table table-hover table-sm mb-0" id="purchaseTable" style="width: 100% !important; font-size: 0.85rem !important;">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">회원사코드</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">회사명</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">데이터센터</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">통신사</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">과금시작일</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">계약종료일</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">서비스ID</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">NNI ID</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">원가코드</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">비용기준</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">매입금액</th>
+                </tr>
+              </thead>
+              <tfoot class="sort text-center" style="display: table-header-group">
+                <tr>
+                  <th class="text-center">회원사코드</th>
+                  <th class="text-center">회사명</th>
+                  <th class="text-center">데이터센터</th>
+                  <th class="text-center">통신사</th>
+                  <th class="text-center">과금시작일</th>
+                  <th class="text-center">계약종료일</th>
+                  <th class="text-center">서비스ID</th>
+                  <th class="text-center">NNI ID</th>
+                  <th class="text-center">원가코드</th>
+                  <th class="text-center">비용기준</th>
+                  <th class="text-center">매입금액</th>
+                </tr>
+              </tfoot>
+              <tbody class="list" id="purchase-table-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer position-absolute">
+      <div class="row g-0 justify-content-between align-items-center h-100">
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 mt-2 mt-sm-0 text-body">Nextrade Network Admin<span class="d-none d-sm-inline-block"></span><span class="d-none d-sm-inline-block mx-1">|</span><br class="d-sm-none" />2025 &copy;<a class="mx-1" href="">RWS</a></p>
+        </div>
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 text-body-tertiary text-opacity-85">v1.22.0</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 추가 모달 -->
+  <div class="modal fade" id="createModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content border-0" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header border-0" style="background: linear-gradient(135deg, #059669, #10b981); padding: 18px 24px;">
+          <h5 class="modal-title fw-bold text-white" style="font-size: 1.1rem;">
+            <i class="fas fa-plus-circle me-2" style="opacity: 0.85;"></i>매입내역 추가
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="background-color: #f8fafc; padding: 20px 24px;">
+          <form id="createForm">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">회원사코드 <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm" id="add_member_code">
+                  <option value="">선택</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">데이터센터</label>
+                <select class="form-select form-select-sm" id="add_datacenter_code">
+                  <option value="">선택</option>
+                  <option value="DC1">DC1</option>
+                  <option value="DC2">DC2</option>
+                  <option value="DC3">DC3</option>
+                  <option value="DR">DR</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">통신사</label>
+                <select class="form-select form-select-sm" id="add_provider">
+                  <option value="">선택</option>
+                  <option value="KT">KT</option>
+                  <option value="LGU">LGU</option>
+                  <option value="SKB">SKB</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">과금시작일</label>
+                <input type="date" class="form-control form-control-sm" id="add_billing_start_date">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">계약종료일</label>
+                <input type="date" class="form-control form-control-sm" id="add_contract_end_date">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">서비스ID</label>
+                <input type="text" class="form-control form-control-sm" id="add_service_id" placeholder="예: C18000504" maxlength="30">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">NNI ID</label>
+                <input type="text" class="form-control form-control-sm" id="add_nni_id" maxlength="30">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label small fw-semibold text-muted">원가코드</label>
+                <select class="form-select form-select-sm" id="add_cost_code">
+                  <option value="">선택</option>
+                </select>
+                <div id="add_cost_info" class="mt-1" style="font-size: 0.75rem; color: #6366f1; font-weight: 500;"></div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0" style="background-color: #f8fafc; padding: 14px 24px;">
+          <button type="button" class="btn btn-light btn-sm px-4" data-bs-dismiss="modal" style="border: 1px solid #d1d5db; border-radius: 8px;">
+            <i class="fas fa-times me-1"></i>취소
+          </button>
+          <button type="button" class="btn btn-sm px-4" onclick="saveCreate()" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; border-radius: 8px; border: none;">
+            <i class="fas fa-save me-1"></i>추가
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 수정 모달 -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content border-0" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header border-0" style="background: linear-gradient(135deg, #4f46e5, #6366f1); padding: 18px 24px;">
+          <h5 class="modal-title fw-bold text-white" style="font-size: 1.1rem;">
+            <i class="fas fa-edit me-2" style="opacity: 0.85;"></i>매입내역 수정
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="background-color: #f8fafc; padding: 20px 24px;">
+          <form id="editForm">
+            <input type="hidden" id="edit_id">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">회원사코드</label>
+                <select class="form-select form-select-sm" id="edit_member_code">
+                  <option value="">선택</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">데이터센터</label>
+                <select class="form-select form-select-sm" id="edit_datacenter_code">
+                  <option value="">선택</option>
+                  <option value="DC1">DC1</option>
+                  <option value="DC2">DC2</option>
+                  <option value="DC3">DC3</option>
+                  <option value="DR">DR</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">통신사</label>
+                <select class="form-select form-select-sm" id="edit_provider">
+                  <option value="">선택</option>
+                  <option value="KT">KT</option>
+                  <option value="LGU">LGU</option>
+                  <option value="SKB">SKB</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">과금시작일</label>
+                <input type="date" class="form-control form-control-sm" id="edit_billing_start_date">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">계약종료일</label>
+                <input type="date" class="form-control form-control-sm" id="edit_contract_end_date">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">서비스ID</label>
+                <input type="text" class="form-control form-control-sm" id="edit_service_id" maxlength="30">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">NNI ID</label>
+                <input type="text" class="form-control form-control-sm" id="edit_nni_id" maxlength="30">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label small fw-semibold text-muted">원가코드</label>
+                <select class="form-select form-select-sm" id="edit_cost_code">
+                  <option value="">선택</option>
+                </select>
+                <div id="edit_cost_info" class="mt-1" style="font-size: 0.75rem; color: #6366f1; font-weight: 500;"></div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0 d-flex justify-content-between" style="background-color: #f8fafc; padding: 14px 24px;">
+          <button type="button" class="btn btn-sm px-4" onclick="deleteFromEdit()" style="background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff; border-radius: 8px; border: none;">
+            <i class="fas fa-trash-alt me-1"></i>삭제
+          </button>
+          <div>
+            <button type="button" class="btn btn-light btn-sm px-4 me-2" data-bs-dismiss="modal" style="border: 1px solid #d1d5db; border-radius: 8px;">
+              <i class="fas fa-times me-1"></i>취소
+            </button>
+            <button type="button" class="btn btn-sm px-4" onclick="saveEdit()" style="background: linear-gradient(135deg, #4f46e5, #6366f1); color: #fff; border-radius: 8px; border: none;">
+              <i class="fas fa-save me-1"></i>저장
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="back_data" data-submenu="{{ sub_menu|escapejs }}"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'assets/js/datatables.min.js' %}"></script>
+<script src="{% static 'assets/js/jszip.min.js' %}"></script>
+<script src="{% static 'assets/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'assets/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'vendors/popper/popper.min.js' %}"></script>
+<script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
+<script src="{% static 'vendors/is/is.min.js' %}"></script>
+<script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
+<script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
+<script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
+<script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
+<script src="{% static 'assets/js/phoenix.js' %}"></script>
+<script src="{% static 'assets/js/chart.min.js' %}"></script>
+<script src="{% static 'assets/js/net_admin/purchase_contract.js' %}?v={% now "YmdHis" %}"></script>
+{% endblock %}

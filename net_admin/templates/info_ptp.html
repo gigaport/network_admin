@@ -1,0 +1,437 @@
+{% extends 'components/base.html' %}
+{% load static %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'assets/css/datatables.min.css' %}">
+
+<style>
+    /* 테이블 스타일 */
+    #ptp_summary_table thead th {
+        white-space: nowrap !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        position: relative !important;
+        padding-right: 30px !important;
+    }
+    #ptp_summary_table thead th.sorting::before,
+    #ptp_summary_table thead th.sorting::after,
+    #ptp_summary_table thead th.sorting_asc::before,
+    #ptp_summary_table thead th.sorting_asc::after,
+    #ptp_summary_table thead th.sorting_desc::before,
+    #ptp_summary_table thead th.sorting_desc::after {
+        right: 10px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        position: absolute !important;
+        display: block !important;
+        opacity: 0.5 !important;
+    }
+    #ptp_summary_table thead th.sorting, 
+    #ptp_summary_table thead th.sorting_asc, 
+    #ptp_summary_table thead th.sorting_desc {
+        background-image: none !important;
+    }
+
+    /* 차트 컨테이너 */
+    .chart-container {
+        position: relative;
+        height: 250px;
+        width: 100%;
+    }
+    
+    /* 상세 모달 테이블 폰트 */
+    .modal-body table { font-size: 0.85rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+  <nav class="mb-3" aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="#!">네트워크 정보메뉴</a></li>
+      <li class="breadcrumb-item active">시간 동기화 정보</li>
+    </ol>
+  </nav>
+
+  <div class="mb-9">
+    <div class="row g-3 mb-4">
+      <div class="col-auto">
+        <h2 id="contents_title" class="mb-0">시간 동기화 정보 (PTP)</h2>
+      </div>
+    </div>
+
+    <div id="orderTable">
+      <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis border-top border-bottom border-translucent position-relative top-1">
+        <div class="table-list" id="ptpSummaryTableWrapper">
+          <div class="table-responsive scrollbar mx-n1 px-1">
+             <div class="mt-3 ms-4 mb-2">
+                <span class="text-body-secondary fw-semibold fs-9">
+                    <i class="fas fa-info-circle me-1"></i>※ 해당 값(오차,경로 지연, 지터)은 수집된 데이터의 평균값입니다.
+                </span>
+            </div>          
+            <table class="table table-sm fs-9 mb-0" id="ptp_summary_table">
+              <thead>
+                <tr>
+                  <th class="sort align-middle text-center" style="width:10%;">영역</th>
+                  <th class="sort align-middle text-center" style="width:10%;">장비</th>
+                  <th class="sort align-middle text-center" style="width:20%;">Time (KST)</th>
+                  <th class="sort align-middle text-center" style="width:10%;">오차(ns)</th>
+                  <th class="sort align-middle text-center" style="width:10%;">경로 지연(ns)</th>
+                  <th class="sort align-middle text-center" style="width:10%;">지터(ns)</th>
+                  <th class="sort align-middle text-center" style="width:15%;">패킷 연속성(%)</th>
+                  <th class="align-middle text-center" style="width:10%;">상세보기</th>
+                </tr>
+              </thead>
+              <tbody class="list" id="ptp-summary-body">
+                </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header py-2 bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-primary"><i class="fas fa-chart-line me-2"></i>오차(Offset) 추이 DATA</span>
+                    <span class="badge bg-primary-subtle text-primary-emphasis">Live History</span>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container"><canvas id="ptpOffsetChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header py-2 bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-warning"><i class="fas fa-chart-line me-2"></i>경로 지연(Delay) 추이 DATA</span>
+                    <span class="badge bg-warning-subtle text-warning-emphasis">Live History</span>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container"><canvas id="ptpDelayChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-4">
+      <div class="col-12">
+        <h5 class="text-body-secondary mb-2 fs-9">
+          <i class="fas fa-info-circle me-1"></i> 데이터 지표 가이드
+        </h5>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100 border-start border-4 border-primary shadow-sm">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="text-body-highlight fw-bold mb-0">※오차 (Offset)</h6>
+              <span class="badge badge-phoenix badge-phoenix-primary fs-10">핵심 지표</span>
+            </div>
+            <p class="fs-10 text-body-secondary mb-1">
+              마스터 시간과의 차이(ns)입니다.<br>
+              오차범위는 100ns 이내로 권장합니다.
+            </p>
+            <div class="mt-2 pt-2 border-top border-translucent">
+              <span class="fs-10 fw-bold text-success">✅ 정상: ±100ns 이내</span><br>
+              <span class="fs-10 fw-bold text-danger">❌ 위험: ±1,000ns 초과</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100 border-start border-4 border-warning shadow-sm">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="text-body-highlight fw-bold mb-0">※경로 지연 (Path Delay)</h6>
+              <i class="fas fa-route text-warning"></i>
+            </div>
+            <p class="fs-10 text-body-secondary mb-1">
+              패킷 도달 시간입니다. 거리(Hop)에 비례하며,<br>
+              수치 크기보다 <strong>일정함(Stability)</strong>이 중요합니다.
+            </p>
+            <div class="mt-2 pt-2 border-top border-translucent">
+              <span class="fs-10 fw-bold text-body-tertiary">ℹ️ 보통 1μs(1,000ns) 미만</span><br>
+              <span class="fs-10 fw-bold text-warning">⚠️ 주의: 값이 튀면 경로 혼잡</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100 border-start border-4 border-danger shadow-sm">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="text-body-highlight fw-bold mb-0">※지터 (Jitter)</h6>
+              <i class="fas fa-wave-square text-danger"></i>
+            </div>
+            <p class="fs-10 text-body-secondary mb-1">
+              오차 값의 표준편차(흔들림)입니다.<br>
+              값이 낮을수록 네트워크 품질이 좋습니다.
+            </p>
+            <div class="mt-2 pt-2 border-top border-translucent">
+              <span class="fs-10 fw-bold text-success">✅ 안정: 100ns 미만</span><br>
+              <span class="fs-10 fw-bold text-danger">❌ 불안정: 500ns 초과</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100 border-start border-4 border-success shadow-sm">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="text-body-highlight fw-bold mb-0">※패킷 연속성</h6>
+              <i class="fas fa-check-circle text-success"></i>
+            </div>
+            <p class="fs-10 text-body-secondary mb-1">
+              PTP 패킷 수신율입니다.<br>
+              단 1개의 유실도 없어야 합니다.
+            </p>
+            <div class="mt-2 pt-2 border-top border-translucent">
+              <span class="fs-10 fw-bold text-success">✅ 정상: 100% (Loss 0)</span><br>
+              <span class="fs-10 fw-bold text-danger">❌ 위험: 100% 미만</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> 
+
+  <footer class="footer position-absolute">
+    <div class="row g-0 justify-content-between align-items-center h-100">
+      <div class="col-12 col-sm-auto text-center"><p class="mb-0 mt-2 mt-sm-0 text-body">Nextrade Network Admin</p></div>
+    </div>
+  </footer>
+</div>
+
+<div class="modal fade" id="modal_ptp_detail" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable modal-xl">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="modalTitle">[장비명] PTP 상세 정보</h5><button class="btn btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <table class="table table-sm table-striped fs-9 mb-0">
+          <thead class="bg-body-secondary"><tr><th class="text-center">Port</th><th class="text-center">Time</th><th class="text-center">Offset</th><th class="text-center">Delay</th><th class="text-center">Skew</th><th class="text-center">Seq ID</th></tr></thead>
+          <tbody id="ptp-detail-body"></tbody>
+        </table>
+      </div>
+      <div class="modal-footer"><button class="btn btn-primary" data-bs-dismiss="modal">닫기</button></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'assets/js/datatables.min.js' %}"></script>
+<script src="{% static 'vendors/popper/popper.min.js' %}"></script>
+<script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
+<script src="{% static 'vendors/is/is.min.js' %}"></script>
+<script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
+<script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
+<script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
+<script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
+<script src="{% static 'assets/js/phoenix.js' %}"></script>
+<script src="{% static 'assets/js/chart.min.js' %}"></script>
+
+<script>
+    let offsetChart = null;
+    let delayChart = null;
+    let globalPtpData = []; 
+    const colorPalette = ['#3874ff', '#00d27a', '#e5780b', '#d3342d', '#6f42c1'];
+
+    $(document).ready(function() {
+        fetchData();
+        setInterval(fetchData, 60000); // 1분마다 갱신
+    });
+
+    function fetchData() {
+        fetch('/information/init?sub_menu=info_ptp')
+            .then(res => res.json())
+            .then(data => {
+                if (!data || data.length === 0) return;
+                
+                globalPtpData = data; 
+                renderTable(data);
+                drawHistoryCharts(data);
+            })
+            .catch(err => console.error("Data Fetch Error:", err));
+    }
+
+    // [1] 표 그리기 함수
+    function renderTable(data) {
+        const tbody = $('#ptp-summary-body');
+        
+        if ($.fn.DataTable.isDataTable('#ptp_summary_table')) {
+            $('#ptp_summary_table').DataTable().destroy();
+        }
+        
+        tbody.empty();
+
+        data.forEach((item, index) => {
+            const deviceName = item.device_name;
+            
+            // 영역(운영/테스트) 배지
+            let areaBadge = '';
+            if (deviceName.startsWith('pyd')) {
+                areaBadge = '<span class="badge badge-phoenix badge-phoenix-primary">운영</span>';
+            } else if (deviceName.startsWith('tyd')) {
+                areaBadge = '<span class="badge badge-phoenix badge-phoenix-warning">테스트</span>';
+            } else {
+                areaBadge = `<span class="badge badge-phoenix badge-phoenix-secondary">${deviceName.split('_')[0]}</span>`;
+            }
+
+            // 패킷 연속성 배지
+            let continuityBadge = '';
+            if (item.packet_continuity == 100) {
+                continuityBadge = '<span class="badge badge-phoenix badge-phoenix-success"><i class="fas fa-check me-1"></i>100%</span>';
+            } else {
+                continuityBadge = `<span class="badge badge-phoenix badge-phoenix-danger">${item.packet_continuity}%</span>`;
+            }
+
+            const row = `
+                <tr>
+                    <td class="align-middle text-center py-2">${areaBadge}</td>
+                    <td class="align-middle text-center fw-bold text-body-highlight">${item.device_name}</td>
+                    <td class="align-middle text-center">${item.current_time}</td>
+                    <td class="align-middle text-center">${item.offset}</td>
+                    <td class="align-middle text-center">${item.mean_path_delay}</td>
+                    <td class="align-middle text-center">${item.jitter}</td>
+                    <td class="align-middle text-center">${continuityBadge}</td>
+                    <td class="align-middle text-center">
+                        <button class="btn btn-sm btn-outline-info p-1 px-2 fs-10" onclick="openDetailModal('${index}')">
+                            <i class="fas fa-search me-1"></i>View
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tbody.append(row);
+        });
+
+        $('#ptp_summary_table').DataTable({
+            "order": [],
+            "pageLength": 10,
+            "dom": 'rtip' 
+        });
+    }
+
+    // [2] 그래프 그리기 함수
+    function drawHistoryCharts(dataList) {
+        const offsetDatasets = [];
+        const delayDatasets = [];
+        let commonLabels = [];
+
+        dataList.forEach((device, index) => {
+            const details = device.details; 
+            if (!details || details.length === 0) return;
+
+            // ★ [X축 시간 포맷 개선]
+            // "2026-01-22 19:10:05.586" -> "19:10:05" (소수점 제거)
+            if (commonLabels.length === 0) {
+                commonLabels = details.map(d => {
+                    const timePart = d.time.split(' ')[1]; // "19:10:05.586"
+                    return timePart.split('.')[0]; // "19:10:05" (소수점 절삭)
+                });
+            }
+
+            const color = colorPalette[index % colorPalette.length];
+            
+            offsetDatasets.push({
+                label: device.device_name,
+                data: details.map(d => d.offset),
+                borderColor: color, backgroundColor: color,
+                borderWidth: 1.5, pointRadius: 0, tension: 0.1
+            });
+
+            delayDatasets.push({
+                label: device.device_name,
+                data: details.map(d => d.delay),
+                borderColor: color, backgroundColor: color,
+                borderWidth: 1.5, pointRadius: 0, tension: 0.1
+            });
+        });
+
+        // 그래프 업데이트 (축 제목 파라미터 전달)
+        updateChart('ptpOffsetChart', commonLabels, offsetDatasets, offsetChart, (c) => offsetChart = c, 'Offset (ns)');
+        updateChart('ptpDelayChart', commonLabels, delayDatasets, delayChart, (c) => delayChart = c, 'Path Delay (ns)');
+    }
+
+    // [3] 차트 업데이트 유틸리티 (X축 텀 설정 추가)
+    function updateChart(canvasId, labels, datasets, chartInstance, setChartInstance, yAxisLabel) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+
+        setChartInstance(new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                animation: false,
+                scales: {
+                    x: { 
+                        display: true, // X축 표시
+                        title: {
+                            display: true,
+                            text: 'Time',
+                            font: { size: 11, weight: 'bold' },
+                            color: '#6c757d'
+                        },
+                        // ★ [간격 조절 핵심]
+                        ticks: { 
+                            display: true,
+                            maxTicksLimit: 8, // 레이블 최대 8개까지만 표시 (알아서 띄엄띄엄 나옴)
+                            autoSkip: true,
+                            maxRotation: 0,
+                            font: { size: 10 }
+                        },
+                        grid: { display: false } 
+                    },
+                    y: { 
+                        beginAtZero: false, 
+                        grid: { color: '#f0f0f0' },
+                        title: {
+                            display: true,
+                            text: yAxisLabel,
+                            font: { size: 11, weight: 'bold' },
+                            color: '#6c757d'
+                        }
+                    }
+                },
+                plugins: { legend: { position: 'top', labels: { boxWidth: 10 } } }
+            }
+        }));
+    }
+
+    window.openDetailModal = function(index) {
+        const item = globalPtpData[index];
+        if (!item) return;
+
+        $('#modalTitle').text(`[${item.device_name}] PTP 상세 정보`);
+        const tbody = $('#ptp-detail-body');
+        tbody.empty();
+
+        if (item.details && item.details.length > 0) {
+            [...item.details].reverse().forEach(d => {
+                const row = `<tr>
+                    <td class="text-center">${d.port}</td>
+                    <td class="text-center">${d.time}</td>
+                    <td class="text-center">${d.offset}</td>
+                    <td class="text-center">${d.delay}</td>
+                    <td class="text-center">${d.skew}</td>
+                    <td class="text-center">${d.sequence_id}</td>
+                </tr>`;
+                tbody.append(row);
+            });
+        } else {
+            tbody.append('<tr><td colspan="6" class="text-center">상세 데이터 없음</td></tr>');
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById('modal_ptp_detail'));
+        modal.show();
+    };
+</script>
+{% endblock %}

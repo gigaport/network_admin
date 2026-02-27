@@ -1,0 +1,287 @@
+{% extends 'components/base.html' %}
+{% load static %}
+
+{% block styles %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="{% static 'assets/css/datatables.min.css' %}">
+<!-- DataTables Buttons CSS -->
+<link rel="stylesheet" href="{% static 'assets/css/buttons.dataTables.min.css' %}">
+<style>
+#productsTable tbody tr { cursor: pointer; }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="content">
+    <nav class="mb-3" aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="#!">기준설정</a></li>
+        <li class="breadcrumb-item active">시세상품정보</li>
+      </ol>
+    </nav>
+    <div class="mb-9">
+      <div class="row g-3 mb-4" style="max-width: 1400px; margin: 0 auto;">
+        <div class="col-auto">
+          <h2 id="contents_title" class="mb-0">시세상품정보 관리</h2>
+        </div>
+        <div class="col-auto ms-auto">
+          <button class="btn btn-sm btn-success me-2" onclick="showCreateModal()">
+            <i class="fas fa-plus me-1"></i>추가
+          </button>
+          <button class="btn btn-sm btn-primary" onclick="refreshTable()">
+            <i class="fas fa-sync-alt me-1"></i>새로고침
+          </button>
+        </div>
+      </div>
+
+      <!-- 검색 필터 섹션 -->
+      <div class="card border-0 shadow-sm mb-4" style="max-width: 1400px; margin: 0 auto;">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-auto" style="width: 250px;">
+              <label class="form-label small fw-semibold text-muted mb-1">
+                <i class="fas fa-search me-1"></i>통합 검색
+              </label>
+              <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="상품명, 회선속도 검색...">
+            </div>
+            <div class="col-auto" style="width: 150px;">
+              <label class="form-label small fw-semibold text-muted mb-1">
+                <i class="fas fa-network-wired me-1"></i>회선속도
+              </label>
+              <select class="form-select form-select-sm" id="speedFilter">
+                <option value="">전체</option>
+              </select>
+            </div>
+            <div class="col-auto" style="width: 150px;">
+              <label class="form-label small fw-semibold text-muted mb-1">
+                <i class="fas fa-code me-1"></i>데이터형식
+              </label>
+              <select class="form-select form-select-sm" id="formatFilter">
+                <option value="">전체</option>
+              </select>
+            </div>
+            <div class="col-auto d-flex align-items-end" style="width: 130px;">
+              <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilters()">
+                <i class="fas fa-redo me-1"></i>필터 초기화
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm bg-body-emphasis" style="max-width: 1400px; margin: 0 auto;">
+        <div class="card-body" style="padding: 2rem 1rem !important; min-height: 400px;">
+          <!-- 테이블 영역 -->
+          <div class="table-list" id="advanceAjaxTable">
+            <div class="table-responsive scrollbar">
+              <table class="table table-hover table-sm fs-9 mb-0" id="productsTable" style="width: 100% !important;">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:3%;">ID</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:8%;">상품명</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:6%;">회선속도</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:7%;">데이터형식</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:10%;">운영IP1</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:10%;">운영IP2</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:10%;">테스트IP</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:10%;">DR IP</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:7%;">재전송포트</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:5%;">채널수</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:9%;">생성일시</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:9%;">수정일시</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:6%;">작업</th>
+                </tr>
+              </thead>
+              <tbody class="list" id="order-table-body">
+              </tbody>
+            </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer position-absolute">
+      <div class="row g-0 justify-content-between align-items-center h-100">
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 mt-2 mt-sm-0 text-body">Nextrade Network Admin<span class="d-none d-sm-inline-block"></span><span class="d-none d-sm-inline-block mx-1">|</span><br class="d-sm-none" />2025 &copy;<a class="mx-1" href="">RWS</a></p>
+        </div>
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 text-body-tertiary text-opacity-85">v1.22.0</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 추가 모달 -->
+  <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+          <div class="w-100">
+            <h4 class="modal-title fw-bold mb-1" id="createModalLabel" style="color: #1f2937;">
+              <i class="fas fa-plus me-2" style="color: #10b981;"></i>시세상품 추가
+            </h4>
+            <p class="text-muted mb-0 small">새로운 시세상품을 추가할 수 있습니다</p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="background-color: #f8f9fa;">
+          <form id="createForm">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #10b981; padding-left: 12px;">
+                  <i class="fas fa-info-circle me-2" style="color: #10b981;"></i>상품 정보
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="create_product_name" class="form-label small fw-semibold text-muted mb-2">상품명 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-sm" id="create_product_name" required maxlength="50">
+                    <small class="form-text text-muted">예: NXTA-COM, NXTB-10</small>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="create_line_speed" class="form-label small fw-semibold text-muted mb-2">회선속도 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-sm" id="create_line_speed" required maxlength="20">
+                    <small class="form-text text-muted">예: 20M, 100M</small>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="create_data_format" class="form-label small fw-semibold text-muted mb-2">데이터형식 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-sm" id="create_data_format" required maxlength="20">
+                    <small class="form-text text-muted">예: 아스키, 바이너리</small>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="create_retransmit_port" class="form-label small fw-semibold text-muted mb-2">재전송포트</label>
+                    <input type="text" class="form-control form-control-sm" id="create_retransmit_port" maxlength="10">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="create_operation_ip1" class="form-label small fw-semibold text-muted mb-2">운영IP1</label>
+                    <input type="text" class="form-control form-control-sm" id="create_operation_ip1" maxlength="20">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="create_operation_ip2" class="form-label small fw-semibold text-muted mb-2">운영IP2</label>
+                    <input type="text" class="form-control form-control-sm" id="create_operation_ip2" maxlength="20">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="create_test_ip" class="form-label small fw-semibold text-muted mb-2">테스트IP</label>
+                    <input type="text" class="form-control form-control-sm" id="create_test_ip" maxlength="20">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="create_dr_ip" class="form-label small fw-semibold text-muted mb-2">DR IP</label>
+                    <input type="text" class="form-control form-control-sm" id="create_dr_ip" maxlength="20">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0" style="background-color: #f8f9fa;">
+          <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>취소
+          </button>
+          <button type="button" class="btn btn-success btn-sm px-4" onclick="saveCreate()">
+            <i class="fas fa-save me-2"></i>추가
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 수정 모달 -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+          <div class="w-100">
+            <h4 class="modal-title fw-bold mb-1" id="editModalLabel" style="color: #1f2937;">
+              <i class="fas fa-edit me-2" style="color: #6366f1;"></i>시세상품 수정
+            </h4>
+            <p class="text-muted mb-0 small">시세상품 정보를 수정할 수 있습니다</p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="background-color: #f8f9fa;">
+          <form id="editForm">
+            <input type="hidden" id="edit_id">
+
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #6366f1; padding-left: 12px;">
+                  <i class="fas fa-info-circle me-2" style="color: #6366f1;"></i>상품 정보
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="edit_product_name" class="form-label small fw-semibold text-muted mb-2">상품명 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-sm" id="edit_product_name" required maxlength="50">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="edit_line_speed" class="form-label small fw-semibold text-muted mb-2">회선속도 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-sm" id="edit_line_speed" required maxlength="20">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="edit_data_format" class="form-label small fw-semibold text-muted mb-2">데이터형식 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-sm" id="edit_data_format" required maxlength="20">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="edit_retransmit_port" class="form-label small fw-semibold text-muted mb-2">재전송포트</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_retransmit_port" maxlength="10">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="edit_operation_ip1" class="form-label small fw-semibold text-muted mb-2">운영IP1</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_operation_ip1" maxlength="20">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="edit_operation_ip2" class="form-label small fw-semibold text-muted mb-2">운영IP2</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_operation_ip2" maxlength="20">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="edit_test_ip" class="form-label small fw-semibold text-muted mb-2">테스트IP</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_test_ip" maxlength="20">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="edit_dr_ip" class="form-label small fw-semibold text-muted mb-2">DR IP</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_dr_ip" maxlength="20">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0" style="background-color: #f8f9fa;">
+          <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>취소
+          </button>
+          <button type="button" class="btn btn-primary btn-sm px-4" onclick="saveEdit()">
+            <i class="fas fa-save me-2"></i>저장
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="back_data" data-submenu="{{ sub_menu|escapejs }}"></div>
+{% endblock %}
+
+{% block scripts %}
+<!-- ===============================================-->
+<!--    JavaScripts-->
+<!-- ===============================================-->
+<!-- jQuery 먼저 포함 (다른 스크립트들이 의존) -->
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<!-- DataTables JS -->
+<script src="{% static 'assets/js/datatables.min.js' %}"></script>
+<!-- JSZip (Excel export 필수) -->
+<script src="{% static 'assets/js/jszip.min.js' %}"></script>
+<!-- DataTables Buttons -->
+<script src="{% static 'assets/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'assets/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'vendors/popper/popper.min.js' %}"></script>
+<script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
+<script src="{% static 'vendors/is/is.min.js' %}"></script>
+<script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
+<script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
+<script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
+<script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
+<script src="{% static 'assets/js/phoenix.js' %}"></script>
+<script src="{% static 'assets/js/net_admin/sise_products.js' %}?v={% now "YmdHis" %}"></script>
+{% endblock %}

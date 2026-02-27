@@ -137,12 +137,34 @@ def check_multicast_info(market_gubn, members_mroute):
     ## 01. member_info <- 시세 멀티캐스트그룹 수신 개수 삽입
     ## 02. member_mroute <- member_info 정보 삽입
         merge_members_mroute = merge_multicast_group_count(members_mroute['data'], mpr_multicast_info)
-        # print(f"[merge_members_info]\n{merge_members_info}\n\n")
-        # print(f"[members_mroute['data']]\n{members_mroute['data']}")
 
         response_data:List = create_member_sise_info(merge_members_mroute, members_info, market_gubn)
 
+        # 전체 장비 결과를 webhook으로 전송하여 상태 기반 알람 처리
+        send_multicast_alarm_check(market_gubn, response_data)
+
 # openJsonFile = lambda path: openJsonFile
+
+def send_multicast_alarm_check(market_gubn: str, devices: List):
+    """전체 장비 결과를 webhook으로 전송하여 상태 기반 알람 처리"""
+    logger.info(f"[{market_gubn}] 멀티캐스트 알람 상태 체크 요청: {len(devices)}개 장비")
+    try:
+        webhook_url = f"{WEBHOOK_BASE_URL}/batch/multicast/check"
+        response = requests.post(
+            webhook_url,
+            json={"market_gubn": market_gubn, "devices": devices},
+            headers={'Content-Type': 'application/json'},
+            timeout=10
+        )
+        if response.status_code == 200:
+            result = response.json()
+            logger.info(f"[{market_gubn}] 알람 체크 결과: alerts={result.get('alerts_sent', 0)}, "
+                        f"recoveries={result.get('recoveries_sent', 0)}, skipped={result.get('skipped', 0)}")
+        else:
+            logger.error(f"[{market_gubn}] 알람 체크 실패 - 상태코드: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"[{market_gubn}] 알람 체크 요청 실패: {e}")
+
 
 def merge_multicast_group_count(members_mroute:list, mpr_multicast_info:Dict):
     for idx, device in enumerate(members_mroute):
@@ -232,21 +254,6 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
             check_result = '확인필요'
             type = "danger"
             icon = "fas fa-x-square"
-            info = {
-                "market_gubn": market_gubn,
-                "member_name": member_name,
-                "device_name": device_name,
-                "pim_rp": pim_rp,
-                "products": products,
-                "product_cnt": product_cnt,
-                "mroute_cnt": mroute_cnt,
-                "oif_cnt": oif_cnt,
-                "rpf_nbr": rpf_nbr,
-                "connected_server_cnt": connected_server_cnt,
-                "check_result": check_result
-            }
-
-            send_slack_message(info)
 
         temp = {
             "id" : idx+1,

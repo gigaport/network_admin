@@ -325,20 +325,6 @@
           "A-10"
         ]
       }
-    },
-    "ie_2_px_sas1_a_mkd_02": {
-      "os": "eos",
-      "type": "switch",
-      "ip": "99.206.2.2",
-      "custom": {
-        "groups": [
-          "product"
-        ],
-        "join_products": [
-          "A-COM",
-          "A-10"
-        ]
-      }
     }
   }
 }

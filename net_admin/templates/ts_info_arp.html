@@ -1,292 +1,173 @@
 {% extends 'components/base.html' %}
 {% load static %}
 
-{% block styles %}
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="{% static 'assets/css/datatables.min.css' %}">
+{% block content %}
+  <!-- 로딩 오버레이 -->
+  <div id="pageLoadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9998; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.3); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 0.4s ease;">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div style="font-size: 0.85rem; color: #475569; font-weight: 500;">데이터를 불러오는 중...</div>
+    </div>
+  </div>
+  <div class="content">
+    <nav class="mb-3" aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="#!">네트워크 정보메뉴</a></li>
+        <li class="breadcrumb-item"><a href="#!">스위치 정보제공</a></li>
+        <li class="breadcrumb-item active">[테스트] ARP 정보</li>
+      </ol>
+    </nav>
+    <div class="mb-9">
+      <div class="row g-3 mb-4" style="margin: 0 auto;">
+        <div class="col-auto">
+          <h2 id="contents_title" class="mb-0">[테스트] ARP 정보</h2>
+        </div>
+        <div class="col-auto ms-auto">
+          <button class="btn btn-sm btn-primary" onclick="refreshTable()">
+            <i class="fas fa-sync-alt me-1"></i>새로고침
+          </button>
+        </div>
+      </div>
+
+      <!-- 요약 통계 -->
+      <div class="row g-3 mb-3" id="summaryCards">
+        <div class="col-6 col-md">
+          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #6366f1, #818cf8); box-shadow: 0 4px 15px rgba(99,102,241,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center gap-3">
+              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-table-list" style="color: #fff; font-size: 0.9rem;"></i>
+              </div>
+              <div>
+                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">총 ARP 항목</div>
+                <div class="fw-bold" id="stat_total" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md">
+          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #0EA5E9, #38BDF8); box-shadow: 0 4px 15px rgba(14,165,233,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center gap-3">
+              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-server" style="color: #fff; font-size: 0.9rem;"></i>
+              </div>
+              <div>
+                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">장비 수</div>
+                <div class="fw-bold" id="stat_devices" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md">
+          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #059669, #10B981); box-shadow: 0 4px 15px rgba(16,185,129,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center gap-3">
+              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-earth-americas" style="color: #fff; font-size: 0.9rem;"></i>
+              </div>
+              <div>
+                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">고유 IP 수</div>
+                <div class="fw-bold" id="stat_unique_ip" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md">
+          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #f59e0b, #fbbf24); box-shadow: 0 4px 15px rgba(245,158,11,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center gap-3">
+              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-fingerprint" style="color: #fff; font-size: 0.9rem;"></i>
+              </div>
+              <div>
+                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">고유 MAC 수</div>
+                <div class="fw-bold" id="stat_unique_mac" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 장비별 ARP 수 바 차트 -->
+      <div class="row g-3 mb-4">
+        <div class="col-12">
+          <div class="h-100 position-relative" style="border-radius: 14px; padding: 20px; background: linear-gradient(135deg, #1e293b, #334155); box-shadow: 0 4px 15px rgba(30,41,59,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.05);"></div>
+            <div class="d-flex align-items-center mb-3">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-chart-bar" style="color: #93c5fd; font-size: 0.8rem;"></i>
+              </div>
+              <span style="font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.9); margin-left: 10px;">장비별 ARP 현황</span>
+              <span id="stat_device_label" class="badge ms-2" style="background: rgba(99,102,241,0.3); color: #a5b4fc; font-size: 0.6rem; padding: 2px 8px; border-radius: 6px;">TOP 10</span>
+            </div>
+            <div id="deviceBarChart" class="d-flex align-items-end" style="height: 80px; gap: 2px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm bg-body-emphasis" style="margin: 0 auto;">
+        <div class="card-body" style="padding: 2rem 1rem !important; min-height: 400px;">
+          <div class="table-responsive scrollbar">
+            <table class="table table-hover table-sm mb-0" id="data_table" style="width: 100% !important; font-size: 0.85rem !important;">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:15%;">장비호스트네임</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:10%;">장비접속IP</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:10%;">장비OS</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:15%;">인터페이스</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:20%;">ARP IP</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:20%;">MAC Address</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:10%;">Origin</th>
+                </tr>
+              </thead>
+              <tfoot style="display: table-header-group">
+                <tr>
+                  <th class="text-center">장비호스트네임</th>
+                  <th class="text-center">장비접속IP</th>
+                  <th class="text-center">장비OS</th>
+                  <th class="text-center">인터페이스</th>
+                  <th class="text-center">ARP IP</th>
+                  <th class="text-center">MAC Address</th>
+                  <th class="text-center">Origin</th>
+                </tr>
+              </tfoot>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer position-absolute">
+      <div class="row g-0 justify-content-between align-items-center h-100">
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 mt-2 mt-sm-0 text-body">Nextrade Network Admin<span class="d-none d-sm-inline-block"></span><span class="d-none d-sm-inline-block mx-1">|</span><br class="d-sm-none" />2025 &copy;<a class="mx-1" href="">RWS</a></p>
+        </div>
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 text-body-tertiary text-opacity-85">v1.22.0</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <div id="back_data" data-submenu="{{ sub_menu|escapejs }}"></div>
 {% endblock %}
 
-    {% block content %}
-      <div class="content">
-        <nav class="mb-3" aria-label="breadcrumb">
-          <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="#!">네트워크 정보메뉴</a></li>
-            <li class="breadcrumb-item"><a href="#!">스위치 정보제공</a></li>
-            <li class="breadcrumb-item active">[테스트] ARP 정보</li>
-          </ol>
-        </nav>
-        <div class="mb-9">
-          <div class="row g-3 mb-4">
-            <div class="col-auto">
-              <h2 id="contents_title" class="mb-0">[테스트] ARP 정보</h2>
-            </div>
-          </div>
-          <!-- <ul class="nav nav-links mb-3 mb-lg-2 mx-n3">
-            <li class="nav-item"><a class="nav-link active" aria-current="page" href="#"><span>All </span><span class="text-body-tertiary fw-semibold">(30)</span></a></li>
-            <li class="nav-item"><a class="nav-link" href="#"><span>정상확인 </span><span class="text-body-tertiary fw-semibold">(28)</span></a></li>
-            <li class="nav-item"><a class="nav-link" href="#"><span>확인필요 </span><span class="text-body-tertiary fw-semibold">(2)</span></a></li>
-          </ul> -->
-          <div id="orderTable">
-            <div class="mb-4">
-              <div class="row g-3">
-                <!-- <div class="col-auto">
-                  <div class="search-box">
-                    <form class="position-relative">
-                      <input class="form-control search-input search" type="search" placeholder="Search..." aria-label="Search" id="search_mroute" />
-                      <span class="fas fa-search search-box-icon"></span>
-
-                    </form>
-                  </div>
-                </div> -->
-                <!-- <div class="col-auto scrollbar overflow-hidden-y flex-grow-1">
-                  <div class="btn-group position-static" role="group">
-                    <div class="btn-group position-static text-nowrap" role="group">
-                      <button class="btn btn-phoenix-secondary px-7 flex-shrink-0" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                        체크결과<span class="fas fa-angle-down ms-2"></span></button>
-                      <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#">확인필요</a></li>
-                        <li><a class="dropdown-item" href="#">정상확인</a></li>
-                      </ul>
-                    </div>
-                    <div class="btn-group position-static text-nowrap" role="group">
-                      <button class="btn btn-sm btn-phoenix-secondary px-7 flex-shrink-0" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent">
-                        시세상품<span class="fas fa-angle-down ms-2"></span></button>
-                      <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#">NXTA-10,NXTA-COM</a></li>
-                        <li><a class="dropdown-item" href="#">NXTA-10,NXTA-COM,NXTB-10,NXTB-COM</a></li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-auto">
-                  <button class="btn btn-link text-body me-4 px-0"><span class="fa-solid fa-file-export fs-9 me-2"></span>Export</button>
-                  <button class="btn btn-primary"><span class="fas fa-plus me-2"></span>Add order</button>
-                </div> -->
-              </div>
-            </div>
-            <div class="mx-n4 px-4 mx-lg-n6 px-lg-6 bg-body-emphasis border-top border-bottom border-translucent position-relative top-1">
-              <div class="table-list" id="advanceAjaxTable">
-                <div class="table-responsive scrollbar mx-n1 px-1">
-                  <table class="table table-sm fs-9 mb-0" id="data_table">
-                    <thead>
-                      <tr>
-                        <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="device_name" style="width:15%;">장비호스트네임</th>
-                        <th class="sort white-space-nowrap align-middle text-center" scope="col" data-sort="device_ip" style="width:10%;">장비접속IP</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="device_os" style="width:10%;">장비OS</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="interface" style="width:15%;">인터페이스</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="arp_ip" style="width:20%;">ARP IP</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="mac_address" style="width:20%;">MAC Address</th>
-                        <th class="sort align-middle text-center" scope="col" data-sort="origin" style="width:10%;">Origin</th>
-                      </tr>
-                    </thead>
-                    <!-- tfoot 내용은 전부 가운데 정렬 -->
-                    <tfoot class="sort text-center" style="display: table-header-group">
-                      <tr>
-                        <th class="text-center">장비호스트네임</th>
-                        <th class="text-center">장비접속IP</th>
-                        <th class="text-center">장비OS</th>
-                        <th class="text-center">인터페이스</th>
-                        <th class="text-center">ARP IP</th>
-                        <th class="text-center">MAC Address</th>
-                        <th class="text-center">Origin</th>
-                      </tr>
-                    </tfoot>
-                    <tbody class="list" id="order-table-body">
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <footer class="footer position-absolute">
-          <div class="row g-0 justify-content-between align-items-center h-100">
-            <div class="col-12 col-sm-auto text-center">
-              <p class="mb-0 mt-2 mt-sm-0 text-body">Nextrade Network Admin<span class="d-none d-sm-inline-block"></span><span class="d-none d-sm-inline-block mx-1">|</span><br class="d-sm-none" />2025 &copy;<a class="mx-1" href="">RWS</a></p>
-            </div>
-            <div class="col-12 col-sm-auto text-center">
-              <p class="mb-0 text-body-tertiary text-opacity-85">v1.22.0</p>
-            </div>
-          </div>
-        </footer>
-      </div>
-      <div class="modal fade" id="searchBoxModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-phoenix-modal="data-phoenix-modal" style="--phoenix-backdrop-opacity: 1;">
-        <div class="modal-dialog">
-          <div class="modal-content mt-15 rounded-pill">
-            <div class="modal-body p-0">
-              <div class="search-box navbar-top-search-box" data-list='{"valueNames":["title"]}' style="width: auto;">
-                <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-                  <input class="form-control search-input fuzzy-search rounded-pill form-control-lg" type="search" placeholder="Search..." aria-label="Search" />
-                  <span class="fas fa-search search-box-icon"></span>
-
-                </form>
-                <div class="btn-close position-absolute end-0 top-50 translate-middle cursor-pointer shadow-none" data-bs-dismiss="search">
-                  <button class="btn btn-link p-0" aria-label="Close"></button>
-                </div>
-                <div class="dropdown-menu border start-0 py-0 overflow-hidden w-100">
-                  <div class="scrollbar-overlay" style="max-height: 30rem;">
-                    <div class="list pb-3">
-                      <h6 class="dropdown-header text-body-highlight fs-10 py-2">24 <span class="text-body-quaternary">results</span></h6>
-                      <hr class="my-0" />
-                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Recently Searched </h6>
-                      <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                          <div class="d-flex align-items-center">
-
-                            <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-clock-rotate-left" data-fa-transform="shrink-2"></span> Store Macbook</div>
-                          </div>
-                        </a>
-                        <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                          <div class="d-flex align-items-center">
-
-                            <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-clock-rotate-left" data-fa-transform="shrink-2"></span> MacBook Air - 13″</div>
-                          </div>
-                        </a>
-
-                      </div>
-                      <hr class="my-0" />
-                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Products</h6>
-                      <div class="py-2"><a class="dropdown-item py-2 d-flex align-items-center" href="apps/e-commerce/landing/product-details.html">
-                          <div class="file-thumbnail me-2"><img class="h-100 w-100 object-fit-cover rounded-3" src="{% static 'assets/img/products/60x60/3.png" alt="" /></div>
-                          <div class="flex-1">
-                            <h6 class="mb-0 text-body-highlight title">MacBook Air - 13″</h6>
-                            <p class="fs-10 mb-0 d-flex text-body-tertiary"><span class="fw-medium text-body-tertiary text-opactity-85">8GB Memory - 1.6GHz - 128GB Storage</span></p>
-                          </div>
-                        </a>
-                        <a class="dropdown-item py-2 d-flex align-items-center" href="apps/e-commerce/landing/product-details.html">
-                          <div class="file-thumbnail me-2"><img class="img-fluid" src="{% static 'assets/img/products/60x60/3.png" alt="" /></div>
-                          <div class="flex-1">
-                            <h6 class="mb-0 text-body-highlight title">MacBook Pro - 13″</h6>
-                            <p class="fs-10 mb-0 d-flex text-body-tertiary"><span class="fw-medium text-body-tertiary text-opactity-85">30 Sep at 12:30 PM</span></p>
-                          </div>
-                        </a>
-
-                      </div>
-                      <hr class="my-0" />
-                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Quick Links</h6>
-                      <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                          <div class="d-flex align-items-center">
-
-                            <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-link text-body" data-fa-transform="shrink-2"></span> Support MacBook House</div>
-                          </div>
-                        </a>
-                        <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                          <div class="d-flex align-items-center">
-
-                            <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-link text-body" data-fa-transform="shrink-2"></span> Store MacBook″</div>
-                          </div>
-                        </a>
-
-                      </div>
-                      <hr class="my-0" />
-                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Files</h6>
-                      <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                          <div class="d-flex align-items-center">
-
-                            <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-file-zipper text-body" data-fa-transform="shrink-2"></span> Library MacBook folder.rar</div>
-                          </div>
-                        </a>
-                        <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                          <div class="d-flex align-items-center">
-
-                            <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-file-lines text-body" data-fa-transform="shrink-2"></span> Feature MacBook extensions.txt</div>
-                          </div>
-                        </a>
-                        <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                          <div class="d-flex align-items-center">
-
-                            <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-image text-body" data-fa-transform="shrink-2"></span> MacBook Pro_13.jpg</div>
-                          </div>
-                        </a>
-
-                      </div>
-                      <hr class="my-0" />
-                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Members</h6>
-                      <div class="py-2"><a class="dropdown-item py-2 d-flex align-items-center" href="pages/members.html">
-                          <div class="avatar avatar-l status-online  me-2 text-body">
-                            <img class="rounded-circle " src="{% static 'assets/img/team/40x40/10.webp" alt="" />
-
-                          </div>
-                          <div class="flex-1">
-                            <h6 class="mb-0 text-body-highlight title">Carry Anna</h6>
-                            <p class="fs-10 mb-0 d-flex text-body-tertiary">anna@technext.it</p>
-                          </div>
-                        </a>
-                        <a class="dropdown-item py-2 d-flex align-items-center" href="pages/members.html' %}">
-                          <div class="avatar avatar-l  me-2 text-body">
-                            <img class="rounded-circle " src="{% static 'assets/img/team/40x40/12.webp' %}" alt="" />
-
-                          </div>
-                          <div class="flex-1">
-                            <h6 class="mb-0 text-body-highlight title">John Smith</h6>
-                            <p class="fs-10 mb-0 d-flex text-body-tertiary">smith@technext.it</p>
-                          </div>
-                        </a>
-
-                      </div>
-                      <hr class="my-0" />
-                      <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Related Searches</h6>
-                      <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html' %}">
-                          <div class="d-flex align-items-center">
-
-                            <div class="fw-normal text-body-highlight title"><span class="fa-brands fa-firefox-browser text-body" data-fa-transform="shrink-2"></span> Search in the Web MacBook</div>
-                          </div>
-                        </a>
-                        <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html' %}">
-                          <div class="d-flex align-items-center">
-
-                            <div class="fw-normal text-body-highlight title"> <span class="fa-brands fa-chrome text-body" data-fa-transform="shrink-2"></span> Store MacBook″</div>
-                          </div>
-                        </a>
-
-                      </div>
-                    </div>
-                    <div class="text-center">
-                      <p class="fallback fw-bold fs-7 d-none">No Result Found.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal fade" id="modal_mroute" tabindex="-1" aria-labelledby="modal_mroute" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-xl">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="modal_title">Modal title</h5>
-              <button class="btn btn-close p-1" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <p class="text-primary lh-lg mb-0"></p>
-            </div>
-            <div class="modal-footer">
-              <button class="btn btn-primary" type="button" data-bs-dismiss="modal">Okay</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="back_data" data-submenu="{{ sub_menu|escapejs }}"></div>
-    {% endblock %}
-    
-
-    {% block scripts %}
-    <!-- ===============================================-->
-    <!--    JavaScripts-->
-    <!-- ===============================================-->
-    <!-- jQuery 먼저 포함 (다른 스크립트들이 의존) -->
-    <script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
-    <!-- DataTables JS -->
-    <script src="{% static 'assets/js/datatables.min.js' %}"></script>
-    
-    <script src="{% static 'vendors/popper/popper.min.js' %}"></script>
-    <script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
-    <script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
-    <script src="{% static 'vendors/is/is.min.js' %}"></script>
-    <script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
-    <script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
-    <script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
-    <script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
-    <script src="{% static 'assets/js/phoenix.js' %}"></script>
-    <script src="{% static 'assets/js/net_admin/arp.js' %}"></script>
-    {% endblock %}
+{% block scripts %}
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'assets/js/datatables.min.js' %}"></script>
+<script src="{% static 'assets/js/jszip.min.js' %}"></script>
+<script src="{% static 'assets/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'assets/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'vendors/popper/popper.min.js' %}"></script>
+<script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
+<script src="{% static 'vendors/is/is.min.js' %}"></script>
+<script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
+<script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
+<script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
+<script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
+<script src="{% static 'assets/js/phoenix.js' %}"></script>
+<script src="{% static 'assets/js/net_admin/arp.js' %}"></script>
+{% endblock %}

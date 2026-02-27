@@ -1,4 +1,4 @@
-import requests, json
+import requests, json, logging
 from datetime import datetime
 from typing import List, Dict, Tuple, Union, Optional
 from django.shortcuts import render
@@ -8,6 +8,8 @@ from django.shortcuts import render, redirect
 from django.utils.timezone import localtime, now
 from django.utils import timezone
 from django.http import HttpResponse, Http404, QueryDict
+
+logger = logging.getLogger(__name__)
 
 # TODAY_STR = localtime(now()).strftime('%Y-%m-%d')
 NOW = timezone.localtime()
@@ -32,7 +34,7 @@ def init (request):
     today_str = datetime.today().strftime('%Y-%m-%d')
     today_time = datetime.today().strftime('%Y-%m-%d %H:%M')
 
-    print(f'[CALL_INIT_TODAY] : {today_str}, {today_time}, {now} \n')
+    logger.info(f'[CALL_INIT_TODAY] : {today_str}, {today_time}, {now}')
     response_data = []
 
     if request.method == "GET":
@@ -46,24 +48,26 @@ def init (request):
         elif sub_menu == "pr_info_multicast":
             market_gubn = "pr_information"
 
-        print(f"[SUB_MENU] : {sub_menu}, [MARKET_GUBN] : {market_gubn}")
+        logger.info(f"[SUB_MENU] : {sub_menu}, [MARKET_GUBN] : {market_gubn}")
 
         # market_gubn이 pr_information인 경우 (Arista 멀티캐스트 정보 수집)
         if market_gubn == "pr_information":
             api_url = "http://fastapi:8000/api/v1/network/collect/multicast/arista/pr"
-            print(f"[CALL_API] ==> {api_url}")
+            logger.info(f"[CALL_API] ==> {api_url}")
             response = requests.get(api_url)
             if response.status_code == 200:
                 data = response.json()
-                print(f"[API_RESPONSE] : {data}")
-                response_data = data
+                logger.debug(f"[API_RESPONSE] : {data}")
+                # None 값 필터링
+                response_data = [item for item in data if item is not None]
+                logger.info(f"[FILTERED_DATA_COUNT] : {len(response_data)} items (removed None values)")
             else:
-                print(f"[API_ERROR] : {response.status_code} - {response.text}")
+                logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
                 return HttpResponse(status=response.status_code, content=response.text)
         # market_gubn이 pr_members 또는 ts_members인 경우 (cisco 멀티캐스트 정보 수집)
         else:
             path = f"../data/{market_gubn}_mroute.json"
-            print(f"PATH : {path}")
+            logger.debug(f"PATH : {path}")
             members_mroute:Dict = openJsonFile(path)
 
             ## 회원사 or 정보이용사 정보 가져오기 ##
@@ -91,7 +95,7 @@ def init (request):
 
                 response_data = create_member_sise_info(merge_members_mroute, client_info, today_time)
 
-        print(f"SUB_MENU => {sub_menu}, MARKET_GUBN => {market_gubn}")
+        logger.info(f"SUB_MENU => {sub_menu}, MARKET_GUBN => {market_gubn}")
     
     # data meta info setting
     # meta = {'page': 1, 'pages': 1, 'perpage': -1, 'total': len(json_data['device_info']), 'sort': 'asc', 'field': 'id'}
@@ -107,9 +111,9 @@ def openJsonFile(path):
         with open(path, 'rt', encoding='UTF8') as json_file:
             data = json.load(json_file)
     except FileNotFoundError:
-        print(f"파일이 존재하지 않습니다: {path}")
+        logger.error(f"파일이 존재하지 않습니다: {path}")
     except json.JSONDecodeError:
-        print(f"JSON 형식이 잘못되었습니다.: {path}")
+        logger.error(f"JSON 형식이 잘못되었습니다.: {path}")
 
     return data
 
@@ -203,16 +207,12 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, updated_time
             icon = "fas fa-x-square"
 
 
-        print(f"ALARM: {alarm}")
+        logger.debug(f"ALARM: {alarm}")
 
         if alarm:
             alarm_icon = "fa-bell"
-            print("true")
         else:
             alarm_icon = "fa-bell-slash"
-            print("false")
-
-        print(f"ALARM_ICON: {alarm_icon}")
         
         temp = {
             # "id" : idx+1,
@@ -241,7 +241,6 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, updated_time
 
         result.append(temp)
 
-        print(temp)
+        logger.debug(f"Member sise info: {temp}")
 
-    # print(result)
     return result

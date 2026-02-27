@@ -22,12 +22,12 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(5d_*k*!6*rk=g=+06jl+=u%d76p&2jps!!1zhf#lck(=lg*nx'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dev-only-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['localhost', '*']
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,*').split(',')
 
 
 # Application definition
@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'app',
     'multicast.apps.MulticastConfig',
     'information.apps.InformationConfig',
+    'business.apps.BusinessConfig',
+    'setting.apps.SettingConfig',
 ]
 
 MIDDLEWARE = [
@@ -72,6 +74,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'information.context_processors.static_version',
             ],
             # 개발 환경에서 템플릿 캐시 비활성화 (변경사항 즉시 반영)
             'debug': DEBUG,
@@ -90,7 +93,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('POSTGRES_DB', 'nxt_nms_db'),
         'USER': os.environ.get('POSTGRES_USER', 'nextrade'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'Sprtmxm1@3'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
         'HOST': os.environ.get('POSTGRES_HOST', 'postgres-db'),
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
@@ -181,3 +184,9 @@ LOGGING = {
         },
     },
 }
+
+# Static files cache busting version
+# 정적 파일(CSS/JS) 캐시 방지를 위한 버전
+# 파일 수정 시 이 숫자를 증가시키면 브라우저가 새 파일을 다운로드합니다
+import time
+STATIC_VERSION = str(int(time.time()))

@@ -26,16 +26,24 @@ def GetAristaMulticastInfo(device_info):
     """    Arista 멀티캐스트 정보를 수집하는 함수
     device_info: Arista 장비 정보 (IP, 사용자명, 비밀번호 등)
     """
-    logger.debug(f"GetAristaMulticastInfo >> {device_info}")
+    device_name = device_info[0]
+    device_ip = device_info[1]['ip']
 
-    data = CallAristaAPI(device_info[1]['ip'], [
+    logger.info(f"[{device_name}] 멀티캐스트 정보 수집 시작 (IP: {device_ip})")
+
+    import time
+    start_time = time.time()
+
+    data = CallAristaAPI(device_ip, [
         'show ip mroute',
         'show ip pim rp',
         'show interfaces status'
     ])
 
+    elapsed_time = time.time() - start_time
+
     # logger.debug(f" arista_response_json >> {json.dumps(data, indent=4, ensure_ascii=False)}")
-    
+
     # show ip mroute 명령어의 결과 처리
     # 0.0.0.0인 경우를 제외한 groupSources 갯수를 구하고,
     # 해당 groupSources에 oifList키의 배열에 Vlan1100의 갯수도 구하는 로직
@@ -46,8 +54,10 @@ def GetAristaMulticastInfo(device_info):
     connected_server_cnt = 0
 
     if data is None:
-        logger.error(" NO DATA RECEIVED FROM ARISTA API")
+        logger.error(f"[{device_name}] NO DATA RECEIVED FROM ARISTA API (IP: {device_ip}, 소요시간: {elapsed_time:.2f}초)")
         return None
+
+    logger.info(f"[{device_name}] 멀티캐스트 정보 수집 완료 (소요시간: {elapsed_time:.2f}초)")
     
     logger.debug(f" ARISTA_DATA >> {data}")
 
@@ -226,28 +236,6 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
         check_result = '확인필요'
         type = "danger"
         icon = "fas fa-x-square"
-        # 멀티캐스트 확인필요 메세지를 슬랙으로 전송
-        message_title= f":alert: *(가동)시세수신 이상* :alert:",
-        attachments=[
-            {
-                "color": "danger",
-                "title": f"대상회원사 : `{member_name}`",
-                "text": (
-                    f"*- 장비이름: {device_hostname}*\n"
-                    f"- 가입상품: `{products}`\n"
-                    f"- PIM_RP: {rp_address}\n"
-                    f"- 기준 mroute: {product_cnt}\n"
-                    f"- 현재 mroute: {mroute_cnt}\n"
-                    f"- 현재 oif_cnt: {oif_cnt}\n"
-                    f"- RPF_NBR: `{rpf_nbr}`\n"
-                ),
-                "mrkdwn_in": ["text", "title"]
-            }
-        ]
-
-        logger.debug(f'[DEBUG] ATTACHMENTS: {attachments}')
-
-        # SendMulticastNotificationToSlack(message_title, attachments)
 
     temp = {
         "updated_time": NOW_DATETIME,

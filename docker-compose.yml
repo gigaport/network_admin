@@ -7,10 +7,8 @@ services:
   postgres-db:
     image: postgres:13
     container_name: postgres-db
+    env_file: .env
     environment:
-      POSTGRES_DB: nxt_nms_db
-      POSTGRES_USER: nextrade
-      POSTGRES_PASSWORD: Sprtmxm1@3
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     ports:
       - "5432:5432"
@@ -18,9 +16,14 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres_config:/etc/postgresql:Z
     command: >
-      postgres 
+      postgres
       -c hba_file=/etc/postgresql/pg_hba.conf
       -c config_file=/etc/postgresql/postgresql.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextrade"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
     restart: unless-stopped
@@ -43,8 +46,17 @@ services:
       - ./common:/app/common:Z
       - ~/.ssh:/root/.ssh:ro
     command: uvicorn app:app --host 0.0.0.0 --port 8000 --log-level info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
-      - redis
+      postgres-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - app-network
 
@@ -87,13 +99,9 @@ services:
       target: production
     image: netview_django:latest
     container_name: netview_django
+    env_file: .env
     environment:
       <<: *common_env
-      POSTGRES_DB: nxt_nms_db
-      POSTGRES_USER: nextrade
-      POSTGRES_PASSWORD: Sprtmxm1@3
-      POSTGRES_HOST: postgres-db
-      POSTGRES_PORT: 5432
       DJANGO_SETTINGS_MODULE: net_admin.settings
       PYTHONPATH: /app
       PYTHONUNBUFFERED: 1
@@ -101,22 +109,23 @@ services:
       - ./data:/app/data:Z
       - ./logs:/app/logs:Z
       - ./common:/app/common:Z
-      - ./net_admin/static:/app/net_admin/static:Z
-      - ./net_admin/staticfiles:/app/net_admin/staticfiles:Z
-      - ./net_admin/templates:/app/net_admin/templates:Z
+      - ./net_admin:/app/net_admin:Z
+      - ./entrypoint.sh:/app/entrypoint.sh:Z
+      - django_migrations:/tmp
       - ~/.ssh:/root/.ssh:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     depends_on:
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
     networks:
       - app-network
     restart: unless-stopped
-    command: >
-      bash -c "
-        cd /app/net_admin &&
-        python manage.py migrate &&
-        python manage.py collectstatic --noinput &&
-        python manage.py runserver 0.0.0.0:8080
-      "
+    command: ["/app/entrypoint.sh"]
 
   # Nginx 리버스 프록시
   nginx:
@@ -132,14 +141,18 @@ services:
       - ./net_admin/staticfiles:/app/staticfiles:ro
       - ./logs/nginx:/var/log/nginx
     depends_on:
-      - django
-      - fastapi
+      django:
+        condition: service_healthy
+      fastapi:
+        condition: service_healthy
     networks:
       - app-network
     restart: unless-stopped
 
 volumes:
   postgres_data:
+    driver: local
+  django_migrations:
     driver: local
   # redis_data:
   #   driver: local

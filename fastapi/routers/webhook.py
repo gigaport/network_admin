@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from utils.slack_client import slack_client, send_alert, send_structured
+from utils.alarm_state import check_transition, get_alert_info
 
 # 로깅 설정
 logger = logging.getLogger(__name__)
@@ -204,7 +205,7 @@ async def send_syslog_webhook_to_slack(request: Request):
         logger.info(f"Syslog 수신: {data}")
         
         # 필수 필드 검증
-        required_fields = ['device', 'host_ip', 'timestamp_trans', 'severity', 'facility', 'mnemonic', 'type', 'message']
+        required_fields = ['device', 'host_ip', 'timestamp_trans', 'severity', 'facility', 'mnemonic', 'message']
         missing_fields = [field for field in required_fields if field not in data or data[field] is None]
         
         if missing_fields:
@@ -531,7 +532,7 @@ def create_network_monitoring_sections(received_data: Dict, net_gubn: str) -> Li
         
         sections.extend([
             {"title": "<Top 10 Bandwidth Usage>", "text": top_10_text, "color": "#FFA500"},
-            {"title": "<전체증권사>", "text": f"`전체증권사 [{received_data['ALL_SECUTIES']['bd_usage']}/40G]` : {received_data['ALL_SECUTIES']['max_bps_unit']} ({received_data['ALL_SECUTIES']['diff_emoji']}{received_data['ALL_SECUTIES']['diff_unit']})", "color": "#FF6666"},
+            {"title": "<전체증권사>", "text": f"`전체증권사 [{received_data['ALL_SECURITIES']['bd_usage']}/40G]` : {received_data['ALL_SECURITIES']['max_bps_unit']} ({received_data['ALL_SECURITIES']['diff_emoji']}{received_data['ALL_SECURITIES']['diff_unit']})", "color": "#FF6666"},
             {"title": "<회원사_1그룹>", "text": _format_group_data(received_data, ["KB", "KR_HQ", "KR_KT", "MR", "KW", "SH", "NH", "SS", "KY", "YU", "TS"]), "color": "#439FE0"},
             {"title": "<회원사_2그룹>", "text": _format_group_data(received_data, ["DA", "DB", "EU", "HD", "HN", "HW", "KA", "LS", "ME", "SK", "SY", "IM"]), "color": "#90EE90"},
             {"title": "<PB이용사>", "text": _format_group_data(received_data, ["BN", "BK", "DO", "DS", "HY", "IB", "LD", "WR"]), "color": "#9370DB"},
@@ -689,4 +690,115 @@ async def send_monitor_webhook_to_slack(net_gubn: str, request: Request):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"result": "error", "detail": str(e)}
+        )
+
+
+@router.post("/batch/multicast/check")
+async def check_multicast_alarm_state(request: Request):
+    """
+    멀티캐스트 알람 상태 체크 엔드포인트
+
+    전체 장비의 check_result를 받아 상태 전환을 판단하고,
+    장애 발생/복구 시에만 Slack 알람을 발송합니다.
+
+    요청 형식:
+    {
+        "market_gubn": "pr",
+        "devices": [
+            {"device_name": "...", "check_result": "정상확인|확인필요", "member_name": "...", ...}
+        ]
+    }
+    """
+    try:
+        data = await request.json()
+        market_gubn = data.get("market_gubn", "")
+        devices = data.get("devices", [])
+
+        if not market_gubn or not devices:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"result": False, "error": "market_gubn and devices are required"}
+            )
+
+        # 시장 구분 한글 변환
+        market_name_map = {"pr": "가동", "ts": "테스트", "dr": "DR", "pr_information": "정보사-가동"}
+        market_name = market_name_map.get(market_gubn, market_gubn)
+
+        channel = "#network-alert-multicast"
+        alerts_sent = 0
+        recoveries_sent = 0
+        skipped = 0
+
+        for device in devices:
+            if device is None:
+                continue
+
+            device_name = device.get("device_name", "")
+            check_result = device.get("check_result", "")
+
+            if not device_name or not check_result:
+                skipped += 1
+                continue
+
+            # 알람 상태 전환 확인
+            result = check_transition(market_gubn, device_name, check_result, device)
+            action = result["action"]
+
+            if action == "send_alert":
+                # 장애 발생 알람
+                alert_time = result.get("alert_time", "")
+                member_name = device.get("member_name", "N/A")
+                title = f":rotating_light: *({market_name}) {member_name} 시세수신 이상* :rotating_light:"
+
+                fields = [
+                    {"title": "대상회원사", "value": f"`{member_name}`", "short": True},
+                    {"title": "장비이름", "value": f"*{device_name}*", "short": True},
+                    {"title": "가입상품", "value": f"`{device.get('products', 'N/A')}`", "short": True},
+                    {"title": "PIM_RP", "value": f"{device.get('pim_rp', 'N/A')}", "short": True},
+                    {"title": "기준 mroute", "value": f"{device.get('product_cnt', 0)}", "short": True},
+                    {"title": "현재 mroute", "value": f"{device.get('mroute_cnt', 0)}", "short": True},
+                    {"title": "현재 oif_cnt", "value": f"{device.get('oif_cnt', 0)}", "short": True},
+                    {"title": "RPF_NBR", "value": f"`{device.get('rpf_nbr', 'N/A')}`", "short": True},
+                    {"title": "발생시간", "value": f"*{alert_time}*", "short": True},
+                ]
+
+                send_alert(channel=channel, title=title, message="", color="danger", fields=fields)
+                alerts_sent += 1
+                logger.info(f"[ALARM SENT] 장애 알람: {market_gubn}:{device_name}")
+
+            elif action == "send_recovery":
+                # 복구 알람 - 발생시간 + 복구시간 포함
+                alert_time = result.get("alert_time", "")
+                recovery_time = result.get("recovery_time", "")
+                member_name = device.get("member_name", "N/A")
+                title = f":white_check_mark: *({market_name}) {member_name} 시세수신 복구* :white_check_mark:"
+
+                fields = [
+                    {"title": "대상회원사", "value": f"`{member_name}`", "short": True},
+                    {"title": "장비이름", "value": f"*{device_name}*", "short": True},
+                    {"title": "발생시간", "value": f"*{alert_time}*", "short": True},
+                    {"title": "복구시간", "value": f"*{recovery_time}*", "short": True},
+                ]
+
+                send_alert(channel=channel, title=title, message="", color="good", fields=fields)
+                recoveries_sent += 1
+                logger.info(f"[ALARM SENT] 복구 알람: {market_gubn}:{device_name}")
+
+            else:
+                skipped += 1
+
+        logger.info(f"[ALARM CHECK] {market_gubn}: alerts={alerts_sent}, recoveries={recoveries_sent}, skipped={skipped}")
+
+        return JSONResponse(content={
+            "result": True,
+            "alerts_sent": alerts_sent,
+            "recoveries_sent": recoveries_sent,
+            "skipped": skipped
+        })
+
+    except Exception as e:
+        logger.error(f"멀티캐스트 알람 상태 체크 오류: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"result": False, "error": str(e)}
         )

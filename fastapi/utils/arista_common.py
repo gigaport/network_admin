@@ -42,11 +42,12 @@ def CallAristaAPI(ip, cmds, params=None):
     # eAPI 요청 보내기
     try:
         response = requests.post(
-            url, 
-            headers=headers, 
-            data=json.dumps(payload), 
+            url,
+            headers=headers,
+            data=json.dumps(payload),
             auth=(NETWORK_ID, NETWORK_PASSWD),
-            verify=False
+            verify=False,
+            timeout=10  # 10초 타임아웃 설정 (장비당 최대 대기 시간)
         )
         # 상태 코드 확인
         if response.status_code != 200:
@@ -71,8 +72,14 @@ def CallAristaAPI(ip, cmds, params=None):
             logger.error(f"Response Content: {response.text}")
             return None
 
+    except requests.exceptions.Timeout as e:
+        logger.error(f"Timeout error for {ip}: {e}")
+        return None
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"Connection error for {ip}: {e}")
+        return None
     except requests.exceptions.RequestException as e:
-        logger.error(f"Request failed: {e}")
+        logger.error(f"Request failed for {ip}: {e}")
         return None
 
     response_json = response.json()

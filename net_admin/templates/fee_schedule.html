@@ -1,0 +1,284 @@
+{% extends 'components/base.html' %}
+{% load static %}
+
+{% block content %}
+  <div class="content">
+    <nav class="mb-3" aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="#!">기준설정</a></li>
+        <li class="breadcrumb-item active">회원사 요금기준</li>
+      </ol>
+    </nav>
+    <div class="mb-9" style="max-width: 960px; margin: 0 auto;">
+      <div class="row g-3 mb-4">
+        <div class="col-auto">
+          <h2 class="mb-0">회원사 요금기준</h2>
+        </div>
+        <div class="col-auto ms-auto">
+          <button class="btn btn-sm btn-success me-2" onclick="showAddForm()">
+            <i class="fas fa-plus me-1"></i>항목 추가
+          </button>
+          <button class="btn btn-sm btn-primary" onclick="loadFeeSchedule()">
+            <i class="fas fa-sync-alt me-1"></i>새로고침
+          </button>
+        </div>
+      </div>
+
+      <!-- 요약 통계 카드 -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 14px; padding: 20px; background: linear-gradient(135deg, #6366F1, #818CF8); box-shadow: 0 4px 15px rgba(99,102,241,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center mb-2">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-list-alt" style="color: #fff; font-size: 0.8rem;"></i>
+              </div>
+            </div>
+            <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">전체 항목</div>
+            <div class="fw-bold" id="stat_total" style="font-size: 1.6rem; color: #fff; line-height: 1;">-</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 14px; padding: 20px; background: linear-gradient(135deg, #0369A1, #0EA5E9); box-shadow: 0 4px 15px rgba(14,165,233,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center mb-2">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-layer-group" style="color: #fff; font-size: 0.8rem;"></i>
+              </div>
+            </div>
+            <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">Phase 1</div>
+            <div class="fw-bold" id="stat_phase1" style="font-size: 1.6rem; color: #fff; line-height: 1;">-</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 14px; padding: 20px; background: linear-gradient(135deg, #047857, #10B981); box-shadow: 0 4px 15px rgba(16,185,129,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center mb-2">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-layer-group" style="color: #fff; font-size: 0.8rem;"></i>
+              </div>
+            </div>
+            <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">Phase 2</div>
+            <div class="fw-bold" id="stat_phase2" style="font-size: 1.6rem; color: #fff; line-height: 1;">-</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 14px; padding: 20px; background: linear-gradient(135deg, #B45309, #F59E0B); box-shadow: 0 4px 15px rgba(245,158,11,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center mb-2">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-ellipsis-h" style="color: #fff; font-size: 0.8rem;"></i>
+              </div>
+            </div>
+            <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">기타</div>
+            <div class="fw-bold" id="stat_etc" style="font-size: 1.6rem; color: #fff; line-height: 1;">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 추가 폼 (초기 숨김) -->
+      <div class="card border-0 shadow-sm bg-body-emphasis mb-4" id="addFormCard" style="display: none; border-radius: 12px; overflow: hidden;">
+        <div class="card-header border-0 py-3" style="background: linear-gradient(135deg, #059669, #10b981);">
+          <h6 class="mb-0 text-white fw-bold"><i class="fas fa-plus-circle me-2"></i>새 요금기준 추가</h6>
+        </div>
+        <div class="card-body" style="padding: 20px 24px;">
+          <form id="addForm">
+            <div class="row g-3">
+              <div class="col-md-2">
+                <label class="form-label small fw-semibold text-muted">용도 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-sm" id="add_usage" placeholder="예: MPR, ORD" maxlength="50">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-semibold text-muted">대역폭</label>
+                <select class="form-select form-select-sm" id="add_bandwidth">
+                  <option value="">없음</option>
+                  <option value="50M">50M</option>
+                  <option value="100M">100M</option>
+                  <option value="150M">150M</option>
+                  <option value="200M">200M</option>
+                  <option value="250M">250M</option>
+                  <option value="300M">300M</option>
+                  <option value="350M">350M</option>
+                  <option value="400M">400M</option>
+                  <option value="450M">450M</option>
+                  <option value="공유(1G)">공유(1G)</option>
+                </select>
+              </div>
+              <div class="col-auto d-flex align-items-end pb-1">
+                <div class="form-check" style="white-space: nowrap;">
+                  <input class="form-check-input" type="checkbox" id="add_additional_circuit">
+                  <label class="form-check-label small text-muted" for="add_additional_circuit">추가회선</label>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-semibold text-muted">설명 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-sm" id="add_description" placeholder="예: 주문회선_50M" maxlength="100">
+              </div>
+              <div class="col">
+                <label class="form-label small fw-semibold text-muted">요금</label>
+                <div class="input-group input-group-sm">
+                  <input type="number" class="form-control" id="add_price" value="0">
+                  <span class="input-group-text">원</span>
+                </div>
+              </div>
+              <div class="col-auto">
+                <label class="form-label small fw-semibold text-muted">Phase</label>
+                <select class="form-select form-select-sm" id="add_phase" style="width: 90px;">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                </select>
+              </div>
+              <div class="col-md-9 d-flex align-items-end gap-2">
+                <button type="button" class="btn btn-sm px-4" onclick="saveAdd()" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; border-radius: 8px;">
+                  <i class="fas fa-save me-1"></i>저장
+                </button>
+                <button type="button" class="btn btn-sm btn-light px-4" onclick="hideAddForm()" style="border: 1px solid #d1d5db; border-radius: 8px;">
+                  <i class="fas fa-times me-1"></i>취소
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 1단계 그룹 -->
+      <div class="card border-0 shadow-sm bg-body-emphasis mb-4" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-header border-0 py-3" style="background: linear-gradient(135deg, #1e40af, #3b82f6);">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-layer-group me-2 text-white" style="opacity: 0.8;"></i>
+            <h6 class="mb-0 text-white fw-bold">Phase 1</h6>
+          </div>
+        </div>
+        <div class="card-body p-0" id="group_1">
+          <div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i>로딩 중...</div>
+        </div>
+      </div>
+
+      <!-- 2단계 그룹 -->
+      <div class="card border-0 shadow-sm bg-body-emphasis mb-4" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-header border-0 py-3" style="background: linear-gradient(135deg, #065f46, #10b981);">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-layer-group me-2 text-white" style="opacity: 0.8;"></i>
+            <h6 class="mb-0 text-white fw-bold">Phase 2</h6>
+          </div>
+        </div>
+        <div class="card-body p-0" id="group_2">
+          <div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i>로딩 중...</div>
+        </div>
+      </div>
+
+      <!-- 기타 항목 그룹 -->
+      <div class="card border-0 shadow-sm bg-body-emphasis mb-4" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-header border-0 py-3" style="background: linear-gradient(135deg, #92400e, #f59e0b);">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-cogs me-2 text-white" style="opacity: 0.8;"></i>
+            <h6 class="mb-0 text-white fw-bold">기타</h6>
+          </div>
+        </div>
+        <div class="card-body p-0" id="group_0">
+          <div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i>로딩 중...</div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer position-absolute">
+      <div class="row g-0 justify-content-between align-items-center h-100">
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 mt-2 mt-sm-0 text-body">Nextrade Network Admin<span class="d-none d-sm-inline-block"></span><span class="d-none d-sm-inline-block mx-1">|</span><br class="d-sm-none" />2025 &copy;<a class="mx-1" href="">RWS</a></p>
+        </div>
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 text-body-tertiary text-opacity-85">v1.22.0</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 수정 모달 -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content border-0" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header border-0" style="background: linear-gradient(135deg, #4f46e5, #6366f1); padding: 18px 24px;">
+          <h5 class="modal-title fw-bold text-white" style="font-size: 1.1rem;">
+            <i class="fas fa-edit me-2" style="opacity: 0.85;"></i>요금기준 수정
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="background-color: #f8fafc; padding: 20px 24px;">
+          <form id="editForm">
+            <input type="hidden" id="edit_id">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">용도</label>
+                <input type="text" class="form-control form-control-sm" id="edit_usage" maxlength="50">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">대역폭</label>
+                <select class="form-select form-select-sm" id="edit_bandwidth">
+                  <option value="">없음</option>
+                  <option value="50M">50M</option>
+                  <option value="100M">100M</option>
+                  <option value="150M">150M</option>
+                  <option value="200M">200M</option>
+                  <option value="250M">250M</option>
+                  <option value="300M">300M</option>
+                  <option value="350M">350M</option>
+                  <option value="400M">400M</option>
+                  <option value="450M">450M</option>
+                  <option value="공유(1G)">공유(1G)</option>
+                </select>
+              </div>
+              <div class="col-md-3 d-flex align-items-end pb-1">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="edit_additional_circuit">
+                  <label class="form-check-label small text-muted" for="edit_additional_circuit">추가회선</label>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label small fw-semibold text-muted">설명</label>
+                <input type="text" class="form-control form-control-sm" id="edit_description" maxlength="100">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">요금</label>
+                <div class="input-group input-group-sm">
+                  <input type="number" class="form-control" id="edit_price">
+                  <span class="input-group-text">원</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">가입 Phase</label>
+                <select class="form-select form-select-sm" id="edit_phase">
+                  <option value="1">Phase 1</option>
+                  <option value="2">Phase 2</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0" style="background-color: #f8fafc; padding: 14px 24px;">
+          <button type="button" class="btn btn-light btn-sm px-4" data-bs-dismiss="modal" style="border: 1px solid #d1d5db; border-radius: 8px;">
+            <i class="fas fa-times me-1"></i>취소
+          </button>
+          <button type="button" class="btn btn-sm px-4" onclick="saveEdit()" style="background: linear-gradient(135deg, #4f46e5, #6366f1); color: #fff; border-radius: 8px; border: none;">
+            <i class="fas fa-save me-1"></i>저장
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="back_data" data-submenu="{{ sub_menu|escapejs }}"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'vendors/popper/popper.min.js' %}"></script>
+<script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
+<script src="{% static 'vendors/is/is.min.js' %}"></script>
+<script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
+<script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
+<script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
+<script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
+<script src="{% static 'assets/js/phoenix.js' %}"></script>
+<script src="{% static 'assets/js/net_admin/fee_schedule.js' %}?v={% now "YmdHis" %}"></script>
+{% endblock %}

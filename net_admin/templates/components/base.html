@@ -11,22 +11,27 @@
     <!-- ===============================================-->
     <!--    Document Title-->
     <!-- ===============================================-->
-    <title>NEXTRADE MKNM</title>
+    <title>NW통합운영시스템</title>
 
 
     <!-- ===============================================-->
     <!--    Favicons-->
     <!-- ===============================================-->
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/img/favicons/apple-touch-icon.png' %}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/img/icons/logo.png' %}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/img/icons/logo.png' %}">
-    <link rel="shortcut icon" type="image/x-icon" href="{% static 'assets/img/favicons/favicon.ico' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/img/icons/nextrade_ci.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/img/icons/nextrade_ci.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/img/icons/nextrade_ci.png' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'assets/img/icons/nextrade_ci.png' %}">
     <link rel="manifest" href="{% static 'assets/img/favicons/manifest.js' %}on">
     <meta name="msapplication-TileImage" content="{% static 'assets/img/favicons/mstile-150x150.png' %}">
     <meta name="theme-color" content="#ffffff">
+    <style>
+      :root, [data-bs-theme="light"] { --phoenix-logo-color: #1f2937; }
+      [data-bs-theme="dark"] { --phoenix-logo-color: #e5e7eb; }
+    </style>
     <script src="{% static 'vendors/simplebar/simplebar.min.js' %}"></script>
     <script src="{% static 'assets/js/config.js' %}"></script>
     <script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+    <script src="{% static 'assets/js/net_admin/search.js' %}"></script>
 
     <!-- DataTables CSS & JS -->
     <link href="{% static 'assets/css/datatables.min.css' %}" rel="stylesheet">
@@ -97,6 +102,98 @@
               </li> -->
               <li class="nav-item">
                 <!-- label-->
+                <p class="navbar-vertical-label">대시보드
+                </p>
+                <hr class="navbar-vertical-line" />
+                <div class="nav-item-wrapper"><a class="nav-link label-1 {% if sub_menu == 'dashboard' %}active{% endif %}" href="/index">
+                    <div class="d-flex align-items-center">
+                      <span class="nav-link-icon"><span data-feather="monitor"></span></span><span class="nav-link-text">네트워크 대시보드</span>
+                    </div>
+                  </a>
+                </div>
+              </li>
+              <li class="nav-item">
+                <!-- label-->
+                <p class="navbar-vertical-label">네트워크 회선계약
+                </p>
+                <hr class="navbar-vertical-line" />
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-SUBSCRIBER" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-SUBSCRIBER">
+                    <div class="d-flex align-items-center">
+                      <div class="dropdown-indicator-icon-wrapper"><span class="fas fa-caret-right dropdown-indicator-icon"></span></div><span class="nav-link-icon"><span data-feather="sliders"></span></span><span class="nav-link-text">기준설정</span>
+                    </div>
+                  </a>
+                  <div class="parent-wrapper label-1">
+                    <ul class="nav collapse parent {% if parent_menu == "subscriber_management" %}show{% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-SUBSCRIBER">
+                      <li class="collapsed-nav-item-title d-none">기준설정</li>
+                      <li class="nav-item"><a class="nav-link {% if sub_menu == "subscriber_codes" %}active{% endif %}" href="/subscriber_codes">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">회원사 코드</span>
+                          </div>
+                        </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {% if sub_menu == "subscriber_address" %}active{% endif %}" href="/subscriber_address">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">회원사 주소</span>
+                          </div>
+                        </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {% if sub_menu == "sise_products" %}active{% endif %}" href="/sise_products">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">시세상품정보</span>
+                          </div>
+                        </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {% if sub_menu == "sise_product_detail" %}active{% endif %}" href="/sise_product_detail">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">시세상품정보 상세</span>
+                          </div>
+                        </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {% if sub_menu == "fee_schedule" %}active{% endif %}" href="/fee_schedule">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">회원사 요금기준</span>
+                          </div>
+                        </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {% if sub_menu == "network_cost" %}active{% endif %}" href="/network_cost">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">통신사 원가정보</span>
+                          </div>
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-CONTRACTS" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-CONTRACTS">
+                    <div class="d-flex align-items-center">
+                      <div class="dropdown-indicator-icon-wrapper"><span class="fas fa-caret-right dropdown-indicator-icon"></span></div><span class="nav-link-icon"><span data-feather="file-text"></span></span><span class="nav-link-text">회선계약 관리</span>
+                    </div>
+                  </a>
+                  <div class="parent-wrapper label-1">
+                    <ul class="nav collapse parent {% if parent_menu == "network_contracts" %}show{% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-CONTRACTS">
+                      <li class="collapsed-nav-item-title d-none">회선계약 관리</li>
+                      <li class="nav-item"><a class="nav-link {% if sub_menu == "purchase_contract" %}active{% endif %}" href="/purchase_contract">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">회원사 매입내역</span>
+                          </div>
+                        </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {% if sub_menu == "circuits" %}active{% endif %}" href="/circuits">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">회원사 회선내역</span>
+                          </div>
+                        </a>
+                      </li>
+                      <li class="nav-item"><a class="nav-link {% if sub_menu == "revenue_summary" %}active{% endif %}" href="/revenue_summary">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">회원사 매출내역</span>
+                          </div>
+                        </a>
+                      </li>
+                      <!-- 계약현황 임시화면 - 당분간 숨김 처리
+                      <li class="nav-item"><a class="nav-link {% if sub_menu == "network_contracts" %}active{% endif %}" href="/network_contracts">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">계약현황(임시화면)</span>
+                          </div>
+                        </a>
+                      </li>
+                      -->
+                    </ul>
+                  </div>
+                </div>
+              </li>
+              <li class="nav-item">
+                <!-- label-->
                 <p class="navbar-vertical-label">네트워크 모니터링
                 </p>
                 <hr class="navbar-vertical-line" />
@@ -109,22 +206,17 @@
                     <ul class="nav collapse parent {%  if parent_menu == "network_status_check" %} show {% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-CRM">
                       <li class="collapsed-nav-item-title d-none">멀티캐스트 시세수신체크</li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "pr_multicast" %} active {% endif %}" href="/pr_multicast">
-                          <div class="d-flex align-items-center"><span class="nav-link-text">[회원사-본가동] 시세현황</span>
+                          <div class="d-flex align-items-center"><span class="nav-link-text">회원사-운영시세</span>
                           </div>
                         </a>
                       </li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "ts_multicast" %} active {% endif %}" href="/ts_multicast">
-                            <div class="d-flex align-items-center"><span class="nav-link-text">[회원사-테스트] 시세현황</span>
+                            <div class="d-flex align-items-center"><span class="nav-link-text">회원사-개발시세</span>
                             </div>
                           </a>
                       </li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "pr_info_multicast" %} active {% endif %}" href="/pr_info_multicast">
-                          <div class="d-flex align-items-center"><span class="nav-link-text">[정보이용사-본가동] 시세현황</span>
-                          </div>
-                        </a>
-                      </li>
-                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "ts_info_multicast" %} active {% endif %}" href="/ts_info_multicast">
-                          <div class="d-flex align-items-center"><span class="nav-link-text">[개발중 정보이용사-테스트]</span>
+                          <div class="d-flex align-items-center"><span class="nav-link-text">정보사-운영시세</span>
                           </div>
                         </a>
                       </li>
@@ -132,26 +224,6 @@
                   </div>
                 </div>
               </li>
-            <!-- </ul>
-            <ul class="navbar-nav flex-column" id="navbarVerticalNav"> -->
-              <!-- <li class="nav-item">
-                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-home" role="button" data-bs-toggle="collapse" aria-expanded="true" aria-controls="nv-home">
-                    <div class="d-flex align-items-center">
-                      <div class="dropdown-indicator-icon-wrapper"><span class="fas fa-caret-right dropdown-indicator-icon"></span></div><span class="nav-link-icon"><span data-feather="pie-chart"></span></span><span class="nav-link-text">Home</span>
-                    </div>
-                  </a>
-                  <div class="parent-wrapper label-1">
-                    <ul class="nav collapse parent show" data-bs-parent="#navbarVerticalCollapse" id="nv-home">
-                      <li class="collapsed-nav-item-title d-none">Home
-                      </li>
-                      <li class="nav-item"><a class="nav-link active" href="index.html">
-                          <div class="d-flex align-items-center"><span class="nav-link-text">E commerce</span>
-                          </div>
-                        </a>
-                    </ul>
-                  </div>
-                </div>
-              </li> -->
               <li class="nav-item">
                 <!-- label-->
                 <p class="navbar-vertical-label">네트워크 정보메뉴
@@ -175,27 +247,44 @@
                       </a>
                       </li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "pr_info_interface" %} active {% endif %}" href="/pr_info_interface">
-                          <div class="d-flex align-items-center"><span class="nav-link-text">[본가동] 인터페이스정보</span>
+                          <div class="d-flex align-items-center"><span class="nav-link-text">운영 인터페이스정보</span>
                           </div>
                         </a>
                       </li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "ts_info_interface" %} active {% endif %}" href="/ts_info_interface">
-                        <div class="d-flex align-items-center"><span class="nav-link-text">[테스트] 인터페이스정보</span>
+                        <div class="d-flex align-items-center"><span class="nav-link-text">개발 인터페이스정보</span>
                         </div>
                       </a>
                       </li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "pr_info_arp" %} active {% endif %}" href="/pr_info_arp">
-                          <div class="d-flex align-items-center"><span class="nav-link-text">[본가동] ARP정보</span>
+                          <div class="d-flex align-items-center"><span class="nav-link-text">운영 ARP정보</span>
                           </div>
                         </a>
                       </li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "ts_info_arp" %} active {% endif %}" href="/ts_info_arp">
-                        <div class="d-flex align-items-center"><span class="nav-link-text">[테스트] ARP정보</span>
+                        <div class="d-flex align-items-center"><span class="nav-link-text">개발 ARP정보</span>
                         </div>
                       </a>
                       </li>
+                      <li class="nav-item"><a class="nav-link {%  if sub_menu == "info_ptp" %} active {% endif %}" href="/info_ptp">
+                          <div class="d-flex align-items-center"><span class="nav-link-text">시간동기화 정보</span>
+                          </div>
+                        </a>
+                      </li>
                     </ul>
                   </div>
+                </div>
+              </li>
+              <li class="nav-item">
+                <!-- label-->
+                <p class="navbar-vertical-label">네트워크 자산
+                </p>
+                <hr class="navbar-vertical-line" />
+                <div class="nav-item-wrapper"><a class="nav-link label-1 {% if sub_menu == 'netbox_devices' %}active{% endif %}" href="/netbox_devices">
+                    <div class="d-flex align-items-center">
+                      <span class="nav-link-icon"><span data-feather="server"></span></span><span class="nav-link-text">네트워크 자산내역</span>
+                    </div>
+                  </a>
                 </div>
               </li>
               <li class="nav-item">
@@ -245,141 +334,19 @@
             <a class="navbar-brand me-1 me-sm-3" href="/index">
               <div class="d-flex align-items-center">
                 <div class="d-flex align-items-center"><img src="{% static 'assets/img/icons/logo.png' %}" alt="phoenix" width="27" />
-                  <h5 class="logo-text ms-2 d-none d-sm-block">NXT Network Admin</h5>
+                  <h5 class="logo-text ms-2 d-none d-sm-block" style="font-family: 'Poppins', 'Noto Sans KR', sans-serif; font-weight: 600; letter-spacing: -0.5px; color: var(--phoenix-logo-color, #1f2937);">NETWORK 통합운영시스템</h5>
                 </div>
               </div>
             </a>
           </div>
-          <div class="search-box navbar-top-search-box d-none d-lg-block" data-list='{"valueNames":["title"]}' style="width:25rem;">
-            <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
-              <input class="form-control search-input fuzzy-search rounded-pill form-control-sm" type="search" placeholder="Search..." aria-label="Search" />
-              <span class="fas fa-search search-box-icon"></span>
-
-            </form>
-            <div class="btn-close position-absolute end-0 top-50 translate-middle cursor-pointer shadow-none" data-bs-dismiss="search">
-              <button class="btn btn-link p-0" aria-label="Close"></button>
+          <div id="unifiedSearchBox" class="d-none d-lg-block position-relative" style="width: 28rem;">
+            <div class="position-relative">
+              <input id="unifiedSearchInput" class="form-control rounded-pill form-control-sm" type="text" placeholder="통합검색 (회원사, 회선, IP, 장비...)" autocomplete="off" style="padding-left: 2.2rem; padding-right: 2.2rem; font-size: 0.8rem; height: 36px; border: 1px solid #e2e8f0; background: #f8fafc; transition: all 0.2s;" onfocus="this.style.background='#fff';this.style.borderColor='#6366f1';this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)'" onblur="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0';this.style.boxShadow='none'" />
+              <span class="fas fa-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.75rem;"></span>
+              <span id="unifiedSearchClear" class="fas fa-times position-absolute cursor-pointer" style="right: 12px; top: 50%; transform: translateY(-50%); color: #cbd5e1; font-size: 0.7rem; display: none;"></span>
             </div>
-            <div class="dropdown-menu border start-0 py-0 overflow-hidden w-100">
-              <div class="scrollbar-overlay" style="max-height: 30rem;">
-                <div class="list pb-3">
-                  <h6 class="dropdown-header text-body-highlight fs-10 py-2">24 <span class="text-body-quaternary">results</span></h6>
-                  <hr class="my-0" />
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Recently Searched </h6>
-                  <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-clock-rotate-left" data-fa-transform="shrink-2"></span> Store Macbook</div>
-                      </div>
-                    </a>
-                    <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-clock-rotate-left" data-fa-transform="shrink-2"></span> MacBook Air - 13″</div>
-                      </div>
-                    </a>
-
-                  </div>
-                  <hr class="my-0" />
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Products</h6>
-                  <div class="py-2"><a class="dropdown-item py-2 d-flex align-items-center" href="apps/e-commerce/landing/product-details.html">
-                      <div class="file-thumbnail me-2"><img class="h-100 w-100 object-fit-cover rounded-3" src="{% static 'assets/img/products/60x60/3.png' %}" alt="" /></div>
-                      <div class="flex-1">
-                        <h6 class="mb-0 text-body-highlight title">MacBook Air - 13″</h6>
-                        <p class="fs-10 mb-0 d-flex text-body-tertiary"><span class="fw-medium text-body-tertiary text-opactity-85">8GB Memory - 1.6GHz - 128GB Storage</span></p>
-                      </div>
-                    </a>
-                    <a class="dropdown-item py-2 d-flex align-items-center" href="apps/e-commerce/landing/product-details.html">
-                      <div class="file-thumbnail me-2"><img class="img-fluid" src="{% static 'assets/img/products/60x60/3.png' %}" alt="" /></div>
-                      <div class="flex-1">
-                        <h6 class="mb-0 text-body-highlight title">MacBook Pro - 13″</h6>
-                        <p class="fs-10 mb-0 d-flex text-body-tertiary"><span class="fw-medium text-body-tertiary text-opactity-85">30 Sep at 12:30 PM</span></p>
-                      </div>
-                    </a>
-
-                  </div>
-                  <hr class="my-0" />
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Quick Links</h6>
-                  <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-link text-body" data-fa-transform="shrink-2"></span> Support MacBook House</div>
-                      </div>
-                    </a>
-                    <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-link text-body" data-fa-transform="shrink-2"></span> Store MacBook″</div>
-                      </div>
-                    </a>
-
-                  </div>
-                  <hr class="my-0" />
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Files</h6>
-                  <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"><span class="fa-solid fa-file-zipper text-body" data-fa-transform="shrink-2"></span> Library MacBook folder.rar</div>
-                      </div>
-                    </a>
-                    <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-file-lines text-body" data-fa-transform="shrink-2"></span> Feature MacBook extensions.txt</div>
-                      </div>
-                    </a>
-                    <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"> <span class="fa-solid fa-image text-body" data-fa-transform="shrink-2"></span> MacBook Pro_13.jpg</div>
-                      </div>
-                    </a>
-
-                  </div>
-                  <hr class="my-0" />2
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Members</h6>
-                  <div class="py-2"><a class="dropdown-item py-2 d-flex align-items-center" href="pages/members.html">
-                      <div class="avatar avatar-l status-online  me-2 text-body">
-                        <img class="rounded-circle " src="{% static 'assets/img/team/40x40/10.webp' %}" alt="" />
-
-                      </div>
-                      <div class="flex-1">
-                        <h6 class="mb-0 text-body-highlight title">Carry Anna</h6>
-                        <p class="fs-10 mb-0 d-flex text-body-tertiary">anna@technext.it</p>
-                      </div>
-                    </a>
-                    <a class="dropdown-item py-2 d-flex align-items-center" href="pages/members.html">
-                      <div class="avatar avatar-l  me-2 text-body">
-                        <img class="rounded-circle " src="{% static 'assets/img/team/40x40/12.webp' %}" alt="" />
-
-                      </div>
-                      <div class="flex-1">
-                        <h6 class="mb-0 text-body-highlight title">John Smith</h6>
-                        <p class="fs-10 mb-0 d-flex text-body-tertiary">smith@technext.it</p>
-                      </div>
-                    </a>
-
-                  </div>
-                  <hr class="my-0" />
-                  <h6 class="dropdown-header text-body-highlight fs-9 border-bottom border-translucent py-2 lh-sm">Related Searches</h6>
-                  <div class="py-2"><a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"><span class="fa-brands fa-firefox-browser text-body" data-fa-transform="shrink-2"></span> Search in the Web MacBook</div>
-                      </div>
-                    </a>
-                    <a class="dropdown-item" href="apps/e-commerce/landing/product-details.html">
-                      <div class="d-flex align-items-center">
-
-                        <div class="fw-normal text-body-highlight title"> <span class="fa-brands fa-chrome text-body" data-fa-transform="shrink-2"></span> Store MacBook″</div>
-                      </div>
-                    </a>
-
-                  </div>
-                </div>
-                <div class="text-center">
-                  <p class="fallback fw-bold fs-7 d-none">No Result Found.</p>
-                </div>
-              </div>
+            <div id="unifiedSearchDropdown" class="position-absolute w-100 bg-white border shadow-lg" style="display: none; top: 42px; left: 0; border-radius: 12px; z-index: 9999; overflow: hidden; border-color: #e2e8f0 !important;">
+              <div id="unifiedSearchResults" class="scrollbar-overlay" style="max-height: 28rem; overflow-y: auto;"></div>
             </div>
           </div>
           <ul class="navbar-nav navbar-nav-icons flex-row">

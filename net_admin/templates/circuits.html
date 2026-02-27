@@ -1,0 +1,960 @@
+{% extends 'components/base.html' %}
+{% load static %}
+
+{% block content %}
+  <!-- 로딩 오버레이 -->
+  <div id="pageLoadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9998; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.3); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 0.4s ease;">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div style="font-size: 0.85rem; color: #475569; font-weight: 500;">데이터를 불러오는 중...</div>
+    </div>
+  </div>
+  <div class="content">
+    <nav class="mb-3" aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="#!">회선계약 관리</a></li>
+        <li class="breadcrumb-item active">회원사 회선내역</li>
+      </ol>
+    </nav>
+    <div class="mb-9">
+      <div class="row g-3 mb-4" style="margin: 0 auto;">
+        <div class="col-auto">
+          <h2 id="contents_title" class="mb-0">회원사 회선내역</h2>
+        </div>
+        <div class="col-auto ms-auto">
+          <button class="btn btn-sm btn-outline-secondary me-2" onclick="showAnalysisModal()">
+            <i class="fas fa-chart-bar me-1"></i>회선 현황 분석
+          </button>
+          <button class="btn btn-sm btn-success me-2" onclick="showCreateModal()">
+            <i class="fas fa-plus me-1"></i>추가
+          </button>
+          <button class="btn btn-sm btn-primary" onclick="refreshTable()">
+            <i class="fas fa-sync-alt me-1"></i>새로고침
+          </button>
+        </div>
+      </div>
+
+      <!-- 상단 영역: 좌측 요약 카드 | 우측 최근 변경 내역 -->
+      <div class="row g-3 mb-4">
+        <!-- 좌측: 요약 카드들 -->
+        <div class="col-lg-6">
+          <!-- 1행: 핵심 지표 -->
+          <div class="row g-3 mb-3" id="summaryCards">
+            <div class="col-6">
+              <div class="h-100 position-relative" style="border-radius: 14px; padding: 14px 16px; background: linear-gradient(135deg, #6366f1, #818cf8); box-shadow: 0 4px 15px rgba(99,102,241,0.3); overflow: hidden;">
+                <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+                <div class="d-flex align-items-center gap-2">
+                  <div style="width: 36px; height: 36px; min-width: 36px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-network-wired" style="color: #fff; font-size: 0.8rem;"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 0.65rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 1px;">총 회선</div>
+                    <div class="fw-bold" id="stat_total" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="h-100 position-relative" style="border-radius: 14px; padding: 14px 16px; background: linear-gradient(135deg, #0EA5E9, #38BDF8); box-shadow: 0 4px 15px rgba(14,165,233,0.3); overflow: hidden;">
+                <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+                <div class="d-flex align-items-center gap-2">
+                  <div style="width: 36px; height: 36px; min-width: 36px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-building" style="color: #fff; font-size: 0.8rem;"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 0.65rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 1px;">회원사</div>
+                    <div class="fw-bold" id="stat_members" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="h-100 position-relative" style="border-radius: 14px; padding: 14px 16px; background: linear-gradient(135deg, #7C3AED, #A78BFA); box-shadow: 0 4px 15px rgba(124,58,237,0.3); overflow: hidden;">
+                <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+                <div class="d-flex align-items-center gap-2">
+                  <div style="width: 36px; height: 36px; min-width: 36px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-tags" style="color: #fff; font-size: 0.8rem;"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 0.65rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 1px;">ORD / MPR</div>
+                    <div class="d-flex align-items-baseline gap-1">
+                      <span class="fw-bold" id="stat_ord" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</span>
+                      <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">/</span>
+                      <span class="fw-bold" id="stat_mpr" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="h-100 position-relative" style="border-radius: 14px; padding: 14px 16px; background: linear-gradient(135deg, #DC2626, #F87171); box-shadow: 0 4px 15px rgba(220,38,38,0.3); overflow: hidden;">
+                <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+                <div class="d-flex align-items-center gap-2">
+                  <div style="width: 36px; height: 36px; min-width: 36px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-exclamation-triangle" style="color: #fff; font-size: 0.8rem;"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 0.65rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 1px;">만료 임박 (90일)</div>
+                    <div class="fw-bold" id="stat_expiring" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 2행: 통신사별 / 환경별 / DC별 -->
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="h-100 position-relative" style="border-radius: 14px; padding: 16px; background: linear-gradient(135deg, #059669, #10B981); box-shadow: 0 4px 15px rgba(16,185,129,0.3); overflow: hidden;">
+                <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+                <div class="d-flex align-items-center mb-2">
+                  <div style="width: 28px; height: 28px; border-radius: 7px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-broadcast-tower" style="color: #fff; font-size: 0.7rem;"></i>
+                  </div>
+                  <span style="font-size: 0.65rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-left: 8px;">통신사별</span>
+                </div>
+                <div class="d-flex align-items-end" style="margin-top: 4px;">
+                  <div class="text-center" style="flex: 1;">
+                    <div class="fw-bold" id="stat_kt" style="font-size: 1.1rem; color: #fff; line-height: 1;">-</div>
+                    <div style="font-size: 0.55rem; margin-top: 4px; color: rgba(255,255,255,0.7); font-weight: 600;">KT</div>
+                  </div>
+                  <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2); margin: 0 3px;"></div>
+                  <div class="text-center" style="flex: 1;">
+                    <div class="fw-bold" id="stat_lgu" style="font-size: 1.1rem; color: #fff; line-height: 1;">-</div>
+                    <div style="font-size: 0.55rem; margin-top: 4px; color: rgba(255,255,255,0.7); font-weight: 600;">LGU</div>
+                  </div>
+                  <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2); margin: 0 3px;"></div>
+                  <div class="text-center" style="flex: 1;">
+                    <div class="fw-bold" id="stat_skb" style="font-size: 1.1rem; color: #fff; line-height: 1;">-</div>
+                    <div style="font-size: 0.55rem; margin-top: 4px; color: rgba(255,255,255,0.7); font-weight: 600;">SKB</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="h-100 position-relative" style="border-radius: 14px; padding: 16px; background: linear-gradient(135deg, #B45309, #F59E0B); box-shadow: 0 4px 15px rgba(245,158,11,0.3); overflow: hidden;">
+                <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+                <div class="d-flex align-items-center mb-2">
+                  <div style="width: 28px; height: 28px; border-radius: 7px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-server" style="color: #fff; font-size: 0.7rem;"></i>
+                  </div>
+                  <span style="font-size: 0.65rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-left: 8px;">환경별</span>
+                </div>
+                <div class="d-flex align-items-end" style="margin-top: 4px;">
+                  <div class="text-center" style="flex: 1;">
+                    <div class="fw-bold" id="stat_pr" style="font-size: 1.1rem; color: #fff; line-height: 1;">-</div>
+                    <div style="font-size: 0.55rem; margin-top: 4px; color: rgba(255,255,255,0.7); font-weight: 600;">PR</div>
+                  </div>
+                  <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2); margin: 0 2px;"></div>
+                  <div class="text-center" style="flex: 1;">
+                    <div class="fw-bold" id="stat_dr" style="font-size: 1.1rem; color: #fff; line-height: 1;">-</div>
+                    <div style="font-size: 0.55rem; margin-top: 4px; color: rgba(255,255,255,0.7); font-weight: 600;">DR</div>
+                  </div>
+                  <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2); margin: 0 2px;"></div>
+                  <div class="text-center" style="flex: 1;">
+                    <div class="fw-bold" id="stat_ts" style="font-size: 1.1rem; color: #fff; line-height: 1;">-</div>
+                    <div style="font-size: 0.55rem; margin-top: 4px; color: rgba(255,255,255,0.7); font-weight: 600;">TS</div>
+                  </div>
+                  <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2); margin: 0 2px;"></div>
+                  <div class="text-center" style="flex: 1;">
+                    <div class="fw-bold" id="stat_mg" style="font-size: 1.1rem; color: #fff; line-height: 1;">-</div>
+                    <div style="font-size: 0.55rem; margin-top: 4px; color: rgba(255,255,255,0.7); font-weight: 600;">MG</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="h-100 position-relative" style="border-radius: 14px; padding: 16px; background: linear-gradient(135deg, #1E40AF, #3B82F6); box-shadow: 0 4px 15px rgba(59,130,246,0.3); overflow: hidden;">
+                <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+                <div class="d-flex align-items-center mb-2">
+                  <div style="width: 28px; height: 28px; border-radius: 7px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-database" style="color: #fff; font-size: 0.7rem;"></i>
+                  </div>
+                  <span style="font-size: 0.65rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-left: 8px;">DC코드별</span>
+                </div>
+                <div class="d-flex align-items-end" style="margin-top: 4px;">
+                  <div class="text-center" style="flex: 1;">
+                    <div class="fw-bold" id="stat_dc1" style="font-size: 1.1rem; color: #fff; line-height: 1;">-</div>
+                    <div style="font-size: 0.55rem; margin-top: 4px; color: rgba(255,255,255,0.7); font-weight: 600;">DC1</div>
+                  </div>
+                  <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2); margin: 0 2px;"></div>
+                  <div class="text-center" style="flex: 1;">
+                    <div class="fw-bold" id="stat_dc2" style="font-size: 1.1rem; color: #fff; line-height: 1;">-</div>
+                    <div style="font-size: 0.55rem; margin-top: 4px; color: rgba(255,255,255,0.7); font-weight: 600;">DC2</div>
+                  </div>
+                  <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2); margin: 0 2px;"></div>
+                  <div class="text-center" style="flex: 1;">
+                    <div class="fw-bold" id="stat_dc3" style="font-size: 1.1rem; color: #fff; line-height: 1;">-</div>
+                    <div style="font-size: 0.55rem; margin-top: 4px; color: rgba(255,255,255,0.7); font-weight: 600;">DC3</div>
+                  </div>
+                  <div style="width: 1px; height: 25px; background: rgba(255,255,255,0.2); margin: 0 2px;"></div>
+                  <div class="text-center" style="flex: 1;">
+                    <div class="fw-bold" id="stat_dc_dr" style="font-size: 1.1rem; color: #fff; line-height: 1;">-</div>
+                    <div style="font-size: 0.55rem; margin-top: 4px; color: rgba(255,255,255,0.7); font-weight: 600;">DR</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 우측: 최근 변경 내역 -->
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
+            <div class="card-header border-0 d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #1e293b, #334155); padding: 10px 16px;">
+              <div class="d-flex align-items-center gap-2">
+                <div style="width: 26px; height: 26px; border-radius: 7px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
+                  <i class="fas fa-history" style="color: #93c5fd; font-size: 0.7rem;"></i>
+                </div>
+                <span style="font-size: 0.72rem; font-weight: 600; color: #fff;">최근 변경 내역</span>
+                <span id="stat_recent_count" class="badge" style="background: rgba(99,102,241,0.3); color: #a5b4fc; font-size: 0.6rem; padding: 2px 7px; border-radius: 6px;">0건</span>
+              </div>
+              <div style="font-size: 0.6rem; color: rgba(255,255,255,0.5);">최근 30일</div>
+            </div>
+            <div id="recentChangesBody" style="background: #fff; overflow-y: auto; max-height: 220px;">
+              <div class="text-center py-4 text-muted" style="font-size: 0.8rem;">데이터 로딩 중...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm bg-body-emphasis" style="margin: 0 auto;">
+        <div class="card-body" style="padding: 2rem 1rem !important; min-height: 400px;">
+          <!-- 테이블 영역 -->
+          <div class="table-list" id="advanceAjaxTable">
+            <div class="table-responsive scrollbar">
+              <table class="table table-hover table-sm mb-0" id="circuitsTable" style="width: 100% !important; font-size: 0.7rem !important;">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">회원사코드</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">회원사넘버</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">회사명</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">DC코드</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">요약주소</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">통신사</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">회선ID</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">NNI ID</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">환경</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">용도</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">상품</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">대역폭</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">추가회선</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">가입Phase</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">요금</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">COT장비</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">RT장비</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">계약일</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">만료일</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">약정기간</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">문서번호</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">비고</th>
+                </tr>
+              </thead>
+              <tfoot class="sort text-center" style="display: table-header-group">
+                <tr>
+                  <th class="text-center">회원사코드</th>
+                  <th class="text-center">회원사넘버</th>
+                  <th class="text-center">회사명</th>
+                  <th class="text-center">DC코드</th>
+                  <th class="text-center">요약주소</th>
+                  <th class="text-center">통신사</th>
+                  <th class="text-center">회선ID</th>
+                  <th class="text-center">NNI ID</th>
+                  <th class="text-center">환경</th>
+                  <th class="text-center">용도</th>
+                  <th class="text-center">상품</th>
+                  <th class="text-center">대역폭</th>
+                  <th class="text-center">추가회선</th>
+                  <th class="text-center">가입Phase</th>
+                  <th class="text-center">요금</th>
+                  <th class="text-center">COT장비</th>
+                  <th class="text-center">RT장비</th>
+                  <th class="text-center">계약일</th>
+                  <th class="text-center">만료일</th>
+                  <th class="text-center">약정기간</th>
+                  <th class="text-center">문서번호</th>
+                  <th class="text-center">비고</th>
+                </tr>
+              </tfoot>
+              <tbody class="list" id="order-table-body">
+              </tbody>
+            </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer position-absolute">
+      <div class="row g-0 justify-content-between align-items-center h-100">
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 mt-2 mt-sm-0 text-body">Nextrade Network Admin<span class="d-none d-sm-inline-block"></span><span class="d-none d-sm-inline-block mx-1">|</span><br class="d-sm-none" />2025 &copy;<a class="mx-1" href="">RWS</a></p>
+        </div>
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 text-body-tertiary text-opacity-85">v1.22.0</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 추가 모달 -->
+  <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content border-0" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header border-0" style="background: linear-gradient(135deg, #059669, #10b981); padding: 18px 24px;">
+          <div class="w-100">
+            <h5 class="modal-title fw-bold text-white mb-1" id="createModalLabel" style="font-size: 1.1rem;">
+              <i class="fas fa-plus-circle me-2" style="opacity: 0.85;"></i>회선 추가
+            </h5>
+            <p class="mb-0" style="font-size: 0.75rem; color: rgba(255,255,255,0.7);">새로운 회선 정보를 입력합니다</p>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="background-color: #f8fafc; padding: 20px 24px;">
+          <form id="createForm">
+            <!-- 기본 정보 -->
+            <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px; overflow: hidden;">
+              <div class="card-body" style="padding: 18px 20px;">
+                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #10b981; padding-left: 12px;">
+                  <i class="fas fa-info-circle me-2" style="color: #10b981;"></i>기본 정보
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <label for="create_member_code" class="form-label small fw-semibold text-muted mb-2">회원사코드 <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="create_member_code" required>
+                      <option value="">선택</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-2">DC코드 <span class="text-danger">*</span></label>
+                    <div class="btn-group w-100" role="group">
+                      <input type="radio" class="btn-check" name="create_datacenter_code" id="create_dc_dc1" value="DC1" autocomplete="off">
+                      <label class="btn btn-outline-primary btn-sm" for="create_dc_dc1">DC1</label>
+                      <input type="radio" class="btn-check" name="create_datacenter_code" id="create_dc_dc2" value="DC2" autocomplete="off">
+                      <label class="btn btn-outline-primary btn-sm" for="create_dc_dc2">DC2</label>
+                      <input type="radio" class="btn-check" name="create_datacenter_code" id="create_dc_dc3" value="DC3" autocomplete="off">
+                      <label class="btn btn-outline-primary btn-sm" for="create_dc_dc3">DC3</label>
+                      <input type="radio" class="btn-check" name="create_datacenter_code" id="create_dc_dr" value="DR" autocomplete="off">
+                      <label class="btn btn-outline-primary btn-sm" for="create_dc_dr">DR</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-2">통신사 <span class="text-danger">*</span></label>
+                    <div class="btn-group w-100" role="group">
+                      <input type="radio" class="btn-check" name="create_provider" id="create_provider_kt" value="KT" autocomplete="off">
+                      <label class="btn btn-outline-info btn-sm" for="create_provider_kt">KT</label>
+                      <input type="radio" class="btn-check" name="create_provider" id="create_provider_lgu" value="LGU" autocomplete="off">
+                      <label class="btn btn-outline-info btn-sm" for="create_provider_lgu">LGU</label>
+                      <input type="radio" class="btn-check" name="create_provider" id="create_provider_skb" value="SKB" autocomplete="off">
+                      <label class="btn btn-outline-info btn-sm" for="create_provider_skb">SKB</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 회선 정보 -->
+            <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px; overflow: hidden;">
+              <div class="card-body" style="padding: 18px 20px;">
+                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #3b82f6; padding-left: 12px;">
+                  <i class="fas fa-network-wired me-2" style="color: #3b82f6;"></i>회선 정보
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <label for="create_circuit_id" class="form-label small fw-semibold text-muted mb-2">회선ID</label>
+                    <input type="text" class="form-control form-control-sm" id="create_circuit_id" maxlength="100">
+                  </div>
+                  <div class="col-md-3">
+                    <label for="create_nni_id" class="form-label small fw-semibold text-muted mb-2">NNI ID</label>
+                    <input type="text" class="form-control form-control-sm" id="create_nni_id" maxlength="100">
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-2">환경 <span class="text-danger">*</span></label>
+                    <div class="btn-group w-100" role="group">
+                      <input type="radio" class="btn-check" name="create_env" id="create_env_pr" value="PR" autocomplete="off">
+                      <label class="btn btn-outline-success btn-sm" for="create_env_pr">PR</label>
+                      <input type="radio" class="btn-check" name="create_env" id="create_env_dr" value="DR" autocomplete="off">
+                      <label class="btn btn-outline-success btn-sm" for="create_env_dr">DR</label>
+                      <input type="radio" class="btn-check" name="create_env" id="create_env_ts" value="TS" autocomplete="off">
+                      <label class="btn btn-outline-success btn-sm" for="create_env_ts">TS</label>
+                      <input type="radio" class="btn-check" name="create_env" id="create_env_mg" value="MG" autocomplete="off">
+                      <label class="btn btn-outline-success btn-sm" for="create_env_mg">MG</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="create_usage" class="form-label small fw-semibold text-muted mb-2">용도 <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="create_usage">
+                      <option value="">선택</option>
+                      <option value="ORD">ORD</option>
+                      <option value="MPR">MPR</option>
+                      <option value="MGT">MGT</option>
+                      <option value="PB_ORD_PRD">PB_ORD_PRD</option>
+                      <option value="PB_ORD_DEV">PB_ORD_DEV</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="create_product" class="form-label small fw-semibold text-muted mb-2">상품 <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="create_product">
+                      <option value="">선택</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="create_bandwidth" class="form-label small fw-semibold text-muted mb-2">대역폭 <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="create_bandwidth">
+                      <option value="">선택</option>
+                      <option value="10M">10M</option>
+                      <option value="50M">50M</option>
+                      <option value="100M">100M</option>
+                      <option value="150M">150M</option>
+                      <option value="200M">200M</option>
+                      <option value="250M">250M</option>
+                      <option value="300M">300M</option>
+                      <option value="350M">350M</option>
+                      <option value="400M">400M</option>
+                      <option value="450M">450M</option>
+                      <option value="공유(1G)">공유(1G)</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2 d-flex align-items-end pb-1">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="create_additional_circuit">
+                      <label class="form-check-label small text-muted" for="create_additional_circuit">추가회선</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="create_phase" class="form-label small fw-semibold text-muted mb-2">가입 Phase <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="create_phase">
+                      <option value="">선택</option>
+                      <option value="1">Phase 1</option>
+                      <option value="2">Phase 2</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 장비 정보 -->
+            <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px; overflow: hidden;">
+              <div class="card-body" style="padding: 18px 20px;">
+                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #8b5cf6; padding-left: 12px;">
+                  <i class="fas fa-hdd me-2" style="color: #8b5cf6;"></i>장비 정보
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="create_cot_device" class="form-label small fw-semibold text-muted mb-2">COT장비</label>
+                    <input type="text" class="form-control form-control-sm" id="create_cot_device" maxlength="100">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="create_rt_device" class="form-label small fw-semibold text-muted mb-2">RT장비</label>
+                    <input type="text" class="form-control form-control-sm" id="create_rt_device" maxlength="100">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 계약 정보 -->
+            <div class="card border-0 shadow-sm" style="border-radius: 10px; overflow: hidden;">
+              <div class="card-body" style="padding: 18px 20px;">
+                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #f59e0b; padding-left: 12px;">
+                  <i class="fas fa-file-contract me-2" style="color: #f59e0b;"></i>계약 정보
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <label for="create_contract_date" class="form-label small fw-semibold text-muted mb-2">계약일</label>
+                    <input type="date" class="form-control form-control-sm" id="create_contract_date">
+                  </div>
+                  <div class="col-md-3">
+                    <label for="create_expiry_date" class="form-label small fw-semibold text-muted mb-2">만료일</label>
+                    <input type="date" class="form-control form-control-sm" id="create_expiry_date">
+                  </div>
+                  <div class="col-md-3">
+                    <label for="create_contract_period" class="form-label small fw-semibold text-muted mb-2">약정기간(개월)</label>
+                    <select class="form-select form-select-sm" id="create_contract_period">
+                      <option value="12">12개월</option>
+                      <option value="24">24개월</option>
+                      <option value="36">36개월</option>
+                      <option value="48">48개월</option>
+                      <option value="60" selected>60개월</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="create_report_number" class="form-label small fw-semibold text-muted mb-2">문서번호</label>
+                    <input type="text" class="form-control form-control-sm" id="create_report_number" maxlength="100">
+                  </div>
+                  <div class="col-12">
+                    <label for="create_comments" class="form-label small fw-semibold text-muted mb-2">비고</label>
+                    <textarea class="form-control form-control-sm" id="create_comments" rows="2" maxlength="500"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0" style="background-color: #f8fafc; padding: 14px 24px;">
+          <button type="button" class="btn btn-light btn-sm px-4" data-bs-dismiss="modal" style="border: 1px solid #d1d5db; border-radius: 8px;">
+            <i class="fas fa-times me-1"></i>취소
+          </button>
+          <button type="button" class="btn btn-sm px-4" onclick="saveCreate(true)" style="background: linear-gradient(135deg, #2563eb, #3b82f6); color: #fff; border-radius: 8px; border: none;">
+            <i class="fas fa-redo me-1"></i>계속
+          </button>
+          <button type="button" class="btn btn-sm px-4" onclick="saveCreate()" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; border-radius: 8px; border: none;">
+            <i class="fas fa-save me-1"></i>추가
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 수정 모달 -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content border-0" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header border-0" style="background: linear-gradient(135deg, #4f46e5, #6366f1); padding: 18px 24px;">
+          <div class="w-100">
+            <h5 class="modal-title fw-bold text-white mb-1" id="editModalLabel" style="font-size: 1.1rem;">
+              <i class="fas fa-edit me-2" style="opacity: 0.85;"></i>회선 수정
+            </h5>
+            <p class="mb-0" style="font-size: 0.75rem; color: rgba(255,255,255,0.7);">회선 정보를 수정합니다</p>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="background-color: #f8fafc; padding: 20px 24px;">
+          <form id="editForm">
+            <input type="hidden" id="edit_id">
+
+            <!-- 기본 정보 -->
+            <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px; overflow: hidden;">
+              <div class="card-body" style="padding: 18px 20px;">
+                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #6366f1; padding-left: 12px;">
+                  <i class="fas fa-info-circle me-2" style="color: #6366f1;"></i>기본 정보
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <label for="edit_member_code" class="form-label small fw-semibold text-muted mb-2">회원사코드 <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="edit_member_code" required>
+                      <option value="">선택</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-2">DC코드 <span class="text-danger">*</span></label>
+                    <div class="btn-group w-100" role="group">
+                      <input type="radio" class="btn-check" name="edit_datacenter_code" id="edit_dc_dc1" value="DC1" autocomplete="off">
+                      <label class="btn btn-outline-primary btn-sm" for="edit_dc_dc1">DC1</label>
+                      <input type="radio" class="btn-check" name="edit_datacenter_code" id="edit_dc_dc2" value="DC2" autocomplete="off">
+                      <label class="btn btn-outline-primary btn-sm" for="edit_dc_dc2">DC2</label>
+                      <input type="radio" class="btn-check" name="edit_datacenter_code" id="edit_dc_dc3" value="DC3" autocomplete="off">
+                      <label class="btn btn-outline-primary btn-sm" for="edit_dc_dc3">DC3</label>
+                      <input type="radio" class="btn-check" name="edit_datacenter_code" id="edit_dc_dr" value="DR" autocomplete="off">
+                      <label class="btn btn-outline-primary btn-sm" for="edit_dc_dr">DR</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-2">통신사 <span class="text-danger">*</span></label>
+                    <div class="btn-group w-100" role="group">
+                      <input type="radio" class="btn-check" name="edit_provider" id="edit_provider_kt" value="KT" autocomplete="off">
+                      <label class="btn btn-outline-info btn-sm" for="edit_provider_kt">KT</label>
+                      <input type="radio" class="btn-check" name="edit_provider" id="edit_provider_lgu" value="LGU" autocomplete="off">
+                      <label class="btn btn-outline-info btn-sm" for="edit_provider_lgu">LGU</label>
+                      <input type="radio" class="btn-check" name="edit_provider" id="edit_provider_skb" value="SKB" autocomplete="off">
+                      <label class="btn btn-outline-info btn-sm" for="edit_provider_skb">SKB</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 회선 정보 -->
+            <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px; overflow: hidden;">
+              <div class="card-body" style="padding: 18px 20px;">
+                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #3b82f6; padding-left: 12px;">
+                  <i class="fas fa-network-wired me-2" style="color: #3b82f6;"></i>회선 정보
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <label for="edit_circuit_id" class="form-label small fw-semibold text-muted mb-2">회선ID</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_circuit_id" maxlength="100">
+                  </div>
+                  <div class="col-md-3">
+                    <label for="edit_nni_id" class="form-label small fw-semibold text-muted mb-2">NNI ID</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_nni_id" maxlength="100">
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-2">환경 <span class="text-danger">*</span></label>
+                    <div class="btn-group w-100" role="group">
+                      <input type="radio" class="btn-check" name="edit_env" id="edit_env_pr" value="PR" autocomplete="off">
+                      <label class="btn btn-outline-success btn-sm" for="edit_env_pr">PR</label>
+                      <input type="radio" class="btn-check" name="edit_env" id="edit_env_dr" value="DR" autocomplete="off">
+                      <label class="btn btn-outline-success btn-sm" for="edit_env_dr">DR</label>
+                      <input type="radio" class="btn-check" name="edit_env" id="edit_env_ts" value="TS" autocomplete="off">
+                      <label class="btn btn-outline-success btn-sm" for="edit_env_ts">TS</label>
+                      <input type="radio" class="btn-check" name="edit_env" id="edit_env_mg" value="MG" autocomplete="off">
+                      <label class="btn btn-outline-success btn-sm" for="edit_env_mg">MG</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="edit_usage" class="form-label small fw-semibold text-muted mb-2">용도 <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="edit_usage">
+                      <option value="">선택</option>
+                      <option value="ORD">ORD</option>
+                      <option value="MPR">MPR</option>
+                      <option value="MGT">MGT</option>
+                      <option value="PB_ORD_PRD">PB_ORD_PRD</option>
+                      <option value="PB_ORD_DEV">PB_ORD_DEV</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="edit_product" class="form-label small fw-semibold text-muted mb-2">상품 <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="edit_product">
+                      <option value="">선택</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="edit_bandwidth" class="form-label small fw-semibold text-muted mb-2">대역폭 <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="edit_bandwidth">
+                      <option value="">선택</option>
+                      <option value="10M">10M</option>
+                      <option value="50M">50M</option>
+                      <option value="100M">100M</option>
+                      <option value="150M">150M</option>
+                      <option value="200M">200M</option>
+                      <option value="250M">250M</option>
+                      <option value="300M">300M</option>
+                      <option value="350M">350M</option>
+                      <option value="400M">400M</option>
+                      <option value="450M">450M</option>
+                      <option value="공유(1G)">공유(1G)</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2 d-flex align-items-end pb-1">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="edit_additional_circuit">
+                      <label class="form-check-label small text-muted" for="edit_additional_circuit">추가회선</label>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="edit_phase" class="form-label small fw-semibold text-muted mb-2">가입 Phase <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="edit_phase">
+                      <option value="">선택</option>
+                      <option value="1">Phase 1</option>
+                      <option value="2">Phase 2</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 장비 정보 -->
+            <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px; overflow: hidden;">
+              <div class="card-body" style="padding: 18px 20px;">
+                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #8b5cf6; padding-left: 12px;">
+                  <i class="fas fa-hdd me-2" style="color: #8b5cf6;"></i>장비 정보
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="edit_cot_device" class="form-label small fw-semibold text-muted mb-2">COT장비</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_cot_device" maxlength="100">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="edit_rt_device" class="form-label small fw-semibold text-muted mb-2">RT장비</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_rt_device" maxlength="100">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 계약 정보 -->
+            <div class="card border-0 shadow-sm" style="border-radius: 10px; overflow: hidden;">
+              <div class="card-body" style="padding: 18px 20px;">
+                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #f59e0b; padding-left: 12px;">
+                  <i class="fas fa-file-contract me-2" style="color: #f59e0b;"></i>계약 정보
+                </h6>
+                <div class="row g-3">
+                  <div class="col-md-3">
+                    <label for="edit_contract_date" class="form-label small fw-semibold text-muted mb-2">계약일</label>
+                    <input type="date" class="form-control form-control-sm" id="edit_contract_date">
+                  </div>
+                  <div class="col-md-3">
+                    <label for="edit_expiry_date" class="form-label small fw-semibold text-muted mb-2">만료일</label>
+                    <input type="date" class="form-control form-control-sm" id="edit_expiry_date">
+                  </div>
+                  <div class="col-md-3">
+                    <label for="edit_contract_period" class="form-label small fw-semibold text-muted mb-2">약정기간(개월)</label>
+                    <select class="form-select form-select-sm" id="edit_contract_period">
+                      <option value="12">12개월</option>
+                      <option value="24">24개월</option>
+                      <option value="36">36개월</option>
+                      <option value="48">48개월</option>
+                      <option value="60" selected>60개월</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="edit_report_number" class="form-label small fw-semibold text-muted mb-2">문서번호</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_report_number" maxlength="100">
+                  </div>
+                  <div class="col-12">
+                    <label for="edit_comments" class="form-label small fw-semibold text-muted mb-2">비고</label>
+                    <textarea class="form-control form-control-sm" id="edit_comments" rows="2" maxlength="500"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0" style="background-color: #f8fafc; padding: 14px 24px;">
+          <button type="button" class="btn btn-light btn-sm px-4" data-bs-dismiss="modal" style="border: 1px solid #d1d5db; border-radius: 8px;">
+            <i class="fas fa-times me-1"></i>취소
+          </button>
+          <button type="button" class="btn btn-sm px-4" onclick="saveEdit()" style="background: linear-gradient(135deg, #4f46e5, #6366f1); color: #fff; border-radius: 8px; border: none;">
+            <i class="fas fa-save me-1"></i>저장
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상세보기 모달 -->
+  <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content border-0" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header border-0" style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 18px 24px;">
+          <div class="w-100">
+            <h5 class="modal-title fw-bold text-white mb-1" id="detailModalLabel" style="font-size: 1.1rem;">
+              <i class="fas fa-info-circle me-2" style="opacity: 0.85;"></i>회선 상세정보
+            </h5>
+            <p class="mb-0" id="detailSubtitle" style="font-size: 0.75rem; color: rgba(255,255,255,0.7);"></p>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="background-color: #f8fafc; padding: 20px 24px;">
+          <input type="hidden" id="detail_id">
+
+          <!-- 기본 정보 -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #3b82f6; padding-left: 12px;">
+                <i class="fas fa-building me-2" style="color: #3b82f6;"></i>기본 정보
+              </h6>
+              <div class="row g-2">
+                <div class="col-md-3"><small class="text-muted d-block">회원사코드</small><strong id="detail_member_code">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">회원사넘버</small><strong id="detail_member_number">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">회사명</small><strong id="detail_company_name">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">DC코드</small><strong id="detail_datacenter_code">-</strong></div>
+                <div class="col-md-6"><small class="text-muted d-block">요약주소</small><strong id="detail_summary_address">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">통신사</small><strong id="detail_provider">-</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 회선 정보 -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #10b981; padding-left: 12px;">
+                <i class="fas fa-network-wired me-2" style="color: #10b981;"></i>회선 정보
+              </h6>
+              <div class="row g-2">
+                <div class="col-md-3"><small class="text-muted d-block">회선ID</small><strong id="detail_circuit_id">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">NNI ID</small><strong id="detail_nni_id">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">환경</small><strong id="detail_env">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">용도</small><strong id="detail_usage">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">상품</small><strong id="detail_product">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">대역폭</small><strong id="detail_bandwidth">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">추가회선</small><strong id="detail_additional_circuit">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">요금</small><strong id="detail_fee_price">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">가입 Phase</small><strong id="detail_phase">-</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 장비 정보 -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #8b5cf6; padding-left: 12px;">
+                <i class="fas fa-hdd me-2" style="color: #8b5cf6;"></i>장비 정보
+              </h6>
+              <div class="row g-2">
+                <div class="col-md-3"><small class="text-muted d-block">COT장비</small><strong id="detail_cot_device">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">RT장비</small><strong id="detail_rt_device">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">LLDP COT장비</small><strong id="detail_lldp_cot_device">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">LLDP 포트</small><strong id="detail_lldp_port">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">LLDP RT장비</small><strong id="detail_lldp_rt_device">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">LLDP RT포트</small><strong id="detail_lldp_rt_port">-</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 계약 정보 -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #f59e0b; padding-left: 12px;">
+                <i class="fas fa-file-contract me-2" style="color: #f59e0b;"></i>계약 정보
+              </h6>
+              <div class="row g-2">
+                <div class="col-md-3"><small class="text-muted d-block">계약일</small><strong id="detail_contract_date">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">만료일</small><strong id="detail_expiry_date">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">약정기간</small><strong id="detail_contract_period">-</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block">문서번호</small><strong id="detail_report_number">-</strong></div>
+                <div class="col-12"><small class="text-muted d-block">비고</small><strong id="detail_comments">-</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 d-flex justify-content-between" style="background-color: #f8fafc; padding: 14px 24px;">
+          <button type="button" class="btn btn-sm px-4" onclick="deleteFromDetail()" style="background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff; border-radius: 8px; border: none;">
+            <i class="fas fa-trash-alt me-1"></i>삭제
+          </button>
+          <div>
+            <button type="button" class="btn btn-light btn-sm px-4 me-2" data-bs-dismiss="modal" style="border: 1px solid #d1d5db; border-radius: 8px;">
+              <i class="fas fa-times me-1"></i>닫기
+            </button>
+            <button type="button" class="btn btn-sm px-4" onclick="editFromDetail()" style="background: linear-gradient(135deg, #4f46e5, #6366f1); color: #fff; border-radius: 8px; border: none;">
+              <i class="fas fa-edit me-1"></i>수정
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 회선 현황 분석 모달 -->
+  <div class="modal fade" id="analysisModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable" style="max-width: 85vw;">
+      <div class="modal-content border-0" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header border-0" style="background: linear-gradient(135deg, #1e293b, #334155); padding: 20px 28px;">
+          <div>
+            <h5 class="modal-title fw-bold text-white mb-1" style="font-size: 1.1rem;">
+              <i class="fas fa-chart-bar me-2" style="opacity: 0.8;"></i>회원사별 회선 현황 분석
+            </h5>
+            <p class="mb-0" style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">DC코드 / 용도 / 상품별 회선 수 요약</p>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="background: #f8fafc; padding: 24px;">
+          <!-- 탭 네비게이션 + 검색 -->
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <ul class="nav nav-pills mb-0" id="analysisTab" role="tablist" style="gap: 6px;">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-detail" data-bs-toggle="pill" data-bs-target="#panel-detail" type="button" role="tab" style="font-size: 0.8rem; padding: 6px 16px; border-radius: 8px;">
+                  <i class="fas fa-th me-1"></i>통합 현황
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-dc" data-bs-toggle="pill" data-bs-target="#panel-dc" type="button" role="tab" style="font-size: 0.8rem; padding: 6px 16px; border-radius: 8px;">
+                  <i class="fas fa-server me-1"></i>DC코드별
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-usage" data-bs-toggle="pill" data-bs-target="#panel-usage" type="button" role="tab" style="font-size: 0.8rem; padding: 6px 16px; border-radius: 8px;">
+                  <i class="fas fa-tags me-1"></i>용도별
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-product" data-bs-toggle="pill" data-bs-target="#panel-product" type="button" role="tab" style="font-size: 0.8rem; padding: 6px 16px; border-radius: 8px;">
+                  <i class="fas fa-box me-1"></i>상품별
+                </button>
+              </li>
+            </ul>
+            <div style="position: relative; width: 200px;">
+              <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.7rem;"></i>
+              <input type="text" id="analysisSearch" class="form-control form-control-sm" placeholder="회원사 검색" style="font-size: 0.75rem; padding-left: 28px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            </div>
+          </div>
+          <!-- 탭 콘텐츠 -->
+          <div class="tab-content" id="analysisTabContent">
+            <div class="tab-pane fade" id="panel-dc" role="tabpanel">
+              <div class="table-responsive" style="border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.78rem;" id="analysisDcTable">
+                  <thead style="background: #f1f5f9;">
+                    <tr>
+                      <th class="text-center py-2" style="color: #475569; font-weight: 700;">회원사코드</th>
+                      <th class="text-center py-2" style="color: #475569; font-weight: 700;">회사명</th>
+                      <th class="text-center py-2" style="color: #6366f1; font-weight: 700;">DC1</th>
+                      <th class="text-center py-2" style="color: #0ea5e9; font-weight: 700;">DC2</th>
+                      <th class="text-center py-2" style="color: #10b981; font-weight: 700;">DC3</th>
+                      <th class="text-center py-2" style="color: #f59e0b; font-weight: 700;">DR</th>
+                      <th class="text-center py-2" style="color: #1e293b; font-weight: 700; background: #e2e8f0;">합계</th>
+                    </tr>
+                  </thead>
+                  <tbody id="analysisDcBody"></tbody>
+                  <tfoot style="background: #f1f5f9; font-weight: 700;">
+                    <tr id="analysisDcFooter"></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="panel-usage" role="tabpanel">
+              <div class="table-responsive" style="border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.78rem;" id="analysisUsageTable">
+                  <thead style="background: #f1f5f9;">
+                    <tr>
+                      <th class="text-center py-2" style="color: #475569; font-weight: 700;">회원사코드</th>
+                      <th class="text-center py-2" style="color: #475569; font-weight: 700;">회사명</th>
+                      <th class="text-center py-2" style="color: #6366f1; font-weight: 700;">ORD</th>
+                      <th class="text-center py-2" style="color: #0ea5e9; font-weight: 700;">MPR</th>
+                      <th class="text-center py-2" style="color: #10b981; font-weight: 700;">MGT</th>
+                      <th class="text-center py-2" style="color: #1e293b; font-weight: 700; background: #e2e8f0;">합계</th>
+                    </tr>
+                  </thead>
+                  <tbody id="analysisUsageBody"></tbody>
+                  <tfoot style="background: #f1f5f9; font-weight: 700;">
+                    <tr id="analysisUsageFooter"></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="panel-product" role="tabpanel">
+              <div class="table-responsive" style="border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.78rem;" id="analysisProductTable">
+                  <thead style="background: #f1f5f9;">
+                    <tr id="analysisProductHeader"></tr>
+                  </thead>
+                  <tbody id="analysisProductBody"></tbody>
+                  <tfoot style="background: #f1f5f9; font-weight: 700;">
+                    <tr id="analysisProductFooter"></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+            <div class="tab-pane fade show active" id="panel-detail" role="tabpanel">
+              <div class="table-responsive" style="border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.7rem;" id="analysisDetailTable">
+                  <thead id="analysisDetailHeader"></thead>
+                  <tbody id="analysisDetailBody"></tbody>
+                  <tfoot style="background: #f1f5f9; font-weight: 700;">
+                    <tr id="analysisDetailFooter"></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="back_data" data-submenu="{{ sub_menu|escapejs }}"></div>
+{% endblock %}
+
+{% block scripts %}
+<!-- ===============================================-->
+<!--    JavaScripts-->
+<!-- ===============================================-->
+<!-- jQuery 먼저 포함 (다른 스크립트들이 의존) -->
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<!-- DataTables JS -->
+<script src="{% static 'assets/js/datatables.min.js' %}"></script>
+<!-- JSZip (Excel export 필수) -->
+<script src="{% static 'assets/js/jszip.min.js' %}"></script>
+<!-- DataTables Buttons -->
+<script src="{% static 'assets/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'assets/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'vendors/popper/popper.min.js' %}"></script>
+<script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
+<script src="{% static 'vendors/is/is.min.js' %}"></script>
+<script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
+<script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
+<script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
+<script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
+<script src="{% static 'assets/js/phoenix.js' %}"></script>
+<script src="{% static 'assets/js/net_admin/circuits.js' %}?v={% now "YmdHis" %}"></script>
+{% endblock %}

@@ -1,0 +1,295 @@
+{% extends 'components/base.html' %}
+{% load static %}
+
+{% block content %}
+  <!-- 로딩 오버레이 -->
+  <div id="pageLoadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9998; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.3); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 0.4s ease;">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div style="font-size: 0.85rem; color: #475569; font-weight: 500;">데이터를 불러오는 중...</div>
+    </div>
+  </div>
+  <div class="content">
+    <nav class="mb-3" aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="#!">회선계약 관리</a></li>
+        <li class="breadcrumb-item active">회원사 매출내역</li>
+      </ol>
+    </nav>
+    <div class="mb-9">
+      <div class="row g-3 mb-4" style="margin: 0 auto;">
+        <div class="col-auto">
+          <h2 id="contents_title" class="mb-0">회원사 매출내역</h2>
+        </div>
+        <div class="col-auto ms-auto d-flex align-items-center gap-2">
+          <select id="monthFilter" class="form-select form-select-sm" style="width: 160px; font-size: 0.8rem;">
+            <option value="">전체 (누적)</option>
+          </select>
+          <button class="btn btn-sm btn-outline-danger" id="btnDownloadPdf" onclick="downloadPdf()" title="PDF 보고서 다운로드" disabled>
+            <i class="fas fa-file-pdf me-1"></i>PDF
+          </button>
+          <button class="btn btn-sm btn-primary" onclick="refreshTable()">
+            <i class="fas fa-sync-alt me-1"></i>새로고침
+          </button>
+        </div>
+      </div>
+
+      <!-- 월별 매출 추이 차트 -->
+      <div class="row g-3 mb-4" id="trendChartRow">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
+            <div class="card-body" style="padding: 18px 20px;">
+              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
+                <i class="fas fa-chart-area me-2" style="color: #6366f1;"></i>월별 매출 추이 (최근 12개월)
+              </h6>
+              <div style="height: 250px;">
+                <canvas id="chartTrend"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 요약 통계 카드 -->
+      <div class="row g-3 mb-4" id="summaryCards">
+        <!-- 전체 회원사 -->
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #6366f1, #818cf8); box-shadow: 0 4px 15px rgba(99,102,241,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
+              <i class="fas fa-building" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
+              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">전체 회원사</span>
+            </div>
+            <div class="fw-bold" id="stat_members" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
+          </div>
+        </div>
+        <!-- 전체 매출 -->
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 4px 15px rgba(16,185,129,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
+              <i class="fas fa-won-sign" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
+              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">전체 매출</span>
+            </div>
+            <div class="fw-bold" id="stat_grand_total" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</div>
+          </div>
+        </div>
+        <!-- ORD 매출 -->
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); box-shadow: 0 4px 15px rgba(14,165,233,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
+              <i class="fas fa-exchange-alt" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
+              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">ORD 매출</span>
+            </div>
+            <div class="fw-bold" id="stat_ord_total" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</div>
+          </div>
+        </div>
+        <!-- MPR 매출 -->
+        <div class="col-md-3">
+          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #d97706, #f59e0b); box-shadow: 0 4px 15px rgba(245,158,11,0.3); overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
+            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
+              <i class="fas fa-chart-line" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
+              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">MPR 매출</span>
+            </div>
+            <div class="fw-bold" id="stat_mpr_total" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 차트 영역 -->
+      <div class="row g-3 mb-4">
+        <!-- 매출 TOP 5 -->
+        <div class="col-md-6">
+          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
+            <div class="card-body" style="padding: 18px 20px;">
+              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
+                <i class="fas fa-trophy me-2" style="color: #f59e0b;"></i>매출 TOP 5
+              </h6>
+              <div style="height: 220px;">
+                <canvas id="chartTop5"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ORD vs MPR 매출 비율 -->
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
+            <div class="card-body" style="padding: 18px 20px;">
+              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
+                <i class="fas fa-chart-pie me-2" style="color: #6366f1;"></i>ORD / MPR 매출 비율
+              </h6>
+              <div style="height: 220px;">
+                <canvas id="chartOrdMpr"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 가입유형별 매출 -->
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
+            <div class="card-body" style="padding: 18px 20px;">
+              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
+                <i class="fas fa-users me-2" style="color: #10b981;"></i>가입유형별 매출
+              </h6>
+              <div style="height: 220px;">
+                <canvas id="chartSubType"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm bg-body-emphasis" style="margin: 0 auto;">
+        <div class="card-body" style="padding: 2rem 1rem !important; min-height: 400px;">
+          <div class="table-list" id="advanceAjaxTable">
+            <div class="table-responsive scrollbar">
+              <table class="table table-hover table-sm mb-0" id="revenueTable" style="width: 100% !important; font-size: 0.7rem !important;">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">회원번호</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">회원사코드</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">회사명</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">가입유형</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">PB</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">Phase</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">ORD회선수</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">ORD매출</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">MPR회선수</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">MPR매출</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">총회선수</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">총매출</th>
+                </tr>
+              </thead>
+              <tfoot class="sort text-center" style="display: table-header-group">
+                <tr>
+                  <th class="text-center">회원번호</th>
+                  <th class="text-center">회원사코드</th>
+                  <th class="text-center">회사명</th>
+                  <th class="text-center">가입유형</th>
+                  <th class="text-center">PB</th>
+                  <th class="text-center">Phase</th>
+                  <th class="text-center">ORD회선수</th>
+                  <th class="text-center">ORD매출</th>
+                  <th class="text-center">MPR회선수</th>
+                  <th class="text-center">MPR매출</th>
+                  <th class="text-center">총회선수</th>
+                  <th class="text-center">총매출</th>
+                </tr>
+              </tfoot>
+              <tbody class="list" id="revenue-table-body">
+              </tbody>
+            </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer position-absolute">
+      <div class="row g-0 justify-content-between align-items-center h-100">
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 mt-2 mt-sm-0 text-body">Nextrade Network Admin<span class="d-none d-sm-inline-block"></span><span class="d-none d-sm-inline-block mx-1">|</span><br class="d-sm-none" />2025 &copy;<a class="mx-1" href="">RWS</a></p>
+        </div>
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 text-body-tertiary text-opacity-85">v1.22.0</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 상세 모달 -->
+  <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content border-0" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header border-0" style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 18px 24px;">
+          <div class="w-100">
+            <h5 class="modal-title fw-bold text-white mb-1" id="detailModalLabel" style="font-size: 1.1rem;">
+              <i class="fas fa-file-invoice-dollar me-2" style="opacity: 0.85;"></i>회선별 요금 상세
+            </h5>
+            <p class="mb-0" id="detailSubtitle" style="font-size: 0.75rem; color: rgba(255,255,255,0.7);"></p>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="background-color: #f8fafc; padding: 20px 24px;">
+          <!-- 회원사 요약 -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <div class="card border-0 shadow-sm" style="border-radius: 10px;">
+                <div class="card-body py-2 px-3">
+                  <small class="text-muted">ORD 매출</small>
+                  <div class="fw-bold text-primary" id="modal_ord_total" style="font-size: 1.1rem;">-</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card border-0 shadow-sm" style="border-radius: 10px;">
+                <div class="card-body py-2 px-3">
+                  <small class="text-muted">MPR 매출</small>
+                  <div class="fw-bold text-warning" id="modal_mpr_total" style="font-size: 1.1rem;">-</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card border-0 shadow-sm" style="border-radius: 10px;">
+                <div class="card-body py-2 px-3">
+                  <small class="text-muted">총 매출</small>
+                  <div class="fw-bold text-success" id="modal_grand_total" style="font-size: 1.1rem;">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 상세 테이블 -->
+          <div class="table-responsive" style="border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+            <table class="table table-sm table-hover mb-0" style="font-size: 0.75rem;" id="detailTable">
+              <thead style="background: #f1f5f9;">
+                <tr>
+                  <th class="text-center py-2" style="color: #475569; font-weight: 700;">DC코드</th>
+                  <th class="text-center py-2" style="color: #475569; font-weight: 700;">용도</th>
+                  <th class="text-center py-2" style="color: #475569; font-weight: 700;">상품</th>
+                  <th class="text-center py-2" style="color: #475569; font-weight: 700;">대역폭</th>
+                  <th class="text-center py-2" style="color: #475569; font-weight: 700;">추가회선</th>
+                  <th class="text-center py-2" style="color: #475569; font-weight: 700;">Phase</th>
+                  <th class="text-center py-2" style="color: #475569; font-weight: 700;">통신사</th>
+                  <th class="text-center py-2" style="color: #475569; font-weight: 700;">회선ID</th>
+                  <th class="text-center py-2" style="color: #475569; font-weight: 700;">요금설명</th>
+                  <th class="text-center py-2" style="color: #475569; font-weight: 700;">요금</th>
+                </tr>
+              </thead>
+              <tbody id="detailTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer border-0" style="background-color: #f8fafc; padding: 14px 24px;">
+          <button type="button" class="btn btn-light btn-sm px-4" data-bs-dismiss="modal" style="border: 1px solid #d1d5db; border-radius: 8px;">
+            <i class="fas fa-times me-1"></i>닫기
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="back_data" data-submenu="{{ sub_menu|escapejs }}"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'assets/js/datatables.min.js' %}"></script>
+<script src="{% static 'assets/js/jszip.min.js' %}"></script>
+<script src="{% static 'assets/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'assets/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'vendors/popper/popper.min.js' %}"></script>
+<script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
+<script src="{% static 'vendors/is/is.min.js' %}"></script>
+<script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
+<script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
+<script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
+<script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
+<script src="{% static 'assets/js/phoenix.js' %}"></script>
+<script src="{% static 'assets/js/chart.min.js' %}"></script>
+<script src="{% static 'assets/js/net_admin/revenue_summary.js' %}?v={% now "YmdHis" %}"></script>
+{% endblock %}
