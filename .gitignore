@@ -20,6 +20,7 @@ env/
 
 
 # Project specific
+fastapi/data/multicast_alarm_state.json
 /data
 /logs
 batch.log
