@@ -8,6 +8,52 @@
     var countdownInterval = null;
     var countdown = 60;
 
+    function updateFreshness(meta) {
+        var el = document.getElementById('updatedTime');
+        if (!el || !meta) return;
+
+        var collectedAt = meta.collected_at;
+        var status = meta.status;
+        var successDevices = meta.success_devices || 0;
+        var totalDevices = meta.total_devices || 0;
+        var preservedFrom = meta.preserved_from;
+
+        var ageText = '';
+        var bgColor = '';
+        var icon = '';
+        if (collectedAt) {
+            var collected = new Date(collectedAt.replace(' ', 'T'));
+            var diffMin = Math.round((new Date() - collected) / 60000);
+            if (diffMin < 1) ageText = '방금 전';
+            else if (diffMin < 60) ageText = diffMin + '분 전';
+            else if (diffMin < 1440) ageText = Math.floor(diffMin / 60) + '시간 전';
+            else ageText = Math.floor(diffMin / 1440) + '일 전';
+        }
+
+        if (status === 'success') { bgColor = '#059669'; icon = 'fa-check-circle'; }
+        else if (status === 'partial') { bgColor = '#d97706'; icon = 'fa-exclamation-triangle'; }
+        else { bgColor = '#dc2626'; icon = 'fa-times-circle'; }
+
+        var label = '<i class="fas ' + icon + ' me-1"></i>';
+        if (status === 'failed' && preservedFrom) {
+            label += '수집실패 · 과거 데이터 유지 (' + preservedFrom + ')';
+        } else {
+            label += '수집: ' + ageText + ' (' + successDevices + '/' + totalDevices + '대)';
+        }
+
+        el.innerHTML = label;
+        el.className = 'badge';
+        el.style.cssText = 'font-size:0.7rem; font-weight:500; padding:3px 10px; border-radius:6px; color:#fff; background:' + bgColor + ';';
+
+        if (collectedAt) {
+            var diffMin2 = Math.round((new Date() - new Date(collectedAt.replace(' ', 'T'))) / 60000);
+            if (diffMin2 > 5 && status !== 'failed') {
+                el.style.background = '#d97706';
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>수집: ' + ageText + ' (' + successDevices + '/' + totalDevices + '대)';
+            }
+        }
+    }
+
     function escapeHtml(str) {
         if (!str) return '';
         return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -109,17 +155,24 @@
                 type: 'GET',
                 data: { sub_menu: currentPath },
                 dataSrc: function(json) {
-                    if (json && json.length > 0) {
-                        updateSummary(json);
+                    // 새 형식: {"data": [...], "_meta": {...}} 또는 기존 배열 형식 호환
+                    var rows = Array.isArray(json) ? json : (json.data || []);
+                    var meta = json._meta || null;
+
+                    if (rows.length > 0) {
+                        updateSummary(rows);
                         if (currentPath === 'pr_info_multicast') {
                             $('#updatedTime').html('<i class="fas fa-info-circle me-1"></i>실시간 정보');
-                        } else if (json[0].updated_time) {
-                            $('#updatedTime').html('<i class="fas fa-clock me-1"></i>최종: ' + json[0].updated_time);
+                        } else if (meta) {
+                            updateFreshness(meta);
+                        } else if (rows[0].updated_time) {
+                            $('#updatedTime').html('<i class="fas fa-clock me-1"></i>최종: ' + rows[0].updated_time);
                         }
                     } else {
                         updateSummary([]);
+                        if (meta) { updateFreshness(meta); }
                     }
-                    return json || [];
+                    return rows;
                 },
                 error: function(xhr, error, thrown) {
                     console.error('AJAX Error:', error, thrown);

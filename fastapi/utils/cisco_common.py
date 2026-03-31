@@ -199,12 +199,13 @@ def SelectToDeviceYAML(device_name):
 
 
 # geneie parser를 사용하기 위해 장비에 연결하는 함수
-def ConnectToDevice(device_info):
+def ConnectToDevice(device_info, connection_timeout=30):
     # logger.info(f"[01.network device {device_info.name} connecting...]")
 
     """
     pyATS는 connect메서드 실행 시 자동으로 terminal timeout 설정을 무한(0)으로 설정한다.
-    이를 방지하기위해 init_exec_commands, init_config_commands 기본 명령을 제거."
+    이를 방지하기위해 init_exec_commands, init_config_commands 기본 명령을 제거.
+    connection_timeout: SSH 연결 타임아웃 (초). 기본 30초.
     """
     device_info.connect(
         init_exec_commands=['terminal length 0', 'terminal width 511'],
@@ -212,8 +213,9 @@ def ConnectToDevice(device_info):
         log_stdout=False,
         prompt_recovery=False,
         learn_hostname=False,
-        logfile=None
-    ) 
+        logfile=None,
+        connection_timeout=connection_timeout
+    )
 
     return device_info
 
@@ -268,11 +270,22 @@ def GetParserByCommand(cmd):
         return None
 
 def GetCiscoCommonInfo(device_info, device_name):
-    # logger.info(f"[DEBUG] {device_name} COLLECTING COMMON INFO...]")2
+    # logger.info(f"[DEBUG] {device_name} COLLECTING COMMON INFO...]")
 
-    # 장비에 연결
-    device_info = ConnectToDevice(device_info)
-    # logger.info(f"[DEBUG] {device_name} CONNECTED...")
+    # 장비에 연결 (타임아웃 30초)
+    try:
+        device_info = ConnectToDevice(device_info, connection_timeout=30)
+    except Exception as e:
+        logger.error(f"[CONNECT_TIMEOUT] {device_name} 연결 실패 (30초 타임아웃): {e}")
+        return {
+            "device_name": device_name,
+            "device_os": device_info.os,
+            "device_ip": str(device_info.connections.default.ip),
+            "device_join_products": device_info.custom.get('join_products', []),
+            "cmd_response_list": [],
+            "error": f"Connection timeout: {str(e)}"
+        }
+
     if not device_info:
         return None
 
@@ -287,10 +300,14 @@ def GetCiscoCommonInfo(device_info, device_name):
         cmds = IOSXE_CMDS
     else:
         logger.error(f"[ERROR] Unsupported OS: {device_info.os}")
-        return {"error": f"Unsupported OS: {device_info.os}"}   
+        return {"error": f"Unsupported OS: {device_info.os}"}
 
     for cmd in cmds:
-        cmd_response = Execute_Command(device_info, cmd['value'])
+        try:
+            cmd_response = Execute_Command(device_info, cmd['value'])
+        except Exception as e:
+            logger.error(f"[CMD_ERROR] {device_name} 명령어 실행 실패: {cmd['value']} - {e}")
+            continue
 
         # cmd_response 정상 체크
         if cmd_response is None:
@@ -326,16 +343,18 @@ def GetCiscoCommonInfo(device_info, device_name):
 
 
     # 연결 해제
-    if device_info.connected:
-        device_info.disconnect()
-        # logger.info("network device disconnected...")
+    try:
+        if device_info.connected:
+            device_info.disconnect()
+    except Exception as e:
+        logger.warning(f"[DISCONNECT_WARN] {device_name} 연결 해제 실패: {e}")
 
     data = {
         "device_name": device_name,
         "device_os": device_info.os,
         "device_ip": device_info.connections.default.ip,
         "device_join_products": device_info.custom.get('join_products', []),
-        "cmd_response_list": cmd_response_list  
+        "cmd_response_list": cmd_response_list
     }
 
     return data

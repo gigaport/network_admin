@@ -19,7 +19,7 @@
       width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; flex-shrink: 0;
     }
     .dash-stat-label {
-      font-size: 0.75rem; color: #8c8c8c; font-weight: 500;
+      font-size: 0.85rem; color: #8c8c8c; font-weight: 500;
     }
     .dash-stat-value {
       font-size: 1.7rem; font-weight: 700; color: #1a1a2e; line-height: 1.1; margin-top: 8px;
@@ -43,10 +43,10 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.04);
     }
     .dash-panel-title {
-      font-size: 0.85rem; font-weight: 700; color: #1a1a2e; margin-bottom: 4px;
+      font-size: 1rem; font-weight: 700; color: #1a1a2e; margin-bottom: 4px;
     }
     .dash-panel-subtitle {
-      font-size: 0.7rem; color: #b0b0b0; margin-bottom: 16px;
+      font-size: 0.78rem; color: #b0b0b0; margin-bottom: 16px;
     }
     .dash-quick-link {
       background: #fff;
@@ -141,9 +141,113 @@
     [data-bs-theme="dark"] .dash-monitor-label { color: #94a3b8 !important; }
     /* 매출 분리선 */
     [data-bs-theme="dark"] .dash-revenue-divider { border-color: #2d3d50 !important; }
+    /* ===== 섹션 구분 ===== */
+    .dash-section-divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      margin-top: 6px;
+    }
+    .dash-section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #475569;
+      white-space: nowrap;
+      letter-spacing: -0.2px;
+    }
+    .dash-section-title i,
+    .dash-section-title svg {
+      display: inline-block;
+      margin-right: 10px;
+      font-size: 0.95rem;
+    }
+    .dash-section-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, #e2e8f0, transparent);
+    }
+    [data-bs-theme="dark"] .dash-section-title { color: #94a3b8; }
+    [data-bs-theme="dark"] .dash-section-line { background: linear-gradient(to right, #334155, transparent); }
     /* NetBox 통계 배경 */
     [data-bs-theme="dark"] .dash-nb-stats { background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(129,140,248,0.06)) !important; }
     [data-bs-theme="dark"] .dash-nb-stats div[style*="background: #e5e7eb"] { background: #2d3d50 !important; }
+    /* 이익 현황 카드 */
+    [data-bs-theme="dark"] .dash-profit-stat { background: rgba(255,255,255,0.04) !important; }
+
+    /* ===== 회선분류 섹션 카드 ===== */
+    .dash-stat-section {
+      border-radius: 8px;
+      padding: 12px 14px;
+      border-left: 3px solid #e0e0e0;
+      background: #fafbfc;
+    }
+    .dash-stat-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .dash-stat-section-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #475569;
+    }
+    .dash-stat-section-total {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.05);
+      color: #64748b;
+    }
+    .dash-stat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      font-size: 0.73rem;
+      margin: 3px 4px 3px 0;
+    }
+    .dash-stat-pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dash-stat-pill-label {
+      color: #555;
+      font-weight: 500;
+    }
+    .dash-stat-pill-value {
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-left: 2px;
+    }
+    /* 섹션 accent 색상 */
+    .dash-stat-section.accent-blue { border-left-color: #4a7cff; background: #f5f8ff; }
+    .dash-stat-section.accent-green { border-left-color: #36b37e; background: #f2faf6; }
+    .dash-stat-section.accent-purple { border-left-color: #a855f7; background: #f9f5ff; }
+
+    /* 다크 테마 */
+    [data-bs-theme="dark"] .dash-stat-section {
+      background: rgba(255,255,255,0.04);
+      border-left-color: #3d4f65;
+    }
+    [data-bs-theme="dark"] .dash-stat-section.accent-blue { border-left-color: #4a7cff; background: rgba(74,124,255,0.08); }
+    [data-bs-theme="dark"] .dash-stat-section.accent-green { border-left-color: #36b37e; background: rgba(54,179,126,0.08); }
+    [data-bs-theme="dark"] .dash-stat-section.accent-purple { border-left-color: #a855f7; background: rgba(168,85,247,0.08); }
+    [data-bs-theme="dark"] .dash-stat-section-title { color: #cbd5e1; }
+    [data-bs-theme="dark"] .dash-stat-section-total { background: rgba(255,255,255,0.08); color: #94a3b8; }
+    [data-bs-theme="dark"] .dash-stat-pill {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.08);
+    }
+    [data-bs-theme="dark"] .dash-stat-pill-label { color: #94a3b8; }
+    [data-bs-theme="dark"] .dash-stat-pill-value { color: #e2e8f0; }
   </style>
 
   <!-- 로딩 오버레이 -->
@@ -166,6 +270,12 @@
       <button class="btn btn-sm ms-auto dash-refresh-btn" onclick="loadDashboard()">
         <i class="fas fa-sync-alt me-1" style="font-size: 0.65rem;"></i>새로고침
       </button>
+    </div>
+
+    <!-- ============ 섹션 1: 회선매출/비용 ============ -->
+    <div class="dash-section-divider">
+      <span class="dash-section-title"><i class="fas fa-chart-pie" style="color: #4a7cff;"></i>회선매출 / 비용</span>
+      <div class="dash-section-line"></div>
     </div>
 
     <!-- ============ 1행: 핵심 통계 + Top 5 회선 보유 + 매출 현황 ============ -->
@@ -261,8 +371,8 @@
         <div class="dash-panel flex-grow-1">
           <div class="dash-panel-title">회선 분류별 현황</div>
           <div class="dash-panel-subtitle">Circuits by category</div>
-          <div id="statGridProvider" style="margin-bottom: 16px;"></div>
-          <div id="statGridEnv" style="margin-bottom: 16px;"></div>
+          <div id="statGridProvider" style="margin-bottom: 10px;"></div>
+          <div id="statGridEnv" style="margin-bottom: 10px;"></div>
           <div id="statGridUsage"></div>
         </div>
       </div>
@@ -285,6 +395,86 @@
           <div id="chartRevenueTrend" style="height: 220px;"></div>
         </div>
       </div>
+    </div>
+
+    <!-- ============ 이익 현황 행 ============ -->
+    <div class="row g-3 mb-4">
+      <!-- 좌측: 이익 현황 요약 -->
+      <div class="col-lg-3 d-flex">
+        <div class="dash-panel flex-grow-1">
+          <div class="d-flex align-items-center mb-1">
+            <div class="dash-panel-title mb-0"><i class="fas fa-chart-line me-2" style="color: #f59e0b; font-size: 0.8rem;"></i>이익 현황</div>
+            <a href="/profit_summary" class="ms-auto text-decoration-none" style="font-size: 0.68rem; color: #b0b0b0;">상세보기 ›</a>
+          </div>
+          <div class="dash-panel-subtitle">Profit overview (Revenue - Purchase)</div>
+          <div class="row g-2 mt-1">
+            <div class="col-6">
+              <div style="padding: 10px 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02));">
+                <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 500;">총 매출</div>
+                <div id="stat_profit_revenue" style="font-size: 1.1rem; font-weight: 700; color: #10b981; margin-top: 2px;">-</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div style="padding: 10px 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02));">
+                <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 500;">총 매입</div>
+                <div id="stat_profit_purchase" style="font-size: 1.1rem; font-weight: 700; color: #ef4444; margin-top: 2px;">-</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div style="padding: 10px 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(245,158,11,0.06), rgba(245,158,11,0.02));">
+                <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 500;">총 이익</div>
+                <div id="stat_profit_total" style="font-size: 1.1rem; font-weight: 700; color: #f59e0b; margin-top: 2px;">-</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div style="padding: 10px 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(99,102,241,0.02));">
+                <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 500;">이익률</div>
+                <div id="stat_profit_rate" style="font-size: 1.1rem; font-weight: 700; color: #6366f1; margin-top: 2px;">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 중앙: 이익 Top 5 회원사 -->
+      <div class="col-lg-4 d-flex">
+        <div class="dash-panel flex-grow-1">
+          <div class="dash-panel-title">이익 Top 5 회원사</div>
+          <div class="dash-panel-subtitle">Members with highest profit</div>
+          <div id="chartTopProfit" style="height: 220px;"></div>
+        </div>
+      </div>
+      <!-- 우측: 회원사별 매출/매입/이익 테이블 -->
+      <div class="col-lg-5 d-flex">
+        <div class="dash-panel flex-grow-1">
+          <div class="d-flex align-items-center mb-1">
+            <div class="dash-panel-title mb-0"><i class="fas fa-table me-2" style="color: #6366f1; font-size: 0.8rem;"></i>회원사별 매출 / 매입 / 이익</div>
+            <a href="/profit_summary" class="ms-auto text-decoration-none" style="font-size: 0.68rem; color: #b0b0b0;">상세보기 ›</a>
+          </div>
+          <div class="dash-panel-subtitle">Profit by member</div>
+          <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
+            <table class="table table-sm mb-0" style="font-size: 0.73rem;">
+              <thead style="position: sticky; top: 0; background: #fff; z-index: 1;">
+                <tr style="border-bottom: 2px solid #f0f0f0;">
+                  <th class="py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">회원사</th>
+                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">매출</th>
+                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">매입</th>
+                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">이익</th>
+                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">이익률</th>
+                </tr>
+              </thead>
+              <tbody id="profitMemberTableBody">
+                <tr><td colspan="5" class="text-center py-3" style="color: #b0b0b0;"><span class="spinner-border spinner-border-sm me-1" style="width:0.7rem;height:0.7rem;"></span>로딩 중...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 섹션 2: 네트워크 모니터링 및 자산 ============ -->
+    <div class="dash-section-divider" style="margin-top: 16px;">
+      <span class="dash-section-title"><i class="fas fa-shield-alt" style="color: #10b981;"></i>네트워크 모니터링 및 자산</span>
+      <div class="dash-section-line"></div>
     </div>
 
     <!-- ============ 3행: DC 차트 + 실시간 모니터링 + PTP 테이블 ============ -->
@@ -376,18 +566,18 @@
             <a href="/netbox_devices" class="ms-auto text-decoration-none" style="font-size: 0.68rem; color: #b0b0b0;">상세보기 ›</a>
           </div>
           <div class="dash-panel-subtitle">Device inventory overview</div>
-          <div class="dash-nb-stats d-flex align-items-center justify-content-between mb-3" style="padding: 12px 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(129,140,248,0.05));">
-            <div class="text-center">
+          <div class="dash-nb-stats d-flex align-items-center mb-3" style="padding: 12px 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(129,140,248,0.05));">
+            <div class="flex-grow-1 text-center">
               <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;" id="stat_nb_total">-</div>
               <div style="font-size: 0.65rem; color: #8c8c8c;">총 디바이스</div>
             </div>
-            <div style="width: 1px; height: 32px; background: #e5e7eb;"></div>
-            <div class="text-center">
+            <div style="width: 1px; height: 32px; background: #e5e7eb; flex-shrink: 0;"></div>
+            <div class="flex-grow-1 text-center">
               <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;" id="stat_nb_active">-</div>
               <div style="font-size: 0.65rem; color: #8c8c8c;">Active</div>
             </div>
-            <div style="width: 1px; height: 32px; background: #e5e7eb;"></div>
-            <div class="text-center">
+            <div style="width: 1px; height: 32px; background: #e5e7eb; flex-shrink: 0;"></div>
+            <div class="flex-grow-1 text-center">
               <div style="font-size: 1.5rem; font-weight: 700; color: #0ea5e9;" id="stat_nb_sites">-</div>
               <div style="font-size: 0.65rem; color: #8c8c8c;">사이트</div>
             </div>
@@ -536,6 +726,14 @@
           <div class="dash-quick-link">
             <i class="fas fa-chart-line mb-1" style="font-size: 1.1rem; color: #36b37e;"></i>
             <div style="font-size: 0.72rem; font-weight: 600; color: #444;">매출내역</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-md">
+        <a href="/profit_summary" class="text-decoration-none">
+          <div class="dash-quick-link">
+            <i class="fas fa-coins mb-1" style="font-size: 1.1rem; color: #f59e0b;"></i>
+            <div style="font-size: 0.72rem; font-weight: 600; color: #444;">이익내역</div>
           </div>
         </a>
       </div>

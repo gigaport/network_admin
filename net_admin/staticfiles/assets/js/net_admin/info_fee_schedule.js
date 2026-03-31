@@ -29,10 +29,7 @@
 
     function getUsageBadge(usage) {
         var styles = {
-            'MPR': { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
-            'ORD': { color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
-            'PB_ORD_PRD': { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-            'PB_ORD_DEV': { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+            'MKD': { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
             'MGT': { color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
             '장비사용료': { color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
             '회선설치비': { color: '#06b6d4', bg: 'rgba(6,182,212,0.12)' }
@@ -110,7 +107,7 @@
     }
 
     window.loadFeeSchedule = function() {
-        fetch('/fee_schedule/get_fee_schedule')
+        fetch('/info_fee_schedule/get_info_fee_schedule')
             .then(function(res) { return res.json(); })
             .then(function(result) {
                 if (result.success && result.data) {
@@ -162,7 +159,7 @@
             return;
         }
 
-        fetch('/fee_schedule/create_fee_schedule', {
+        fetch('/info_fee_schedule/create_info_fee_schedule', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -217,7 +214,7 @@
             return;
         }
 
-        fetch('/fee_schedule/update_fee_schedule', {
+        fetch('/info_fee_schedule/update_info_fee_schedule', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -246,7 +243,7 @@
             return;
         }
 
-        fetch('/fee_schedule/delete_fee_schedule', {
+        fetch('/info_fee_schedule/delete_info_fee_schedule', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })

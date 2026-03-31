@@ -108,5 +108,25 @@
     "switch_hostname": ["ie_1_px_scte_a_mkd_01", "ie_1_px_scte_a_mkd_02", "ie_2_px_sas1_a_mkd_01", "ie_2_px_sas1_a_mkd_02"],
     "alarm": true,
     "member_note":""
+  },
+  "33": {
+    "member_code": "JP",
+    "member_name": "JP모건",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTA-10", "NXTA-COM"],
+    "switch_hostname": ["jp_1_px_scjp_a_mkd_01"],
+    "alarm": true,
+    "member_note":""
+  },
+  "208": {
+    "member_code": "TN",
+    "member_name": "TNS",
+    "member_gubn": "info",
+    "member_acc_db": "",
+    "member_products": ["NXTB-10", "NXTB-COM"],
+    "switch_hostname": ["tn_1_px_ydkt_a_mkd_01"],
+    "alarm": true,
+    "member_note":""
   }
 }

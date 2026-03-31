@@ -4,9 +4,11 @@ Slack 메시지 전송을 위한 공통 모듈
 import os
 import time
 import logging
+import threading
 from typing import Dict, List, Optional, Any
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+from slack_sdk.http_retry import RetryState
 # 로깅 설정
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,9 @@ class SlackClient:
         
         self.client = WebClient(
             token=self.token,
-            proxy="http://172.16.4.217:5001"
+            proxy="http://172.16.4.217:5001",
+            timeout=5,
+            retry_handlers=[]  # 내장 재시도 비활성화 (블로킹 방지)
         )
     
     def send_message(

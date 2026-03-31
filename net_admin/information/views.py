@@ -84,7 +84,7 @@ def init (request):
                 api_url = f"{FASTAPI_BASE_URL}/api/v1/network/collect/ptp/arista/all"
                 # logger.info(f"[CALL_API] ==> {api_url}")
                 
-                response = requests.get(api_url, timeout=20)
+                response = requests.get(api_url, timeout=15)
                 
                 if response.status_code == 200:
                     response_data = response.json()

@@ -11,6 +11,16 @@
         return Number(val).toLocaleString() + '원';
     }
 
+    function formatNumberInput(el) {
+        var raw = el.value.replace(/[^\d]/g, '');
+        if (raw === '') { el.value = ''; return; }
+        el.value = Number(raw).toLocaleString();
+    }
+
+    function getRawNumber(selector) {
+        return parseInt($(selector).val().replace(/[^\d]/g, '')) || 0;
+    }
+
     function getGroupKey(item) {
         if (item.phase === 1) return '1';
         if (item.phase === 2) return '2';
@@ -18,74 +28,67 @@
     }
 
     function getUsageBadge(usage) {
-        var colors = {
-            'MPR': '#3b82f6',
-            'ORD': '#10b981'
+        var styles = {
+            'MPR': { color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+            'ORD': { color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+            'PB_ORD_PRD': { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+            'PB_ORD_DEV': { color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+            'MGT': { color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
+            '장비사용료': { color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
+            '회선설치비': { color: '#06b6d4', bg: 'rgba(6,182,212,0.12)' }
         };
-        var color = colors[usage] || '#f59e0b';
-        return '<span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; color: #fff; background: ' + color + ';">' + usage + '</span>';
-    }
-
-    function getPhaseBadge(phase) {
-        if (phase === 1) return '<span style="display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 600; color: #fff; background: #6366f1;">Phase 1</span>';
-        if (phase === 2) return '<span style="display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 600; color: #fff; background: #8b5cf6;">Phase 2</span>';
-        return '<span style="display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 600; color: #fff; background: #94a3b8;">-</span>';
+        var s = styles[usage] || { color: '#eab308', bg: 'rgba(234,179,8,0.12)' };
+        return '<span style="display:inline-block; padding:3px 10px; border-radius:4px; font-size:0.8rem; font-weight:600; color:' + s.color + '; background:' + s.bg + '; line-height:1.4; white-space:nowrap;">' + usage + '</span>';
     }
 
     function renderGroup(groupId, items) {
         var container = $('#group_' + groupId);
 
         if (!items.length) {
-            container.html('<div class="text-center py-4 text-muted" style="font-size: 0.85rem;">등록된 항목이 없습니다.</div>');
+            if (groupId === '0') $('#group_0_card').hide();
+            container.html('<div style="padding:24px; text-align:center; color:var(--fee-text-light); font-size:0.85rem;">등록된 항목이 없습니다.</div>');
             return;
         }
+        if (groupId === '0') $('#group_0_card').show();
 
-        var html = '<div class="list-group list-group-flush">';
+        var html = '';
+        items.forEach(function(item, idx) {
+            var borderTop = idx > 0 ? 'border-top:1px solid var(--fee-border-light);' : '';
+            var desc = item.description || '-';
+            var sub = [];
+            if (item.bandwidth) sub.push(item.bandwidth);
+            if (item.additional_circuit) sub.push('추가회선');
+            var subText = sub.length ? sub.join(' · ') : '';
 
-        items.forEach(function(item) {
-            html += '<div class="list-group-item px-4 py-3" style="border-left: none; border-right: none; cursor: pointer;" data-id="' + item.id + '" onclick="if(!$(event.target).closest(\'button\').length) showEditModal(' + item.id + ')">';
-            html += '  <div class="row align-items-center">';
+            html += '<div class="fee-item" style="padding:12px 14px; ' + borderTop + ' cursor:pointer; transition:background 0.15s;" ';
+            html += 'onclick="if(!$(event.target).closest(\'.fee-btn\').length) showEditModal(' + item.id + ')">';
 
-            // 왼쪽: 용도 배지 + 요금키 + 설명
-            html += '    <div class="col-md-4">';
-            html += '      <div class="d-flex align-items-center gap-3">';
-            html += '        ' + getUsageBadge(item.usage);
-            html += '        <div>';
-            html += '          <div class="fw-bold" style="font-size: 0.9rem; color: #1e293b;">' + (item.description || '-') + '</div>';
-            html += '          <div class="text-muted" style="font-size: 0.75rem;">' + (item.description || '-') + '</div>';
-            html += '        </div>';
-            html += '      </div>';
-            html += '    </div>';
+            // Line 1: fee_code + price + buttons
+            html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">';
+            html += '<span style="font-family:\'SF Mono\',SFMono-Regular,Consolas,monospace; font-size:0.85rem; color:#6366f1; font-weight:500; letter-spacing:0.2px;">' + (item.fee_code || '-') + '</span>';
+            html += '<div style="display:flex; align-items:center; gap:8px;">';
+            html += '<span style="font-size:0.92rem; font-weight:600; color:var(--fee-text-heading); white-space:nowrap;">' + formatPrice(item.price) + '</span>';
+            html += '<div class="fee-actions" style="display:flex; gap:2px;">';
+            html += '<button onclick="showEditModal(' + item.id + ')" class="fee-btn" style="width:26px; height:26px; border:none; border-radius:4px; background:transparent; color:var(--fee-text-light); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; transition:color 0.15s;" onmouseenter="this.style.color=\'#6366f1\'" onmouseleave="this.style.color=\'\'" title="수정">';
+            html += '<i class="fas fa-pen" style="font-size:0.62rem;"></i></button>';
+            html += '<button onclick="deleteItem(' + item.id + ')" class="fee-btn" style="width:26px; height:26px; border:none; border-radius:4px; background:transparent; color:var(--fee-text-light); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; transition:color 0.15s;" onmouseenter="this.style.color=\'#dc2626\'" onmouseleave="this.style.color=\'\'" title="삭제">';
+            html += '<i class="fas fa-trash-alt" style="font-size:0.62rem;"></i></button>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
 
-            // 가운데: 요금 + 가입 Phase
-            html += '    <div class="col-md-4">';
-            html += '      <div class="d-flex gap-5 align-items-center">';
-            html += '        <div style="min-width: 120px;">';
-            html += '          <div class="text-muted" style="font-size: 0.65rem; font-weight: 600; margin-bottom: 2px;">요금</div>';
-            html += '          <div class="fw-bold" style="font-size: 0.95rem; color: #0f172a; letter-spacing: -0.3px;">' + formatPrice(item.price) + '</div>';
-            html += '        </div>';
-            html += '        <div>';
-            html += '          <div class="text-muted" style="font-size: 0.65rem; font-weight: 600; margin-bottom: 2px;">가입 Phase</div>';
-            html += '          <div>' + getPhaseBadge(item.phase) + '</div>';
-            html += '        </div>';
-            html += '      </div>';
-            html += '    </div>';
+            // Line 2: usage badge + description + sub info
+            html += '<div style="display:flex; align-items:center; gap:6px;">';
+            html += getUsageBadge(item.usage);
+            html += '<span style="font-size:0.88rem; font-weight:600; color:var(--fee-text-desc); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + desc + '</span>';
+            if (subText) {
+                html += '<span style="font-size:0.8rem; color:var(--fee-text-light); white-space:nowrap;">· ' + subText + '</span>';
+            }
+            html += '</div>';
 
-            // 오른쪽: 버튼
-            html += '    <div class="col-md-4 text-end">';
-            html += '      <button onclick="showEditModal(' + item.id + ')" style="width: 30px; height: 30px; border: none; border-radius: 8px; background: #f1f5f9; color: #64748b; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; margin-right: 4px;" onmouseenter="this.style.background=\'#e0e7ff\';this.style.color=\'#4f46e5\'" onmouseleave="this.style.background=\'#f1f5f9\';this.style.color=\'#64748b\'" title="수정">';
-            html += '        <i class="fas fa-pen" style="font-size: 0.65rem;"></i>';
-            html += '      </button>';
-            html += '      <button onclick="deleteItem(' + item.id + ')" style="width: 30px; height: 30px; border: none; border-radius: 8px; background: #f1f5f9; color: #64748b; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseenter="this.style.background=\'#fee2e2\';this.style.color=\'#dc2626\'" onmouseleave="this.style.background=\'#f1f5f9\';this.style.color=\'#64748b\'" title="삭제">';
-            html += '        <i class="fas fa-trash-alt" style="font-size: 0.65rem;"></i>';
-            html += '      </button>';
-            html += '    </div>';
-
-            html += '  </div>';
             html += '</div>';
         });
 
-        html += '</div>';
         container.html(html);
     }
 
@@ -101,6 +104,9 @@
         $('#stat_phase1').text(phase1);
         $('#stat_phase2').text(phase2);
         $('#stat_etc').text(etc);
+        $('#stat_phase1_cnt').text(phase1 + '건');
+        $('#stat_phase2_cnt').text(phase2 + '건');
+        $('#stat_etc_cnt').text(etc + '건');
     }
 
     window.loadFeeSchedule = function() {
@@ -131,7 +137,7 @@
 
     window.showAddForm = function() {
         $('#addForm')[0].reset();
-        $('#add_price').val(0);
+        $('#add_price').val('0');
         $('#add_phase').val(1);
         $('#addFormCard').slideDown(200);
     };
@@ -142,16 +148,17 @@
 
     window.saveAdd = function() {
         var data = {
+            fee_code: $('#add_fee_code').val().trim(),
             usage: $('#add_usage').val().trim(),
             description: $('#add_description').val().trim(),
-            price: parseInt($('#add_price').val()) || 0,
+            price: getRawNumber('#add_price'),
             phase: parseInt($('#add_phase').val()) || 0,
             bandwidth: $('#add_bandwidth').val().trim() || null,
             additional_circuit: $('#add_additional_circuit').is(':checked')
         };
 
-        if (!data.usage || !data.description) {
-            showAlert('용도, 설명은 필수 입력항목입니다.', 'warning');
+        if (!data.fee_code || !data.usage || !data.description) {
+            showAlert('요금코드, 용도, 설명은 필수 입력항목입니다.', 'warning');
             return;
         }
 
@@ -181,9 +188,10 @@
         if (!item) return;
 
         $('#edit_id').val(item.id);
+        $('#edit_fee_code').val(item.fee_code || '');
         $('#edit_usage').val(item.usage);
         $('#edit_description').val(item.description);
-        $('#edit_price').val(item.price);
+        $('#edit_price').val(item.price ? Number(item.price).toLocaleString() : '0');
         $('#edit_phase').val(item.phase);
         $('#edit_bandwidth').val(item.bandwidth || '');
         $('#edit_additional_circuit').prop('checked', item.additional_circuit);
@@ -195,16 +203,17 @@
     window.saveEdit = function() {
         var data = {
             id: parseInt($('#edit_id').val()),
+            fee_code: $('#edit_fee_code').val().trim(),
             usage: $('#edit_usage').val().trim(),
             description: $('#edit_description').val().trim(),
-            price: parseInt($('#edit_price').val()) || 0,
+            price: getRawNumber('#edit_price'),
             phase: parseInt($('#edit_phase').val()) || 0,
             bandwidth: $('#edit_bandwidth').val().trim() || null,
             additional_circuit: $('#edit_additional_circuit').is(':checked')
         };
 
-        if (!data.usage || !data.description) {
-            showAlert('용도, 설명은 필수 입력항목입니다.', 'warning');
+        if (!data.fee_code || !data.usage || !data.description) {
+            showAlert('요금코드, 용도, 설명은 필수 입력항목입니다.', 'warning');
             return;
         }
 
@@ -271,6 +280,11 @@
     }
 
     $(document).ready(function() {
+        // 금액 입력필드 콤마 포맷
+        $(document).on('input', '.fee-price-input', function() {
+            formatNumberInput(this);
+        });
+
         loadFeeSchedule();
     });
 

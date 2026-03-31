@@ -325,6 +325,42 @@
           "A-10"
         ]
       }
+    },
+    "jp_1_px_scjp_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "99.33.1.2",
+      "auth": {
+        "id": "125003",
+        "pw": "Dwr278577@"
+      },
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "A-COM",
+          "A-10"
+        ]
+      }
+    },
+    "tn_1_px_ydkt_a_mkd_01": {
+      "os": "eos",
+      "type": "switch",
+      "ip": "172.29.172.205",
+      "auth": {
+        "id": "125003",
+        "pw": "Dwr278577@"
+      },
+      "custom": {
+        "groups": [
+          "product"
+        ],
+        "join_products": [
+          "B-COM",
+          "B-10"
+        ]
+      }
     }
   }
 }

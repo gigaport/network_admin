@@ -276,6 +276,16 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["A-10", "A-COM"]
+  yu_2_px_ydkt_n_mpr_01:
+    os: nxos
+    type: switch
+    connections:
+      default:
+        protocol: ssh
+        ip: 50.24.2.21
+    custom:
+      groups: ["product"]
+      join_products: ["A-10", "A-COM", "B-10", "B-COM"]
   yu_r_pr_bdkt_n_mpr_01:
     os: nxos
     type: switch

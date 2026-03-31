@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-27T00:40:28.435Z",
+  "timestamp": "2026-03-23T09:20:02.869Z",
   "reason": "compaction",
   "status": {
     "version": "2.0",
-    "lastUpdated": "2026-02-26T06:14:42.548Z",
+    "lastUpdated": "2026-03-23T09:10:38.404Z",
     "activeFeatures": [
       "security-infrastructure",
       "fastapi",
@@ -12,7 +12,8 @@
       "information",
       "setting",
       "multicast",
-      "tmp"
+      "tmp",
+      "network_admin"
     ],
     "primaryFeature": "security-infrastructure",
     "features": {
@@ -48,7 +49,7 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-10T01:35:47.813Z",
-          "lastUpdated": "2026-02-26T05:33:20.255Z"
+          "lastUpdated": "2026-03-23T09:06:35.150Z"
         },
         "lastFile": "/home/sysmon/network_admin/fastapi/routers/network.py"
       },
@@ -74,9 +75,9 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-10T01:41:14.675Z",
-          "lastUpdated": "2026-02-26T06:14:42.548Z"
+          "lastUpdated": "2026-03-23T09:10:38.404Z"
         },
-        "lastFile": "/home/sysmon/network_admin/net_admin/static/assets/js/net_admin/dashboard.js"
+        "lastFile": "/home/sysmon/network_admin/net_admin/static/assets/js/net_admin/info_company_circuits.js"
       },
       "information": {
         "phase": "do",
@@ -87,7 +88,7 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-10T01:41:33.403Z",
-          "lastUpdated": "2026-02-10T01:41:50.916Z"
+          "lastUpdated": "2026-03-03T04:37:50.190Z"
         },
         "lastFile": "/home/sysmon/network_admin/net_admin/information/views.py"
       },
@@ -100,9 +101,9 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-10T01:41:59.027Z",
-          "lastUpdated": "2026-02-26T04:07:42.536Z"
+          "lastUpdated": "2026-03-23T09:06:02.818Z"
         },
-        "lastFile": "/home/sysmon/network_admin/net_admin/setting/urls.py"
+        "lastFile": "/home/sysmon/network_admin/net_admin/setting/views.py"
       },
       "multicast": {
         "phase": "do",
@@ -113,7 +114,7 @@
         "documents": {},
         "timestamps": {
           "started": "2026-02-10T01:43:17.538Z",
-          "lastUpdated": "2026-02-10T01:43:59.378Z"
+          "lastUpdated": "2026-03-03T08:53:13.840Z"
         },
         "lastFile": "/home/sysmon/network_admin/net_admin/multicast/views.py"
       },
@@ -129,6 +130,19 @@
           "lastUpdated": "2026-02-26T03:54:15.429Z"
         },
         "lastFile": "/tmp/check_dates.py"
+      },
+      "network_admin": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-02-28T07:26:34.901Z",
+          "lastUpdated": "2026-03-02T22:43:26.597Z"
+        },
+        "lastFile": "/home/sysmon/network_admin/dc.sh"
       }
     },
     "pipeline": {
@@ -139,7 +153,7 @@
     "session": {
       "startedAt": "2026-02-10T00:46:18.895Z",
       "onboardingCompleted": false,
-      "lastActivity": "2026-02-26T06:14:42.548Z"
+      "lastActivity": "2026-03-23T09:10:38.404Z"
     },
     "history": [
       {
@@ -2868,6 +2882,1452 @@
       },
       {
         "timestamp": "2026-02-26T06:14:42.548Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T00:45:37.028Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T00:46:02.410Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T00:46:27.772Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T01:13:10.257Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T01:13:45.422Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T01:14:14.421Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T05:31:39.058Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T05:32:03.331Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T05:32:04.539Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T05:32:44.388Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T05:33:47.687Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T05:33:53.358Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T05:41:32.082Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T05:41:48.735Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T05:41:59.175Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T05:42:04.201Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T06:11:57.654Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T06:12:04.899Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T06:12:15.799Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T06:27:11.112Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T06:43:23.469Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T06:43:30.413Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T06:43:36.910Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T06:44:42.750Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T06:52:05.118Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T06:59:50.318Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:00:01.537Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:00:13.027Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:00:24.357Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:02:02.598Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:03:46.289Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:04:56.540Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:05:52.756Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:06:39.239Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:07:29.011Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:37:53.754Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:39:18.848Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:41:27.757Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:41:58.775Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:42:03.419Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:43:57.135Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T07:52:53.412Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:08:16.615Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:08:46.376Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:11:15.338Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:11:40.190Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:18:15.125Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:22:15.481Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:22:20.935Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:24:20.173Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:24:33.456Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:24:52.093Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:24:57.362Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:25:12.843Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:26:12.088Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:26:23.156Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:27:39.330Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:29:16.083Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:29:21.301Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:29:26.385Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:30:52.059Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:32:05.917Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:32:11.474Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:35:45.805Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:35:56.667Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:36:02.547Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:41:25.137Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:44:48.278Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:44:55.479Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:45:31.264Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:47:25.811Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-27T08:50:11.505Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:26:34.901Z",
+        "feature": "network_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:32:20.201Z",
+        "feature": "network_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:45:58.563Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:46:58.745Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:47:03.522Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:47:11.305Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:47:17.251Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:47:22.702Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:47:30.229Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:47:43.896Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:47:54.027Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-02-28T07:48:02.773Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-02T22:43:26.597Z",
+        "feature": "network_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-02T22:56:44.174Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-02T22:57:04.012Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T00:59:48.027Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T00:59:57.210Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:00:09.517Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:00:14.487Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:00:20.447Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:02:45.505Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:27:29.391Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:27:48.633Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:28:08.216Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:30:34.782Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:30:49.423Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:30:58.721Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:39:28.936Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:39:40.727Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:39:46.455Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:41:39.000Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:42:08.277Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:44:40.242Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:52:37.765Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T01:59:24.781Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:03:27.089Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:05:20.785Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:08:05.000Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:08:36.138Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:10:47.742Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:10:59.091Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:15:21.798Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:15:29.233Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:17:12.869Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:17:42.268Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:17:48.213Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:17:56.532Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:18:04.317Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:20:57.051Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:21:04.361Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T02:21:10.776Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:03:49.830Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:04:02.138Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:13:49.105Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:13:56.883Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:14:40.004Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:15:03.173Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:22:48.730Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:22:55.443Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:23:15.133Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:23:37.955Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:37:15.563Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:37:19.008Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:37:37.071Z",
+        "feature": "multicast",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T04:37:50.190Z",
+        "feature": "information",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T05:04:39.028Z",
+        "feature": "multicast",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T05:04:47.447Z",
+        "feature": "multicast",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T05:14:22.600Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T05:14:47.780Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T05:14:52.181Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T05:30:40.597Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T05:52:57.442Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T05:53:06.291Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T05:53:12.990Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T07:04:16.831Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T07:04:26.623Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T07:17:39.782Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T07:21:27.568Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T07:21:41.160Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T07:26:59.982Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T07:31:50.068Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:46:57.207Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:47:18.374Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:47:30.481Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:48:06.101Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:49:05.702Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:49:14.420Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:50:40.453Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:50:52.220Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:52:58.177Z",
+        "feature": "multicast",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:53:13.840Z",
+        "feature": "multicast",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:53:32.618Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T08:53:43.930Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T09:07:48.433Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T09:07:58.439Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-03T10:34:45.552Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-05T23:07:48.246Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-05T23:07:49.765Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-05T23:08:00.844Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-05T23:08:08.970Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:09:32.137Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:09:34.822Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:09:37.692Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:09:55.555Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:10:11.868Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:10:15.811Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:10:32.426Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:10:55.100Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:11:04.220Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:11:11.954Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:11:31.680Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:11:41.736Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:11:45.812Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:11:51.544Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:12:32.937Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:12:42.969Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:12:50.743Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:13:06.266Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:13:57.928Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:14:12.905Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:20:59.432Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:21:15.622Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:31:24.788Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:34:20.508Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:49:55.979Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:57:19.573Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:59:47.241Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:59:51.387Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T03:59:56.173Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:00:00.858Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:00:04.935Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:00:08.639Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:00:13.920Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:00:18.611Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:00:22.545Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:02:36.320Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:06:27.324Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:06:30.727Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:14:19.594Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:14:28.297Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:14:44.358Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:19:48.239Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:37:33.258Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T04:43:13.410Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T06:12:12.559Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T06:16:49.258Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T06:17:05.281Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T06:17:11.315Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T06:17:15.438Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T06:17:18.842Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-06T06:17:22.401Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T07:08:32.232Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T07:09:27.137Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T07:12:01.444Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T07:13:09.799Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T07:29:52.706Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T07:30:10.395Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T07:32:17.006Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T07:32:29.050Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T07:32:39.552Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-17T07:44:43.366Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-17T07:46:51.902Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-17T08:53:12.945Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-19T22:23:02.607Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-23T09:05:39.196Z",
+        "feature": "net_admin",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-23T09:05:44.256Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-23T09:06:02.818Z",
+        "feature": "setting",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-23T09:06:35.150Z",
+        "feature": "fastapi",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-23T09:10:38.404Z",
         "feature": "net_admin",
         "phase": "do",
         "action": "updated"

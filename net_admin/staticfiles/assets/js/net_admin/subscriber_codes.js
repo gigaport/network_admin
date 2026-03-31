@@ -169,14 +169,10 @@
                     className: 'text-center py-2 align-middle white-space-nowrap',
                     orderable: false,
                     render: function(data, type, row) {
-                        return `
-                            <button class="btn btn-sm btn-phoenix-secondary me-1" onclick="editCode(${row.id})" title="수정">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-phoenix-danger" onclick="deleteCode(${row.id})" title="삭제">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        `;
+                        return '<button onclick="editCode(' + row.id + ')" title="수정" style="width:28px; height:28px; border:none; border-radius:6px; background:transparent; color:#94a3b8; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; transition:color 0.15s; margin-right:2px;" onmouseenter="this.style.color=\'#4f46e5\'" onmouseleave="this.style.color=\'#94a3b8\'">' +
+                            '<i class="fas fa-pen" style="font-size:0.65rem;"></i></button>' +
+                            '<button onclick="deleteCode(' + row.id + ')" title="삭제" style="width:28px; height:28px; border:none; border-radius:6px; background:transparent; color:#94a3b8; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; transition:color 0.15s;" onmouseenter="this.style.color=\'#dc2626\'" onmouseleave="this.style.color=\'#94a3b8\'">' +
+                            '<i class="fas fa-trash-alt" style="font-size:0.65rem;"></i></button>';
                     }
                 }
             ],

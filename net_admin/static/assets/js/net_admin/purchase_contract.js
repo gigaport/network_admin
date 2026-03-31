@@ -40,7 +40,7 @@
             dcAmounts[dc].amount += price;
 
             // 통신사 집계
-            if (item.provider === 'KT') {
+            if (item.provider === 'KTC') {
                 ktCount++;
                 ktAmount += price;
             } else if (item.provider === 'LGU') {
@@ -113,7 +113,7 @@
         chartProvider = new Chart(document.getElementById('chartProvider').getContext('2d'), {
             type: 'doughnut',
             data: {
-                labels: ['KT', 'LGU'],
+                labels: ['KTC', 'LGU'],
                 datasets: [{
                     data: [ktAmount, lguAmount],
                     backgroundColor: ['rgba(14, 165, 233, 0.85)', 'rgba(245, 158, 11, 0.85)'],
@@ -361,7 +361,7 @@
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data) return '-';
-                        var badgeClass = data === 'KT' ? 'badge-phoenix-info' : 'badge-phoenix-success';
+                        var badgeClass = data === 'KTC' ? 'badge-phoenix-info' : 'badge-phoenix-success';
                         return '<span class="badge badge-phoenix ' + badgeClass + '">' + data + '</span>';
                     }
                 },

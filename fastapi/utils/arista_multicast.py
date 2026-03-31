@@ -28,6 +28,9 @@ def GetAristaMulticastInfo(device_info):
     """
     device_name = device_info[0]
     device_ip = device_info[1]['ip']
+    device_auth = None
+    if 'auth' in device_info[1]:
+        device_auth = (device_info[1]['auth']['id'], device_info[1]['auth']['pw'])
 
     logger.info(f"[{device_name}] 멀티캐스트 정보 수집 시작 (IP: {device_ip})")
 
@@ -38,7 +41,7 @@ def GetAristaMulticastInfo(device_info):
         'show ip mroute',
         'show ip pim rp',
         'show interfaces status'
-    ])
+    ], auth=device_auth)
 
     elapsed_time = time.time() - start_time
 

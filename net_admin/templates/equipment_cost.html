@@ -1,0 +1,45 @@
+{% extends 'components/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+:root, [data-bs-theme=light] {
+    --ec-card-bg: #fff;
+    --ec-text-heading: #0f172a;
+    --ec-text-muted: #64748b;
+    --ec-border: #e2e8f0;
+    --ec-accent: #6366f1;
+    --ec-accent-bg: rgba(99,102,241,0.08);
+}
+[data-bs-theme=dark] {
+    --ec-card-bg: #141824;
+    --ec-text-heading: #eff2f6;
+    --ec-text-muted: #8b95a9;
+    --ec-border: #2d3548;
+    --ec-accent: #818cf8;
+    --ec-accent-bg: rgba(129,140,248,0.1);
+}
+</style>
+
+<nav class="mb-2" style="--falcon-breadcrumb-divider: '»';" aria-label="breadcrumb">
+  <ol class="breadcrumb" style="font-size:0.78rem;">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item">기준설정</li>
+    <li class="breadcrumb-item active" aria-current="page">장비구매 원가정보</li>
+  </ol>
+</nav>
+
+<div style="max-width:800px; margin:80px auto; text-align:center;">
+    <div style="background:var(--ec-card-bg); border:1px solid var(--ec-border); border-radius:12px; padding:60px 40px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+        <div style="width:80px; height:80px; margin:0 auto 24px; background:var(--ec-accent-bg); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+            <i class="fas fa-tools" style="font-size:2rem; color:var(--ec-accent);"></i>
+        </div>
+        <h4 style="color:var(--ec-text-heading); font-weight:700; margin-bottom:12px;">개발 중</h4>
+        <p style="color:var(--ec-text-muted); font-size:0.92rem; margin-bottom:0; line-height:1.6;">
+            장비구매 원가정보 기능은 현재 개발 중입니다.<br>
+            빠른 시일 내에 제공될 예정입니다.
+        </p>
+    </div>
+</div>
+
+{% endblock %}

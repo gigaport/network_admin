@@ -41,14 +41,14 @@
     <nav class="mb-3" aria-label="breadcrumb">
       <ol class="breadcrumb mb-0">
         <li class="breadcrumb-item"><a href="#!">기준설정</a></li>
-        <li class="breadcrumb-item active">회원사 요금기준</li>
+        <li class="breadcrumb-item active">정보이용사 요금기준</li>
       </ol>
     </nav>
     <div class="mb-9" style="max-width: 1500px; margin: 0 auto;">
 
       <!-- Header -->
       <div class="d-flex align-items-center justify-content-between mb-3">
-        <h4 class="mb-0 fw-bold" style="color:var(--fee-text-heading); font-size:1.25rem;">회원사 요금기준</h4>
+        <h4 class="mb-0 fw-bold" style="color:var(--fee-text-heading); font-size:1.25rem;">정보이용사 요금기준</h4>
         <div class="d-flex gap-2">
           <button class="btn btn-sm" onclick="showAddForm()" style="background:var(--fee-add-bg); color:#16a34a; border:1px solid var(--fee-add-border); border-radius:8px; font-weight:500; font-size:0.85rem; padding:6px 16px;">
             <i class="fas fa-plus me-1" style="font-size:0.7rem;"></i>항목 추가
@@ -102,8 +102,7 @@
                 <label class="form-label small fw-semibold text-muted">용도 <span class="text-danger">*</span></label>
                 <select class="form-select form-select-sm" id="add_usage">
                   <option value="">선택</option>
-                  <option value="ORD">ORD</option>
-                  <option value="MPR">MPR</option>
+                  <option value="MKD">MKD</option>
                   <option value="MGT">MGT</option>
                   <option value="장비사용료">장비사용료</option>
                   <option value="회선설치비">회선설치비</option>
@@ -113,16 +112,10 @@
                 <label class="form-label small fw-semibold text-muted">대역폭</label>
                 <select class="form-select form-select-sm" id="add_bandwidth">
                   <option value="">없음</option>
-                  <option value="50M">50M</option>
+                  <option value="1M">1M</option>
+                  <option value="20M">20M</option>
                   <option value="100M">100M</option>
-                  <option value="150M">150M</option>
-                  <option value="200M">200M</option>
-                  <option value="250M">250M</option>
-                  <option value="300M">300M</option>
-                  <option value="350M">350M</option>
-                  <option value="400M">400M</option>
-                  <option value="450M">450M</option>
-                  <option value="공유(1G)">공유(1G)</option>
+                  <option value="110M">110M</option>
                 </select>
               </div>
               <div class="col-auto d-flex align-items-end pb-1">
@@ -234,8 +227,7 @@
                 <label class="form-label small fw-semibold text-muted">용도</label>
                 <select class="form-select form-select-sm" id="edit_usage">
                   <option value="">선택</option>
-                  <option value="ORD">ORD</option>
-                  <option value="MPR">MPR</option>
+                  <option value="MKD">MKD</option>
                   <option value="MGT">MGT</option>
                   <option value="장비사용료">장비사용료</option>
                   <option value="회선설치비">회선설치비</option>
@@ -245,16 +237,10 @@
                 <label class="form-label small fw-semibold text-muted">대역폭</label>
                 <select class="form-select form-select-sm" id="edit_bandwidth">
                   <option value="">없음</option>
-                  <option value="50M">50M</option>
+                  <option value="1M">1M</option>
+                  <option value="20M">20M</option>
                   <option value="100M">100M</option>
-                  <option value="150M">150M</option>
-                  <option value="200M">200M</option>
-                  <option value="250M">250M</option>
-                  <option value="300M">300M</option>
-                  <option value="350M">350M</option>
-                  <option value="400M">400M</option>
-                  <option value="450M">450M</option>
-                  <option value="공유(1G)">공유(1G)</option>
+                  <option value="110M">110M</option>
                 </select>
               </div>
               <div class="col-md-3 d-flex align-items-end pb-1">
@@ -308,5 +294,5 @@
 <script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
 <script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
 <script src="{% static 'assets/js/phoenix.js' %}"></script>
-<script src="{% static 'assets/js/net_admin/fee_schedule.js' %}?v={% now "YmdHis" %}"></script>
+<script src="{% static 'assets/js/net_admin/info_fee_schedule.js' %}?v={% now "YmdHis" %}"></script>
 {% endblock %}

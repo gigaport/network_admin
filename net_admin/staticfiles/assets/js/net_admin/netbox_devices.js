@@ -188,8 +188,8 @@
                 {
                     targets: 10, className: 'text-center py-2 align-middle', orderable: false, searchable: false,
                     render: function(data, type, row) {
-                        return '<button class="btn btn-sm btn-outline-primary btn-edit me-1" title="수정" data-id="' + row.id + '"><i class="fas fa-pen" style="font-size:0.65rem;"></i></button>' +
-                               '<button class="btn btn-sm btn-outline-danger btn-delete" title="삭제" data-id="' + row.id + '"><i class="fas fa-trash" style="font-size:0.65rem;"></i></button>';
+                        return '<button class="btn-edit" title="수정" data-id="' + row.id + '" style="width:26px; height:26px; border:none; border-radius:6px; background:#f1f5f9; color:#64748b; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; margin-right:4px; transition:all 0.15s ease;" onmouseenter="this.style.background=\'#dbeafe\';this.style.color=\'#3b82f6\'" onmouseleave="this.style.background=\'#f1f5f9\';this.style.color=\'#64748b\'"><i class="fas fa-pen" style="font-size:0.6rem;"></i></button>' +
+                               '<button class="btn-delete" title="삭제" data-id="' + row.id + '" style="width:26px; height:26px; border:none; border-radius:6px; background:#f1f5f9; color:#64748b; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; transition:all 0.15s ease;" onmouseenter="this.style.background=\'#fee2e2\';this.style.color=\'#ef4444\'" onmouseleave="this.style.background=\'#f1f5f9\';this.style.color=\'#64748b\'"><i class="fas fa-trash" style="font-size:0.6rem;"></i></button>';
                     }
                 }
             ],

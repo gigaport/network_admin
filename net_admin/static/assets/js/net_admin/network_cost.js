@@ -12,19 +12,22 @@
     }
 
     function getGroupKey(item) {
-        if (item.provider === 'KT') return 'KT';
+        if (item.provider === 'KTC') return 'KTC';
         if (item.provider === 'LGU') return 'LGU';
         if (item.provider === 'SKB') return 'SKB';
         if (item.provider === '세종') return 'SEJONG';
+        if (item.provider === '코스콤') return 'KOSCOM';
         return 'ETC';
     }
 
     function getProviderBadge(provider) {
         var colors = {
-            'KT': '#3b82f6',
+            'KTC': '#3b82f6',
             'LGU': '#10b981',
             'SKB': '#ef4444',
-            '세종': '#8b5cf6'
+            '세종': '#8b5cf6',
+            '코스콤': '#0891b2',
+            '기타': '#78716c'
         };
         var color = colors[provider] || '#f59e0b';
         return '<span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; color: #fff; background: ' + color + ';">' + provider + '</span>';
@@ -94,13 +97,14 @@
     }
 
     function updateStats() {
-        var ktItems = [], lguItems = [], skbItems = [], sejongItems = [], etcItems = [];
+        var ktItems = [], lguItems = [], skbItems = [], sejongItems = [], koscomItems = [], etcItems = [];
         costData.forEach(function(item) {
             var g = getGroupKey(item);
-            if (g === 'KT') ktItems.push(item);
+            if (g === 'KTC') ktItems.push(item);
             else if (g === 'LGU') lguItems.push(item);
             else if (g === 'SKB') skbItems.push(item);
             else if (g === 'SEJONG') sejongItems.push(item);
+            else if (g === 'KOSCOM') koscomItems.push(item);
             else etcItems.push(item);
         });
         $('#stat_total').text(costData.length);
@@ -108,12 +112,14 @@
         $('#stat_lgu').text(lguItems.length);
         $('#stat_skb').text(skbItems.length);
         $('#stat_sejong').text(sejongItems.length);
+        $('#stat_koscom').text(koscomItems.length);
         $('#stat_etc').text(etcItems.length);
         $('#stat_total_avg').text('평균 ' + calcAvg(costData));
         $('#stat_kt_avg').text('평균 ' + calcAvg(ktItems));
         $('#stat_lgu_avg').text('평균 ' + calcAvg(lguItems));
         $('#stat_skb_avg').text('평균 ' + calcAvg(skbItems));
         $('#stat_sejong_avg').text('평균 ' + calcAvg(sejongItems));
+        $('#stat_koscom_avg').text('평균 ' + calcAvg(koscomItems));
         $('#stat_etc_avg').text('평균 ' + calcAvg(etcItems));
     }
 
@@ -139,15 +145,16 @@
                     costData = result.data;
                     updateStats();
 
-                    var groups = { 'KT': [], 'LGU': [], 'SKB': [], 'SEJONG': [], 'ETC': [] };
+                    var groups = { 'KTC': [], 'LGU': [], 'SKB': [], 'SEJONG': [], 'KOSCOM': [], 'ETC': [] };
                     costData.forEach(function(item) {
                         groups[getGroupKey(item)].push(item);
                     });
 
-                    renderGroup('KT', sortByCostStandart(groups['KT']));
+                    renderGroup('KTC', sortByCostStandart(groups['KTC']));
                     renderGroup('LGU', sortByCostStandart(groups['LGU']));
                     renderGroup('SKB', sortByCostStandart(groups['SKB']));
                     renderGroup('SEJONG', sortByCostStandart(groups['SEJONG']));
+                    renderGroup('KOSCOM', sortByCostStandart(groups['KOSCOM']));
                     renderGroup('ETC', sortByCostStandart(groups['ETC']));
                 } else {
                     showAlert('데이터 로드 실패: ' + (result.error || ''), 'danger');

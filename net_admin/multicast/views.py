@@ -7,7 +7,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render, redirect
 from django.utils.timezone import localtime, now
 from django.utils import timezone
-from django.http import HttpResponse, Http404, QueryDict
+from django.http import HttpResponse, Http404, QueryDict, JsonResponse
 
 logger = logging.getLogger(__name__)
 
@@ -48,27 +48,38 @@ def init (request):
         elif sub_menu == "pr_info_multicast":
             market_gubn = "pr_information"
 
+        collection_meta = None
         logger.info(f"[SUB_MENU] : {sub_menu}, [MARKET_GUBN] : {market_gubn}")
 
         # market_gubn이 pr_information인 경우 (Arista 멀티캐스트 정보 수집)
         if market_gubn == "pr_information":
             api_url = "http://fastapi:8000/api/v1/network/collect/multicast/arista/pr"
             logger.info(f"[CALL_API] ==> {api_url}")
-            response = requests.get(api_url)
-            if response.status_code == 200:
-                data = response.json()
-                logger.debug(f"[API_RESPONSE] : {data}")
-                # None 값 필터링
-                response_data = [item for item in data if item is not None]
-                logger.info(f"[FILTERED_DATA_COUNT] : {len(response_data)} items (removed None values)")
-            else:
-                logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
-                return HttpResponse(status=response.status_code, content=response.text)
+            try:
+                response = requests.get(api_url, timeout=30)
+                if response.status_code == 200:
+                    data = response.json()
+                    logger.debug(f"[API_RESPONSE] : {data}")
+                    # None 값 필터링
+                    response_data = [item for item in data if item is not None]
+                    logger.info(f"[FILTERED_DATA_COUNT] : {len(response_data)} items (removed None values)")
+                else:
+                    logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+                    return HttpResponse(status=response.status_code, content=response.text)
+            except requests.exceptions.Timeout:
+                logger.error(f"[TIMEOUT] 멀티캐스트 수집 타임아웃 (30초)")
+                return JsonResponse([], safe=False)
+            except requests.exceptions.ConnectionError as e:
+                logger.error(f"[CONNECTION_ERROR] 멀티캐스트 연결 실패: {e}")
+                return JsonResponse([], safe=False)
         # market_gubn이 pr_members 또는 ts_members인 경우 (cisco 멀티캐스트 정보 수집)
         else:
             path = f"../data/{market_gubn}_mroute.json"
             logger.debug(f"PATH : {path}")
             members_mroute:Dict = openJsonFile(path)
+
+            # 수집 메타데이터 추출 (_meta가 있으면 실제 수집 시각 사용)
+            collection_meta = members_mroute.get('_meta') if isinstance(members_mroute, dict) else None
 
             ## 회원사 or 정보이용사 정보 가져오기 ##
             if sub_menu == "pr_multicast" or sub_menu == "ts_multicast":
@@ -77,32 +88,29 @@ def init (request):
                 path = f"../common/information_info.json"
 
             client_info:Dict = openJsonFile(path)
-            
-            if sub_menu == "pr_multicast" or sub_menu == "pr_info_multicast": 
+
+            if sub_menu == "pr_multicast" or sub_menu == "pr_info_multicast":
                 path = f"../common/pr_mpr_multicast_info.json"
-            elif sub_menu == "ts_multicast": 
+            elif sub_menu == "ts_multicast":
                 path = f"../common/ts_mpr_multicast_info.json"
 
             mpr_multicast_info:Dict = openJsonFile(path)
 
             ## 데이터 유무 검증
             if members_mroute and client_info and mpr_multicast_info:
-            ## 01. member_info <- 시세 멀티캐스트그룹 수신 개수 삽입
-            ## 02. member_mroute <- member_info 정보 삽입
                 merge_members_mroute = merge_multicast_group_count(members_mroute['data'], mpr_multicast_info)
-                # print(f"[merge_members_info]\n{merge_members_info}\n\n")
-                # print(f"[members_mroute['data']]\n{members_mroute['data']}")
-
-                response_data = create_member_sise_info(merge_members_mroute, client_info, today_time)
+                # updated_time: _meta가 있으면 실제 수집 시각, 없으면 현재 시각
+                actual_time = collection_meta.get('collected_at', today_time) if collection_meta else today_time
+                response_data = create_member_sise_info(merge_members_mroute, client_info, actual_time)
 
         logger.info(f"SUB_MENU => {sub_menu}, MARKET_GUBN => {market_gubn}")
-    
-    # data meta info setting
-    # meta = {'page': 1, 'pages': 1, 'perpage': -1, 'total': len(json_data['device_info']), 'sort': 'asc', 'field': 'id'}
-    # result: Dict[str, str] = {'meta': meta}
-    # result['data'] = json_data['device_info']
 
-    return HttpResponse(json.dumps(response_data, ensure_ascii=False, indent=4), content_type="application/json")
+    # _meta 포함 응답 (수집 신선도 정보)
+    result = {"data": response_data}
+    if collection_meta:
+        result["_meta"] = collection_meta
+
+    return HttpResponse(json.dumps(result, ensure_ascii=False, indent=4), content_type="application/json")
    
 
 def openJsonFile(path):

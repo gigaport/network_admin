@@ -6,6 +6,51 @@
 
     var arpTable = null;
 
+    function updateFreshness(meta) {
+        var el = document.getElementById('freshnessIndicator');
+        if (!el || !meta) return;
+
+        var collectedAt = meta.collected_at;
+        var status = meta.status;
+        var successDevices = meta.success_devices || 0;
+        var totalDevices = meta.total_devices || 0;
+        var preservedFrom = meta.preserved_from;
+
+        var ageText = '';
+        var bgColor = '';
+        var icon = '';
+        if (collectedAt) {
+            var collected = new Date(collectedAt.replace(' ', 'T'));
+            var diffMin = Math.round((new Date() - collected) / 60000);
+            if (diffMin < 1) ageText = '방금 전';
+            else if (diffMin < 60) ageText = diffMin + '분 전';
+            else if (diffMin < 1440) ageText = Math.floor(diffMin / 60) + '시간 전';
+            else ageText = Math.floor(diffMin / 1440) + '일 전';
+        }
+
+        if (status === 'success') { bgColor = '#059669'; icon = 'fa-check-circle'; }
+        else if (status === 'partial') { bgColor = '#d97706'; icon = 'fa-exclamation-triangle'; }
+        else { bgColor = '#dc2626'; icon = 'fa-times-circle'; }
+
+        var label = '<i class="fas ' + icon + ' me-1"></i>';
+        if (status === 'failed' && preservedFrom) {
+            label += '수집실패 · 과거 데이터 유지 (' + preservedFrom + ')';
+        } else {
+            label += '수집: ' + ageText + ' (' + successDevices + '/' + totalDevices + '대)';
+        }
+
+        el.innerHTML = label;
+        el.style.cssText = 'display:inline-block; font-size:0.7rem; font-weight:500; padding:3px 10px; border-radius:6px; color:#fff; background:' + bgColor + ';';
+
+        if (collectedAt) {
+            var diffMin2 = Math.round((new Date() - new Date(collectedAt.replace(' ', 'T'))) / 60000);
+            if (diffMin2 > 5 && status !== 'failed') {
+                el.style.background = '#d97706';
+                el.innerHTML = '<i class="fas fa-clock me-1"></i>수집: ' + ageText + ' (' + successDevices + '/' + totalDevices + '대)';
+            }
+        }
+    }
+
     function updateSummary(data) {
         var devices = {};
         var uniqueIps = {};
@@ -91,6 +136,7 @@
                 type: 'GET',
                 data: { sub_menu: currentPath },
                 dataSrc: function(json) {
+                    if (json._meta) { updateFreshness(json._meta); }
                     if (json.data) { updateSummary(json.data); return json.data; }
                     return [];
                 },

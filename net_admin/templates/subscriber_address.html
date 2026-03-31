@@ -20,57 +20,55 @@
       </ol>
     </nav>
     <div class="mb-9">
-      <div class="row g-3 mb-4" style="max-width: 1600px; margin: 0 auto;">
+      <div class="row g-3 mb-4" style="max-width: 1900px; margin: 0 auto;">
         <div class="col-auto">
           <h2 id="contents_title" class="mb-0">회원사 주소 관리</h2>
         </div>
-        <div class="col-auto ms-auto">
-          <button class="btn btn-sm btn-success me-2" onclick="showCreateModal()">
-            <i class="fas fa-plus me-1"></i>추가
+        <div class="col-auto ms-auto d-flex gap-2">
+          <button class="btn btn-sm" onclick="showCreateModal()" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; font-weight:500; font-size:0.85rem; padding:6px 16px;">
+            <i class="fas fa-plus me-1" style="font-size:0.7rem;"></i>추가
           </button>
-          <button class="btn btn-sm btn-primary" onclick="refreshTable()">
-            <i class="fas fa-sync-alt me-1"></i>새로고침
+          <button class="btn btn-sm" onclick="refreshTable()" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; font-size:0.85rem; padding:6px 16px;">
+            <i class="fas fa-sync-alt me-1" style="font-size:0.7rem;"></i>새로고침
           </button>
         </div>
       </div>
 
       <!-- 검색 필터 섹션 -->
-      <div class="card border-0 shadow-sm mb-4" style="max-width: 1600px; margin: 0 auto;">
-        <div class="card-body">
-          <div class="row g-3">
-            <div class="col-12 col-md-4">
-              <label class="form-label small fw-semibold text-muted mb-1">
-                <i class="fas fa-search me-1"></i>통합 검색
-              </label>
-              <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="회원사코드, 회사명, 주소 검색...">
-            </div>
-            <div class="col-6 col-md-2">
-              <label class="form-label small fw-semibold text-muted mb-1">
-                <i class="fas fa-server me-1"></i>데이터센터
-              </label>
-              <select class="form-select form-select-sm" id="datacenterFilter">
-                <option value="">전체</option>
-              </select>
-            </div>
-            <div class="col-6 col-md-2">
-              <label class="form-label small fw-semibold text-muted mb-1">
-                <i class="fas fa-building me-1"></i>회원사
-              </label>
-              <select class="form-select form-select-sm" id="memberFilter">
-                <option value="">전체</option>
-              </select>
-            </div>
-            <div class="col-12 col-md-2 d-flex align-items-end">
-              <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilters()">
-                <i class="fas fa-redo me-1"></i>필터 초기화
-              </button>
-            </div>
+      <div class="mb-4" style="max-width: 1900px; margin: 0 auto; background:#fff; border-radius:10px; border:1px solid #e2e8f0; padding:16px 20px;">
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <label class="form-label small fw-semibold text-muted mb-1">
+              <i class="fas fa-search me-1"></i>통합 검색
+            </label>
+            <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="회원사코드, 회사명, 주소 검색...">
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-semibold text-muted mb-1">
+              <i class="fas fa-server me-1"></i>데이터센터
+            </label>
+            <select class="form-select form-select-sm" id="datacenterFilter">
+              <option value="">전체</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label small fw-semibold text-muted mb-1">
+              <i class="fas fa-building me-1"></i>회원사
+            </label>
+            <select class="form-select form-select-sm" id="memberFilter">
+              <option value="">전체</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-2 d-flex align-items-end">
+            <button class="btn btn-sm w-100" onclick="resetFilters()" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; font-size:0.85rem;">
+              <i class="fas fa-redo me-1" style="font-size:0.7rem;"></i>필터 초기화
+            </button>
           </div>
         </div>
       </div>
 
-      <div class="card border-0 shadow-sm bg-body-emphasis" style="max-width: 1600px; margin: 0 auto;">
-        <div class="card-body" style="padding: 2rem 1rem !important; min-height: 400px;">
+      <div style="max-width: 1900px; margin: 0 auto; background:#fff; border-radius:10px; border:1px solid #e2e8f0;">
+        <div style="padding: 2rem 1rem; min-height: 400px;">
           <!-- 테이블 영역 -->
           <div class="table-list" id="advanceAjaxTable">
             <div class="table-responsive scrollbar">
@@ -85,7 +83,7 @@
                   <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:4%;">우편번호</th>
                   <th class="sort white-space-nowrap align-middle" scope="col" style="width:15%;">도로명주소</th>
                   <th class="sort white-space-nowrap align-middle" scope="col" style="width:13%;">상세주소</th>
-                  <th class="sort white-space-nowrap align-middle" scope="col" style="width:10%;">요약주소</th>
+                  <th class="sort white-space-nowrap align-middle" scope="col" style="width:15%;">요약주소</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:8%;">수정일시</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:5%;">작업</th>
                 </tr>
@@ -114,70 +112,58 @@
   <!-- 추가 모달 -->
   <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
-          <div class="w-100">
-            <h4 class="modal-title fw-bold mb-1" id="createModalLabel" style="color: #1f2937;">
-              <i class="fas fa-plus-circle me-2" style="color: #10b981;"></i>주소 정보 추가
-            </h4>
-            <p class="text-muted mb-0 small">회원사 주소 정보를 추가할 수 있습니다</p>
-          </div>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-content" style="border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.08);">
+        <div class="modal-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding:16px 20px;">
+          <h6 class="modal-title fw-bold" id="createModalLabel" style="color:#1e293b; font-size:1.05rem;">
+            <i class="fas fa-plus-circle me-2" style="color:#10b981; font-size:0.85rem;"></i>주소 정보 추가
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="font-size:0.7rem;"></button>
         </div>
-        <div class="modal-body" style="background-color: #f8f9fa;">
+        <div class="modal-body" style="padding:20px;">
           <form id="createForm">
-            <div class="card border-0 shadow-sm">
-              <div class="card-body">
-                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #10b981; padding-left: 12px;">
-                  <i class="fas fa-info-circle me-2" style="color: #10b981;"></i>주소 정보
-                </h6>
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <label for="create_member_code" class="form-label small fw-semibold text-muted mb-2">회원사 코드 <span class="text-danger">*</span></label>
-                    <select class="form-select form-select-sm" id="create_member_code" required>
-                      <option value="">선택</option>
-                    </select>
-                  </div>
-                  <div class="col-md-6">
-                    <label for="create_datacenter_code" class="form-label small fw-semibold text-muted mb-2">데이터센터 코드 <span class="text-danger">*</span></label>
-                    <select class="form-select form-select-sm" id="create_datacenter_code" required>
-                      <option value="">선택</option>
-                      <option value="DC1">DC1</option>
-                      <option value="DC2">DC2</option>
-                      <option value="DC3">DC3</option>
-                      <option value="DR">DR</option>
-                    </select>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label small fw-semibold text-muted mb-2">도로명주소 검색</label>
-                    <div class="d-flex gap-2 mb-2">
-                      <button type="button" class="btn btn-outline-primary btn-sm flex-shrink-0 text-nowrap" onclick="searchAddress('create')">
-                        <i class="fas fa-search me-1"></i>주소 검색
-                      </button>
-                      <input type="text" class="form-control form-control-sm" id="create_post_code" readonly placeholder="우편번호" style="background-color: #f0f0f0; max-width: 100px;">
-                      <input type="text" class="form-control form-control-sm" id="create_main_address" readonly placeholder="주소 검색 버튼을 클릭하세요" style="background-color: #f0f0f0;">
-                    </div>
-                    <div id="create_postcode_embed" style="display:none;border:1px solid #dee2e6;border-radius:4px;height:400px;margin-bottom:8px;"></div>
-                  </div>
-                  <div class="col-12">
-                    <label for="create_detailed_address" class="form-label small fw-semibold text-muted mb-2">상세주소 (동/층/호)</label>
-                    <input type="text" class="form-control form-control-sm" id="create_detailed_address" maxlength="200" placeholder="나머지 상세주소를 입력하세요">
-                  </div>
-                  <div class="col-12">
-                    <label for="create_summary_address" class="form-label small fw-semibold text-muted mb-2">요약주소 <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control form-control-sm" id="create_summary_address" required maxlength="100">
-                  </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="create_member_code" class="form-label small fw-semibold text-muted">회원사 코드 <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm" id="create_member_code" required>
+                  <option value="">선택</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="create_datacenter_code" class="form-label small fw-semibold text-muted">데이터센터 코드 <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm" id="create_datacenter_code" required>
+                  <option value="">선택</option>
+                  <option value="DC1">DC1</option>
+                  <option value="DC2">DC2</option>
+                  <option value="DC3">DC3</option>
+                  <option value="DR">DR</option>
+                </select>
+              </div>
+              <div class="col-12" style="padding-top:8px; margin-top:8px; border-top:1px solid #f1f5f9;">
+                <label class="form-label small fw-semibold text-muted">도로명주소 검색</label>
+                <div class="d-flex gap-2 mb-2">
+                  <button type="button" class="btn btn-sm flex-shrink-0 text-nowrap" onclick="searchAddress('create')" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:8px; font-size:0.85rem;">
+                    <i class="fas fa-search me-1" style="font-size:0.7rem;"></i>주소 검색
+                  </button>
+                  <input type="text" class="form-control form-control-sm" id="create_post_code" readonly placeholder="우편번호" style="background-color: #f8fafc; max-width: 100px;">
+                  <input type="text" class="form-control form-control-sm" id="create_main_address" readonly placeholder="주소 검색 버튼을 클릭하세요" style="background-color: #f8fafc;">
                 </div>
+                <div id="create_postcode_embed" style="display:none;border:1px solid #e2e8f0;border-radius:8px;height:400px;margin-bottom:8px;"></div>
+              </div>
+              <div class="col-12">
+                <label for="create_detailed_address" class="form-label small fw-semibold text-muted">상세주소 (동/층/호)</label>
+                <input type="text" class="form-control form-control-sm" id="create_detailed_address" maxlength="200" placeholder="나머지 상세주소를 입력하세요">
+              </div>
+              <div class="col-12">
+                <label for="create_summary_address" class="form-label small fw-semibold text-muted">요약주소 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-sm" id="create_summary_address" required maxlength="100">
               </div>
             </div>
           </form>
         </div>
-        <div class="modal-footer border-0" style="background-color: #f8f9fa;">
-          <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">
-            <i class="fas fa-times me-2"></i>취소
-          </button>
-          <button type="button" class="btn btn-success btn-sm px-4" onclick="saveCreate()">
-            <i class="fas fa-save me-2"></i>저장
+        <div class="modal-footer" style="border-top:1px solid #f1f5f9; padding:12px 20px;">
+          <button type="button" class="btn btn-sm" data-bs-dismiss="modal" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; padding:7px 18px; font-size:0.85rem;">취소</button>
+          <button type="button" class="btn btn-sm" onclick="saveCreate()" style="background:#16a34a; color:#fff; border:none; border-radius:8px; padding:7px 18px; font-size:0.85rem;">
+            <i class="fas fa-save me-1"></i>저장
           </button>
         </div>
       </div>
@@ -187,72 +173,59 @@
   <!-- 수정 모달 -->
   <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-          <div class="w-100">
-            <h4 class="modal-title fw-bold mb-1" id="editModalLabel" style="color: #1f2937;">
-              <i class="fas fa-edit me-2" style="color: #6366f1;"></i>주소 정보 수정
-            </h4>
-            <p class="text-muted mb-0 small">회원사 주소 정보를 수정할 수 있습니다</p>
-          </div>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-content" style="border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.08);">
+        <div class="modal-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding:16px 20px;">
+          <h6 class="modal-title fw-bold" id="editModalLabel" style="color:#1e293b; font-size:1.05rem;">
+            <i class="fas fa-edit me-2" style="color:#6366f1; font-size:0.85rem;"></i>주소 정보 수정
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="font-size:0.7rem;"></button>
         </div>
-        <div class="modal-body" style="background-color: #f8f9fa;">
+        <div class="modal-body" style="padding:20px;">
           <form id="editForm">
             <input type="hidden" id="edit_id">
-
-            <div class="card border-0 shadow-sm">
-              <div class="card-body">
-                <h6 class="fw-bold mb-3" style="color: #1f2937; border-left: 4px solid #6366f1; padding-left: 12px;">
-                  <i class="fas fa-info-circle me-2" style="color: #6366f1;"></i>주소 정보
-                </h6>
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <label for="edit_member_code" class="form-label small fw-semibold text-muted">회원사 코드</label>
-                    <select class="form-select form-select-sm" id="edit_member_code" required>
-                      <option value="">선택</option>
-                    </select>
-                  </div>
-                  <div class="col-md-6">
-                    <label for="edit_datacenter_code" class="form-label small fw-semibold text-muted">데이터센터 코드</label>
-                    <select class="form-select form-select-sm" id="edit_datacenter_code" required>
-                      <option value="">선택</option>
-                      <option value="DC1">DC1</option>
-                      <option value="DC2">DC2</option>
-                      <option value="DC3">DC3</option>
-                      <option value="DR">DR</option>
-                    </select>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label small fw-semibold text-muted">도로명주소 검색</label>
-                    <div class="d-flex gap-2 mb-2">
-                      <button type="button" class="btn btn-outline-primary btn-sm flex-shrink-0 text-nowrap" onclick="searchAddress('edit')">
-                        <i class="fas fa-search me-1"></i>주소 검색
-                      </button>
-                      <input type="text" class="form-control form-control-sm" id="edit_post_code" readonly placeholder="우편번호" style="background-color: #f0f0f0; max-width: 100px;">
-                      <input type="text" class="form-control form-control-sm" id="edit_main_address" readonly placeholder="주소 검색 버튼을 클릭하세요" style="background-color: #f0f0f0;">
-                    </div>
-                    <div id="edit_postcode_embed" style="display:none;border:1px solid #dee2e6;border-radius:4px;height:400px;margin-bottom:8px;"></div>
-                  </div>
-                  <div class="col-12">
-                    <label for="edit_detailed_address" class="form-label small fw-semibold text-muted">상세주소 (동/층/호)</label>
-                    <input type="text" class="form-control form-control-sm" id="edit_detailed_address" maxlength="200" placeholder="나머지 상세주소를 입력하세요">
-                  </div>
-                  <div class="col-12">
-                    <label for="edit_summary_address" class="form-label small fw-semibold text-muted">요약주소</label>
-                    <input type="text" class="form-control form-control-sm" id="edit_summary_address" required maxlength="100">
-                  </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="edit_member_code" class="form-label small fw-semibold text-muted">회원사 코드</label>
+                <select class="form-select form-select-sm" id="edit_member_code" required>
+                  <option value="">선택</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="edit_datacenter_code" class="form-label small fw-semibold text-muted">데이터센터 코드</label>
+                <select class="form-select form-select-sm" id="edit_datacenter_code" required>
+                  <option value="">선택</option>
+                  <option value="DC1">DC1</option>
+                  <option value="DC2">DC2</option>
+                  <option value="DC3">DC3</option>
+                  <option value="DR">DR</option>
+                </select>
+              </div>
+              <div class="col-12" style="padding-top:8px; margin-top:8px; border-top:1px solid #f1f5f9;">
+                <label class="form-label small fw-semibold text-muted">도로명주소 검색</label>
+                <div class="d-flex gap-2 mb-2">
+                  <button type="button" class="btn btn-sm flex-shrink-0 text-nowrap" onclick="searchAddress('edit')" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:8px; font-size:0.85rem;">
+                    <i class="fas fa-search me-1" style="font-size:0.7rem;"></i>주소 검색
+                  </button>
+                  <input type="text" class="form-control form-control-sm" id="edit_post_code" readonly placeholder="우편번호" style="background-color: #f8fafc; max-width: 100px;">
+                  <input type="text" class="form-control form-control-sm" id="edit_main_address" readonly placeholder="주소 검색 버튼을 클릭하세요" style="background-color: #f8fafc;">
                 </div>
+                <div id="edit_postcode_embed" style="display:none;border:1px solid #e2e8f0;border-radius:8px;height:400px;margin-bottom:8px;"></div>
+              </div>
+              <div class="col-12">
+                <label for="edit_detailed_address" class="form-label small fw-semibold text-muted">상세주소 (동/층/호)</label>
+                <input type="text" class="form-control form-control-sm" id="edit_detailed_address" maxlength="200" placeholder="나머지 상세주소를 입력하세요">
+              </div>
+              <div class="col-12">
+                <label for="edit_summary_address" class="form-label small fw-semibold text-muted">요약주소</label>
+                <input type="text" class="form-control form-control-sm" id="edit_summary_address" required maxlength="100">
               </div>
             </div>
           </form>
         </div>
-        <div class="modal-footer border-0" style="background-color: #f8f9fa;">
-          <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">
-            <i class="fas fa-times me-2"></i>취소
-          </button>
-          <button type="button" class="btn btn-primary btn-sm px-4" onclick="saveEdit()">
-            <i class="fas fa-save me-2"></i>저장
+        <div class="modal-footer" style="border-top:1px solid #f1f5f9; padding:12px 20px;">
+          <button type="button" class="btn btn-sm" data-bs-dismiss="modal" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; padding:7px 18px; font-size:0.85rem;">취소</button>
+          <button type="button" class="btn btn-sm" onclick="saveEdit()" style="background:#4f46e5; color:#fff; border:none; border-radius:8px; padding:7px 18px; font-size:0.85rem;">
+            <i class="fas fa-save me-1"></i>저장
           </button>
         </div>
       </div>

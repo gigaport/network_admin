@@ -9,14 +9,14 @@
     // 요약 통계 업데이트
     function updateSummary(data) {
         var members = {};
-        var kt = 0, lgu = 0, skb = 0, pr = 0, dr = 0, ts = 0, mg = 0;
+        var ktc = 0, lgu = 0, skb = 0, pr = 0, dr = 0, ts = 0, mg = 0;
         var ord = 0, mpr = 0, expiring = 0;
         var dc1 = 0, dc2 = 0, dc3 = 0, dcDr = 0;
         var today = new Date();
         var d90 = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
         data.forEach(function(r) {
             if (r.member_code) members[r.member_code] = true;
-            if (r.provider === 'KT') kt++;
+            if (r.provider === 'KTC') ktc++;
             else if (r.provider === 'LGU') lgu++;
             else if (r.provider === 'SKB') skb++;
             if (r.env === 'PR') pr++;
@@ -36,7 +36,7 @@
         });
         $('#stat_total').text(data.length.toLocaleString());
         $('#stat_members').text(Object.keys(members).length.toLocaleString());
-        $('#stat_kt').text(kt); $('#stat_lgu').text(lgu); $('#stat_skb').text(skb);
+        $('#stat_kt').text(ktc); $('#stat_lgu').text(lgu); $('#stat_skb').text(skb);
         $('#stat_pr').text(pr); $('#stat_dr').text(dr); $('#stat_ts').text(ts); $('#stat_mg').text(mg);
         $('#stat_ord').text(ord); $('#stat_mpr').text(mpr);
         $('#stat_expiring').text(expiring);
@@ -161,6 +161,32 @@
                 }
             })
             .catch(function(err) { console.error('상품 목록 로드 실패:', err); });
+    }
+
+    var allFeeData = [];
+
+    function loadFeeCodeOptions() {
+        fetch('/fee_schedule/get_fee_schedule')
+            .then(function(res) { return res.json(); })
+            .then(function(result) {
+                if (result.success && result.data) {
+                    allFeeData = result.data;
+                    filterFeeCodeByUsage('', '#create_fee_code');
+                    filterFeeCodeByUsage('', '#edit_fee_code');
+                }
+            })
+            .catch(function(err) { console.error('요금코드 목록 로드 실패:', err); });
+    }
+
+    function filterFeeCodeByUsage(usage, selectId) {
+        var html = '<option value="">선택</option>';
+        allFeeData.forEach(function(f) {
+            if (!usage || (f.fee_code && f.fee_code.indexOf(usage) === 0)) {
+                var label = f.fee_code + ' (' + f.description + ' / ' + Number(f.price).toLocaleString() + '원)';
+                html += '<option value="' + f.fee_code + '">' + label + '</option>';
+            }
+        });
+        $(selectId).html(html);
     }
 
     // 용도에 따른 상품 옵션 변경
@@ -336,7 +362,7 @@
                 {
                     targets: 2, // 회사명
                     width: '5%',
-                    className: 'text-center py-2 align-middle'
+                    className: 'text-center py-2 align-middle fw-semibold'
                 },
                 {
                     targets: 3, // DC코드
@@ -368,7 +394,7 @@
                 {
                     targets: 6, // 회선ID
                     width: '6%',
-                    className: 'text-center py-2 align-middle',
+                    className: 'text-center py-2 align-middle fw-semibold',
                     render: function(data) {
                         if (!data) return '-';
                         return '<span title="' + data + '">' + data + '</span>';
@@ -405,13 +431,13 @@
                 {
                     targets: 10, // 상품
                     width: '5%',
-                    className: 'text-center py-2 align-middle',
+                    className: 'text-center py-2 align-middle fw-semibold',
                     render: function(data) { return data || '-'; }
                 },
                 {
                     targets: 11, // 대역폭
                     width: '3%',
-                    className: 'text-center py-2 align-middle',
+                    className: 'text-center py-2 align-middle fw-semibold',
                     render: function(data) { return data || '-'; }
                 },
                 {
@@ -437,7 +463,7 @@
                 {
                     targets: 14, // 요금
                     width: '4%',
-                    className: 'text-end py-2 align-middle',
+                    className: 'text-end py-2 align-middle fw-semibold',
                     render: function(data) {
                         if (!data && data !== 0) return '-';
                         return Number(data).toLocaleString() + '원';
@@ -583,6 +609,7 @@
             cot_device: $('#create_cot_device').val().trim() || null,
             rt_device: $('#create_rt_device').val().trim() || null,
             phase: parseInt($('#create_phase').val()) || null,
+            fee_code: $('#create_fee_code').val() || null,
             contract_date: $('#create_contract_date').val() || null,
             expiry_date: $('#create_expiry_date').val() || null,
             contract_period: $('#create_contract_period').val() || null,
@@ -623,6 +650,10 @@
         });
     };
 
+    function makeBadge(text, color, bg) {
+        return '<span style="display:inline-block; padding:3px 10px; border-radius:4px; font-size:0.78rem; font-weight:600; color:' + color + '; background:' + bg + '; white-space:nowrap;">' + text + '</span>';
+    }
+
     function showDetailModal(circuit) {
         $('#detail_id').val(circuit.id);
 
@@ -641,11 +672,28 @@
         $('#detail_additional_circuit').text(circuit.additional_circuit ? 'Y' : 'N');
         var phase = circuit.phase;
         $('#detail_phase').text(phase === 1 ? 'Phase 1' : phase === 2 ? 'Phase 2' : '-');
+        $('#detail_fee_code').text(circuit.fee_code || '-');
         var fp = circuit.fee_price;
-        $('#detail_fee_price').text(fp !== null && fp !== undefined ? Number(fp).toLocaleString() + '원' : '-');
+        var fpText = fp !== null && fp !== undefined ? Number(fp).toLocaleString() + '원' : '-';
+        if (circuit.fee_description) fpText += ' (' + circuit.fee_description + ')';
+        $('#detail_fee_price').text(fpText);
 
         var name = circuit.company_name || circuit.member_code || '';
         $('#detailSubtitle').text(name + (circuit.circuit_id ? ' / ' + circuit.circuit_id : ''));
+
+        // 요약 배지
+        var badges = '';
+        var usageColors = { 'ORD': ['#059669','#f0fdf4'], 'MPR': ['#2563eb','#eff6ff'], 'MGT': ['#7c3aed','#f5f3ff'] };
+        var uc = usageColors[circuit.usage] || ['#d97706','#fffbeb'];
+        if (circuit.usage) badges += makeBadge(circuit.usage, uc[0], uc[1]);
+        if (circuit.env) badges += makeBadge(circuit.env, '#0369a1', '#f0f9ff');
+        if (phase === 1 || phase === 2) badges += makeBadge('Phase ' + phase, '#6d28d9', '#f5f3ff');
+        if (circuit.provider) badges += makeBadge(circuit.provider, '#334155', '#f1f5f9');
+        if (circuit.bandwidth) badges += makeBadge(circuit.bandwidth, '#0891b2', '#ecfeff');
+        if (fp !== null && fp !== undefined) {
+            badges += '<span style="margin-left:auto; font-size:0.95rem; font-weight:700; color:#0f172a;">' + Number(fp).toLocaleString() + '원</span>';
+        }
+        $('#detail_badges').html(badges);
 
         var modal = new bootstrap.Modal(document.getElementById('detailModal'));
         modal.show();
@@ -680,6 +728,8 @@
         $('#edit_cot_device').val(circuit.cot_device);
         $('#edit_rt_device').val(circuit.rt_device);
         $('#edit_phase').val(circuit.phase);
+        filterFeeCodeByUsage(circuit.usage || '', '#edit_fee_code');
+        $('#edit_fee_code').val(circuit.fee_code || '');
         $('#edit_contract_date').val(circuit.contract_date);
         $('#edit_expiry_date').val(circuit.expiry_date);
         $('#edit_contract_period').val(circuit.contract_period);
@@ -741,6 +791,7 @@
             cot_device: $('#edit_cot_device').val().trim() || null,
             rt_device: $('#edit_rt_device').val().trim() || null,
             phase: parseInt($('#edit_phase').val()) || null,
+            fee_code: $('#edit_fee_code').val() || null,
             contract_date: $('#edit_contract_date').val() || null,
             expiry_date: $('#edit_expiry_date').val() || null,
             contract_period: $('#edit_contract_period').val() || null,
@@ -1208,6 +1259,7 @@
         initTable();
         loadMemberCodeOptions();
         loadProductOptions();
+        loadFeeCodeOptions();
 
         // 용도 변경 시 상품 옵션 + 대역폭 + 추가회선 동적 변경
         $('#create_usage').on('change', function() {
@@ -1215,12 +1267,14 @@
             updateProductByUsage(val, '#create_product');
             updateBandwidthByUsage(val, '#create_bandwidth');
             updateAdditionalCircuitByUsage(val, '#create_additional_circuit');
+            filterFeeCodeByUsage(val, '#create_fee_code');
         });
         $('#edit_usage').on('change', function() {
             var val = $(this).val();
             updateProductByUsage(val, '#edit_product');
             updateBandwidthByUsage(val, '#edit_bandwidth');
             updateAdditionalCircuitByUsage(val, '#edit_additional_circuit');
+            filterFeeCodeByUsage(val, '#edit_fee_code');
         });
 
         // 용도 미선택 시 상품 클릭 경고

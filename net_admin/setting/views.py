@@ -16,7 +16,7 @@ def index(request):
     path = f"{org_path}.html"
 
     # circuits, revenue_summary, purchase_contract는 회선계약 관리 메뉴 하위
-    if org_path in ("circuits", "revenue_summary", "purchase_contract"):
+    if org_path in ("circuits", "revenue_summary", "purchase_contract", "profit_summary", "info_company_circuits"):
         parent_menu = "network_contracts"
     elif org_path == "network_cost":
         parent_menu = "subscriber_management"
@@ -565,6 +565,117 @@ def delete_fee_schedule(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
+# ==================== 정보이용사 요금기준 (Info Fee Schedule) 관리 ====================
+
+def get_info_fee_schedule(request):
+    """정보이용사 과금기준 목록 조회 (FastAPI 호출)"""
+    try:
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_fee_schedule"
+        logger.info(f"[CALL_API] ==> {api_url}")
+
+        response = requests.get(api_url)
+
+        if response.status_code == 200:
+            data = response.json()
+            logger.info(f"[API_RESPONSE] : {len(data.get('data', []))} items received")
+            return JsonResponse(data)
+        else:
+            logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_info_fee_schedule(request):
+    """정보이용사 과금기준 추가 (FastAPI 호출)"""
+    try:
+        data = json.loads(request.body)
+
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_fee_schedule"
+        logger.info(f"[CALL_API] ==> {api_url}")
+
+        response = requests.post(api_url, json=data)
+
+        if response.status_code == 200:
+            result = response.json()
+            return JsonResponse(result)
+        else:
+            logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+            try:
+                error_data = response.json()
+                return JsonResponse({'success': False, 'error': error_data.get('detail', response.text)}, status=response.status_code)
+            except:
+                return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_info_fee_schedule(request):
+    """정보이용사 과금기준 수정 (FastAPI 호출)"""
+    try:
+        data = json.loads(request.body)
+        fee_id = data.get('id')
+
+        if not fee_id:
+            return JsonResponse({'success': False, 'error': 'ID가 필요합니다.'}, status=400)
+
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_fee_schedule/{fee_id}"
+        logger.info(f"[CALL_API] ==> {api_url}")
+
+        response = requests.put(api_url, json=data)
+
+        if response.status_code == 200:
+            result = response.json()
+            return JsonResponse(result)
+        else:
+            logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+            try:
+                error_data = response.json()
+                return JsonResponse({'success': False, 'error': error_data.get('detail', response.text)}, status=response.status_code)
+            except:
+                return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def delete_info_fee_schedule(request):
+    """정보이용사 과금기준 삭제 (FastAPI 호출)"""
+    try:
+        data = json.loads(request.body)
+        fee_id = data.get('id')
+
+        if not fee_id:
+            return JsonResponse({'success': False, 'error': 'ID가 필요합니다.'}, status=400)
+
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_fee_schedule/{fee_id}"
+        logger.info(f"[CALL_API] ==> {api_url}")
+
+        response = requests.delete(api_url)
+
+        if response.status_code == 200:
+            result = response.json()
+            return JsonResponse(result)
+        else:
+            logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
 # ==================== 회선내역 (Circuit) 관리 ====================
 
 def get_circuits(request):
@@ -672,6 +783,98 @@ def delete_circuit(request):
             except:
                 return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
 
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ==================== 정보이용사 회선내역 (Info Company Circuits) ====================
+
+def get_info_company_circuits(request):
+    """정보이용사 회선내역 데이터 조회 (FastAPI 호출)"""
+    try:
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_company_circuits"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            data = response.json()
+            logger.info(f"[API_RESPONSE] : {len(data.get('data', []))} items received")
+            return JsonResponse(data)
+        else:
+            logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_info_company_circuit(request):
+    """정보이용사 회선내역 추가 (FastAPI 호출)"""
+    try:
+        data = json.loads(request.body)
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_company_circuits"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.post(api_url, json=data)
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        else:
+            logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+            try:
+                error_data = response.json()
+                return JsonResponse({'success': False, 'error': error_data.get('detail', response.text)}, status=response.status_code)
+            except:
+                return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_info_company_circuit(request):
+    """정보이용사 회선내역 수정 (FastAPI 호출)"""
+    try:
+        data = json.loads(request.body)
+        circuit_id = data.get('id')
+        if not circuit_id:
+            return JsonResponse({'success': False, 'error': 'ID가 필요합니다.'}, status=400)
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_company_circuits/{circuit_id}"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.put(api_url, json=data)
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        else:
+            logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+            try:
+                error_data = response.json()
+                return JsonResponse({'success': False, 'error': error_data.get('detail', response.text)}, status=response.status_code)
+            except:
+                return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def delete_info_company_circuit(request):
+    """정보이용사 회선내역 삭제 (FastAPI 호출)"""
+    try:
+        data = json.loads(request.body)
+        circuit_id = data.get('id')
+        if not circuit_id:
+            return JsonResponse({'success': False, 'error': 'ID가 필요합니다.'}, status=400)
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_company_circuits/{circuit_id}"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.delete(api_url)
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        else:
+            logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+            try:
+                error_data = response.json()
+                return JsonResponse({'success': False, 'error': error_data.get('detail', response.text)}, status=response.status_code)
+            except:
+                return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
     except Exception as e:
         logger.error(f"Error calling FastAPI: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -971,4 +1174,69 @@ def delete_purchase_contract(request):
         return JsonResponse(response.json())
     except Exception as e:
         logger.error(f"회원사 매입내역 삭제 실패: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ==================== 회원사 이익내역 (Profit Summary) ====================
+
+def get_profit_summary(request):
+    """회원사 이익내역 조회 (FastAPI 호출)"""
+    try:
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/profit_summary"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.get(api_url)
+
+        if response.status_code == 200:
+            data = response.json()
+            logger.info(f"[API_RESPONSE] : {len(data.get('data', []))} items received")
+            return JsonResponse(data)
+        else:
+            logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+
+    except Exception as e:
+        logger.error(f"회원사 이익내역 조회 실패: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def get_profit_monthly(request):
+    """월별 이익 추이 조회 (FastAPI 호출)"""
+    try:
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/profit_monthly"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.get(api_url)
+
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        else:
+            logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+
+    except Exception as e:
+        logger.error(f"월별 이익 추이 조회 실패: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def download_profit_pdf(request):
+    """회원사 이익내역 보고서 PDF 다운로드 (FastAPI 호출)"""
+    try:
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/profit_report_pdf"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.get(api_url, stream=True)
+
+        if response.status_code == 200:
+            django_response = HttpResponse(
+                response.content,
+                content_type='application/pdf'
+            )
+            django_response['Content-Disposition'] = response.headers.get(
+                'Content-Disposition', 'attachment; filename=profit_report.pdf'
+            )
+            return django_response
+        else:
+            logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+
+    except Exception as e:
+        logger.error(f"이익내역 보고서 PDF 다운로드 실패: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)

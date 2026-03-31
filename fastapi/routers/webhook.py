@@ -4,6 +4,8 @@ Webhook 라우터 - 다양한 서비스로부터의 웹훅을 처리하고 Slack
 import json
 import re
 import logging
+import threading
+import time
 from typing import Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import JSONResponse
@@ -14,6 +16,33 @@ from utils.alarm_state import check_transition, get_alert_info
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/webhook", tags=["webhook"])
+
+
+# ── Zabbix 이벤트 중복 방지 캐시 ──
+# key: "event_id:event_value", value: 수신 timestamp
+_zabbix_sent_cache: Dict[str, float] = {}
+_zabbix_cache_lock = threading.Lock()
+ZABBIX_DEDUP_TTL = 600  # 동일 이벤트 무시 기간 (10분)
+
+
+def _zabbix_is_duplicate(event_id: str, event_value: str) -> bool:
+    """동일 event_id+event_value 조합이 TTL 내에 이미 처리되었으면 True"""
+    key = f"{event_id}:{event_value}"
+    now = time.time()
+
+    with _zabbix_cache_lock:
+        # 만료된 항목 정리 (100개 초과 시에만 수행하여 오버헤드 최소화)
+        if len(_zabbix_sent_cache) > 100:
+            expired = [k for k, t in _zabbix_sent_cache.items() if now - t > ZABBIX_DEDUP_TTL]
+            for k in expired:
+                del _zabbix_sent_cache[k]
+
+        prev_time = _zabbix_sent_cache.get(key)
+        if prev_time and now - prev_time < ZABBIX_DEDUP_TTL:
+            return True
+
+        _zabbix_sent_cache[key] = now
+        return False
 
 # 상수 정의
 SYSLOG_NORMAL_KEYWORDS = [
@@ -26,6 +55,45 @@ SYSLOG_ENDPOINT_MNEMONICS = ["IF_UP", "IF_DOWN", "IF_DUPLEX"]
 SYSLOG_NORMAL_FACILITIES = ["USER", "RADIUS"]
 
 ZABBIX_MUTE_KEYWORDS = ["memory"]
+
+# ── Plane 웹훅 설정 ──
+PLANE_STATUS_CHANNEL_MAP = {
+    "backlog": "network-업무-검토",
+    "unstarted": "network-업무-검토",
+    "started": "network-업무-진행",
+    "completed": "network-업무-완료",
+    # cancelled → 전송 안함
+}
+
+PLANE_PRIORITY_EMOJI = {
+    "urgent": ":rotating_light:",
+    "high": ":red_circle:",
+    "medium": ":large_orange_circle:",
+    "low": ":large_blue_circle:",
+    "none": ":white_circle:",
+}
+
+PLANE_ACTION_LABEL = {
+    "created": (":new:", "이슈 생성"),
+    "updated": (":arrows_counterclockwise:", "이슈 변경"),
+}
+
+PLANE_STATE_COLOR = {
+    "backlog": "#EAB308",
+    "unstarted": "#EAB308",
+    "started": "#3B82F6",
+    "completed": "#22C55E",
+}
+
+PLANE_PROJECT_NAMES = {
+    "31127685-bd13-4db3-a36e-2f2860e5b8d8": "네트워크 업무정리",
+    "7c905f2d-4b4c-444b-88f3-480a6edb4914": "회원관리시스템_프로젝트",
+}
+
+# 프로젝트별 채널 고정 (상태 무관하게 단일 채널로 전송, cancelled 포함 모두 전송)
+PLANE_PROJECT_CHANNEL_OVERRIDE = {
+    "7c905f2d-4b4c-444b-88f3-480a6edb4914": "network-시스템개발",
+}
 
 # 채널 매핑 설정
 CHANNEL_MAPPINGS = {
@@ -164,13 +232,18 @@ async def send_planka_webhook_to_slack(request: Request):
                 content={"result": "error", "detail": "메시지 생성 실패"}
             )
         
-        # Slack 메시지 전송
-        slack_client.send_message(
-            channel=channel,
-            text=f"Planka 이벤트: {event_type}",
-            attachments=[attachment]
-        )
-        
+        # Slack 메시지 전송 (백그라운드 스레드)
+        def _send_planka():
+            try:
+                slack_client.send_message(
+                    channel=channel,
+                    text=f"Planka 이벤트: {event_type}",
+                    attachments=[attachment]
+                )
+            except Exception as e:
+                logger.error(f"Planka Slack 전송 오류: {e}")
+        threading.Thread(target=_send_planka, daemon=True).start()
+
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"result": "success", "detail": "전송처리가 완료되었습니다."}
@@ -182,6 +255,191 @@ async def send_planka_webhook_to_slack(request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"result": "error", "detail": str(e)}
         )
+
+
+def _strip_html(html_str: str) -> str:
+    """HTML 태그를 제거하고 순수 텍스트만 반환"""
+    if not html_str:
+        return ''
+    text = re.sub(r'<br\s*/?>', '\n', html_str)
+    text = re.sub(r'</?(p|li|div|ol|ul)[^>]*>', '\n', text)
+    text = re.sub(r'<[^>]+>', '', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
+
+
+@router.post("/plane")
+async def send_plane_webhook_to_slack(request: Request):
+    """Plane 웹훅 처리 - 이슈/댓글 이벤트를 Slack으로 전송"""
+    try:
+        data = await request.json()
+        logger.info(f"Plane 웹훅 수신: event={data.get('event')}, action={data.get('action')}")
+        logger.info(f"Plane 웹훅 전체 데이터: {json.dumps(data, ensure_ascii=False, default=str)}")
+
+        event = data.get('event', '')
+        action = data.get('action', '')
+
+        # issue_comment 이벤트 처리
+        if event == 'issue_comment' and action in ('created', 'updated'):
+            return await _handle_plane_comment(data, action)
+
+        # issue 이벤트의 created/updated만 처리
+        if event != 'issue' or action not in ('created', 'updated'):
+            logger.info(f"Plane 웹훅 무시: event={event}, action={action}")
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={"result": "skipped", "detail": f"이벤트 미처리: {event}/{action}"}
+            )
+
+        issue = data.get('data', {})
+        activity = data.get('activity') or {}
+
+        # state 필드에서 상태 그룹 추출 (Plane은 state_detail이 아닌 state 사용)
+        state_info = issue.get('state') or {}
+        state_group = state_info.get('group', '')
+        project_id = issue.get('project', '')
+
+        # 프로젝트별 채널 오버라이드 (상태 무관하게 단일 채널)
+        channel = PLANE_PROJECT_CHANNEL_OVERRIDE.get(project_id)
+        if not channel:
+            # 기본: 상태 그룹별 채널 매핑 (cancelled은 전송 안함)
+            channel = PLANE_STATUS_CHANNEL_MAP.get(state_group)
+            if not channel:
+                logger.info(f"Plane 웹훅 채널 미매핑 (state_group={state_group}), 전송 안함")
+                return JSONResponse(
+                    status_code=status.HTTP_200_OK,
+                    content={"result": "skipped", "detail": f"미매핑 상태: {state_group}"}
+                )
+
+        # 이슈 정보 추출
+        issue_name = issue.get('name', '제목 없음')
+        project_name = PLANE_PROJECT_NAMES.get(project_id, '')
+        sequence_id = issue.get('sequence_id', '')
+        priority = issue.get('priority') or 'none'
+        description = (issue.get('description_stripped') or '').strip()
+        target_date = issue.get('target_date') or ''
+        start_date = issue.get('start_date') or ''
+        state_name = state_info.get('name', state_group)
+
+        # 작업자 (activity.actor에서 추출)
+        actor = activity.get('actor') or {}
+        actor_name = actor.get('display_name') or actor.get('first_name') or ''
+
+        # 이모지/라벨
+        action_emoji, action_label = PLANE_ACTION_LABEL.get(action, ('', action))
+        priority_emoji = PLANE_PRIORITY_EMOJI.get(priority, ':white_circle:')
+        color = PLANE_STATE_COLOR.get(state_group, '#439FE0')
+
+        # 타이틀 (프로젝트명 포함)
+        if project_name:
+            title = f"{action_emoji} [{project_name}] {action_label}"
+        else:
+            title = f"{action_emoji} {action_label}"
+
+        # 메시지 본문 구성
+        text_lines = []
+        text_lines.append(f"*{issue_name}*")
+        text_lines.append(f"상태: `{state_name}`  |  우선순위: {priority_emoji} `{priority}`")
+        if actor_name:
+            text_lines.append(f"작업자: *{actor_name}*")
+        if target_date:
+            date_str = f"마감일: `{target_date}`"
+            if start_date:
+                date_str = f"기간: `{start_date}` ~ `{target_date}`"
+            text_lines.append(date_str)
+        if description:
+            desc_preview = description[:200] + ('...' if len(description) > 200 else '')
+            text_lines.append(f"\n{desc_preview}")
+
+        attachment = {
+            "color": color,
+            "text": '\n'.join(text_lines),
+            "mrkdwn_in": ["text"]
+        }
+
+        # Slack 전송 (백그라운드 스레드)
+        def _send_plane():
+            try:
+                slack_client.send_message(
+                    channel=channel,
+                    text=f"{title}: {issue_name}",
+                    attachments=[attachment]
+                )
+                logger.info(f"Plane Slack 전송 완료: {issue_name} -> {channel}")
+            except Exception as e:
+                logger.error(f"Plane Slack 전송 오류: {e}")
+        threading.Thread(target=_send_plane, daemon=True).start()
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"result": "success", "detail": f"{channel}로 전송 완료"}
+        )
+
+    except Exception as e:
+        logger.error(f"Plane 웹훅 처리 오류: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"result": "error", "detail": str(e)}
+        )
+
+
+async def _handle_plane_comment(data: dict, action: str):
+    """Plane 이슈 댓글 이벤트 처리"""
+    comment = data.get('data', {})
+    activity = data.get('activity') or {}
+
+    project_id = comment.get('project', '')
+    issue_id = comment.get('issue', '')
+    comment_html = comment.get('comment_html', '')
+    comment_text = _strip_html(comment_html)
+
+    # 작성자
+    actor = activity.get('actor') or {}
+    actor_name = actor.get('display_name') or actor.get('first_name') or '알 수 없음'
+
+    # 채널 결정 (프로젝트 오버라이드 우선, 없으면 기본 채널)
+    channel = PLANE_PROJECT_CHANNEL_OVERRIDE.get(project_id)
+    if not channel:
+        channel = PLANE_STATUS_CHANNEL_MAP.get('started', 'network-업무-진행')
+
+    project_name = PLANE_PROJECT_NAMES.get(project_id, '')
+    action_label = "댓글 추가" if action == 'created' else "댓글 수정"
+
+    # 타이틀
+    if project_name:
+        title = f":speech_balloon: [{project_name}] {action_label}"
+    else:
+        title = f":speech_balloon: {action_label}"
+
+    # 본문 구성
+    text_lines = []
+    text_lines.append(f"작성자: *{actor_name}*")
+    if comment_text:
+        preview = comment_text[:300] + ('...' if len(comment_text) > 300 else '')
+        text_lines.append(f"\n{preview}")
+
+    attachment = {
+        "color": "#17A2B8",
+        "text": '\n'.join(text_lines),
+        "mrkdwn_in": ["text"]
+    }
+
+    def _send_comment():
+        try:
+            slack_client.send_message(
+                channel=channel,
+                text=f"{title}",
+                attachments=[attachment]
+            )
+            logger.info(f"Plane 댓글 Slack 전송 완료: {actor_name} -> {channel}")
+        except Exception as e:
+            logger.error(f"Plane 댓글 Slack 전송 오류: {e}")
+    threading.Thread(target=_send_comment, daemon=True).start()
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "success", "detail": f"댓글 {channel}로 전송 완료"}
+    )
 
 
 @router.post("/syslog")
@@ -235,9 +493,9 @@ async def send_syslog_webhook_to_slack(request: Request):
 
         
         
-        # 메시지 전송
-        _send_syslog_to_slack(channel, data)
-        
+        # 메시지 전송 (백그라운드 스레드로 처리하여 이벤트 루프 블로킹 방지)
+        threading.Thread(target=_send_syslog_to_slack, args=(channel, data), daemon=True).start()
+
         return JSONResponse(
             content={
                 "result": True,
@@ -260,17 +518,102 @@ async def send_syslog_webhook_to_slack(request: Request):
 
 @router.post("/grafana")
 async def send_grafana_webhook_to_slack(request: Request):
-    """Grafana 웹훅 처리"""
+    """Grafana 웹훅 처리 - 알림을 Slack으로 전송"""
     try:
         data = await request.json()
-        logger.info(f"Grafana 웹훅 수신: {data}")
-        
-        # TODO: Grafana 알림 처리 로직 구현
+        logger.info(f"Grafana 웹훅 수신: status={data.get('status')}, title={data.get('title', '')[:80]}")
+
+        alerts = data.get('alerts', [])
+        if not alerts:
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={"result": "skipped", "detail": "알림 없음"}
+            )
+
+        channel = "network-alert-critical"
+        sent_count = 0
+
+        for alert in alerts:
+            alert_status = alert.get('status', 'firing')
+            labels = alert.get('labels', {})
+            annotations = alert.get('annotations', {})
+            values = alert.get('values', {})
+
+            alertname = labels.get('alertname', 'Unknown Alert')
+            company = labels.get('company', '')
+            host = labels.get('host', '')
+            item = labels.get('item', '')
+            severity = labels.get('severity', 'warning')
+            alert_type = labels.get('alert_type', '')
+            folder = labels.get('grafana_folder', '')
+            summary = annotations.get('summary', '')
+            description = annotations.get('description', '')
+            starts_at = alert.get('startsAt', '')
+
+            # 시간 포맷 (ISO → 읽기 쉬운 형식)
+            time_str = starts_at[:19].replace('T', ' ') if starts_at else ''
+
+            # firing/resolved 구분
+            if alert_status == 'resolved':
+                emoji = ":white_check_mark:"
+                status_label = "복구"
+                color = "#22C55E"
+                ends_at = alert.get('endsAt', '')
+                end_time_str = ends_at[:19].replace('T', ' ') if ends_at and not ends_at.startswith('0001') else ''
+            else:
+                emoji = ":rotating_light:"
+                status_label = "장애"
+                color = "#EF4444"
+                end_time_str = ''
+
+            # 측정값 포맷 (ms 단위)
+            def _fmt_val(k, v):
+                try:
+                    return f"{k}={round(float(v), 3)}ms"
+                except (ValueError, TypeError):
+                    return f"{k}={v}"
+            values_str = ', '.join(_fmt_val(k, v) for k, v in values.items()) if values else ''
+
+            title = f"{emoji} [{status_label}] {alertname}"
+
+            # 메시지 필드 구성
+            fields = [
+                {"title": "알림명", "value": f"*{alertname}*", "short": False},
+            ]
+            if company:
+                fields.append({"title": "회원사", "value": f"`{company}`", "short": True})
+            if host:
+                fields.append({"title": "호스트", "value": f"`{host}`", "short": True})
+            if item:
+                fields.append({"title": "항목", "value": f"`{item}`", "short": False})
+            if severity:
+                fields.append({"title": "심각도", "value": f"`{severity}`", "short": True})
+            if folder:
+                fields.append({"title": "폴더", "value": folder, "short": True})
+            if time_str:
+                fields.append({"title": "발생시간", "value": f"`{time_str}`", "short": True})
+            if end_time_str:
+                fields.append({"title": "복구시간", "value": f"`{end_time_str}`", "short": True})
+            if values_str:
+                fields.append({"title": "측정값", "value": f"`{values_str}`", "short": False})
+
+            message_text = description or summary or ''
+
+            def _send_grafana(ch=channel, t=title, msg=message_text, c=color, f=fields):
+                try:
+                    send_alert(channel=ch, title=t, message=msg, color=c, fields=f)
+                    logger.info(f"Grafana Slack 전송 완료: {t[:60]} -> {ch}")
+                except Exception as e:
+                    logger.error(f"Grafana Slack 전송 오류: {e}")
+
+            threading.Thread(target=_send_grafana, daemon=True).start()
+            sent_count += 1
+
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"result": "success", "detail": "전송처리가 완료되었습니다."}
+            content={"result": "success", "detail": f"{sent_count}건 전송 완료"}
         )
-        
+
     except Exception as e:
         logger.error(f"Grafana 웹훅 처리 오류: {e}")
         return JSONResponse(
@@ -298,11 +641,11 @@ async def send_zabbix_webhook_to_slack(request: Request):
             )
         
         logger.info(f"Zabbix 웹훅 수신: {data}")
-        
+
         # 필수 필드 검증
         required_fields = ['hostname', 'event_name', 'event_value', 'severity', 'host_group', 'event_date', 'event_time', 'opdata']
         missing_fields = [field for field in required_fields if field not in data or data[field] is None]
-        
+
         if missing_fields:
             logger.warning(f"필수 필드 누락: {missing_fields}")
             return JSONResponse(
@@ -313,17 +656,34 @@ async def send_zabbix_webhook_to_slack(request: Request):
                     "detail": f"Required fields missing: {missing_fields}"
                 }
             )
-        
+
+        # 중복 이벤트 체크 (event_id + event_value 기반)
+        event_id = data.get('event_id', '')
+        event_value = data.get('event_value', '')
+
+        if event_id and _zabbix_is_duplicate(event_id, event_value):
+            logger.info(f"Zabbix 중복 이벤트 스킵: event_id={event_id}, event_value={event_value}")
+            return JSONResponse(
+                content={
+                    "result": True,
+                    "response": {
+                        "code": 200,
+                        "message": "[OK]duplicate event skipped."
+                    }
+                },
+                headers={"Content-Type": "application/json; charset=utf-8"}
+            )
+
         # 채널 결정
         channel = "network-alert-critical"
-        
+
         # 회원사 스위치 구분
         hostname = data.get('hostname', '')
         event_name = data.get('event_name', '')
         severity = data.get('severity', '')
 
         logger.info(f"Zabbix 웹훅 수신: {hostname} - {event_name} - {severity}")
-        
+
         if any(keyword in hostname for keyword in ["mpr", "ord", "com"]):
             if bool(re.search(r'\(\s*\)', event_name)):
                 channel = "network-alert-endpoint"
@@ -335,10 +695,10 @@ async def send_zabbix_webhook_to_slack(request: Request):
         # severity가 Informational이면 network-alert-normal 채널로 전송
         if severity == "Information":
             channel = "network-alert-normal"
-        
-        # 메시지 구성 및 전송
+
+        # 메시지 구성 및 전송 (백그라운드 스레드로 처리)
         if not any(keyword in event_name for keyword in ZABBIX_MUTE_KEYWORDS):
-            send_zabbix_message(channel, data)
+            threading.Thread(target=send_zabbix_message, args=(channel, data), daemon=True).start()
         
         return JSONResponse(
             content={
@@ -623,14 +983,8 @@ async def send_batch_multicast_alert(request: Request):
             {"title": "RPF_NBR", "value": f"`{data['rpf_nbr']}`", "short": True}
         ]
         
-        # Slack 메시지 전송
-        send_alert(
-            channel=channel,
-            title=title,
-            message="",
-            color="danger",
-            fields=fields
-        )
+        # Slack 메시지 전송 (백그라운드 스레드)
+        threading.Thread(target=send_alert, kwargs={"channel": channel, "title": title, "message": "", "color": "danger", "fields": fields}, daemon=True).start()
 
         logger.info(f"배치 멀티캐스트 알림 전송 완료: {data['member_name']} -> {channel}")
         
@@ -677,12 +1031,8 @@ async def send_monitor_webhook_to_slack(net_gubn: str, request: Request):
         # 메시지 전송
         title = f"{market_data['emoji']} [{market_data['name']}-{market_data['time_range']}] {'주문망' if net_gubn == 'ord' else '시세망'} 트래픽"
         
-        send_structured(
-            channel="network-monitor",
-            title=title,
-            sections=sections
-        )
-        
+        threading.Thread(target=send_structured, kwargs={"channel": "network-monitor", "title": title, "sections": sections}, daemon=True).start()
+
         return {"status": "success"}
         
     except Exception as e:
@@ -762,7 +1112,7 @@ async def check_multicast_alarm_state(request: Request):
                     {"title": "발생시간", "value": f"*{alert_time}*", "short": True},
                 ]
 
-                send_alert(channel=channel, title=title, message="", color="danger", fields=fields)
+                threading.Thread(target=send_alert, kwargs={"channel": channel, "title": title, "message": "", "color": "danger", "fields": fields}, daemon=True).start()
                 alerts_sent += 1
                 logger.info(f"[ALARM SENT] 장애 알람: {market_gubn}:{device_name}")
 
@@ -780,7 +1130,7 @@ async def check_multicast_alarm_state(request: Request):
                     {"title": "복구시간", "value": f"*{recovery_time}*", "short": True},
                 ]
 
-                send_alert(channel=channel, title=title, message="", color="good", fields=fields)
+                threading.Thread(target=send_alert, kwargs={"channel": channel, "title": title, "message": "", "color": "good", "fields": fields}, daemon=True).start()
                 recoveries_sent += 1
                 logger.info(f"[ALARM SENT] 복구 알람: {market_gubn}:{device_name}")
 

@@ -4,30 +4,28 @@
 })((function () {
     'use strict';
 
-    var circuitsTable = null;
+    var infoCompanyCircuitsTable = null;
 
     // 요약 통계 업데이트
     function updateSummary(data) {
         var members = {};
-        var ktc = 0, lgu = 0, skb = 0, pr = 0, dr = 0, ts = 0, mg = 0;
-        var ord = 0, mpr = 0, expiring = 0;
-        var dc1 = 0, dc2 = 0, dc3 = 0, dcDr = 0;
+        var lgu = 0, skb = 0, ktc = 0, pr = 0, dr = 0, ts = 0;
+        var mkd = 0, mgt = 0, expiring = 0;
+        var dc1 = 0, dc2 = 0, dcDr = 0;
         var today = new Date();
         var d90 = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
         data.forEach(function(r) {
             if (r.member_code) members[r.member_code] = true;
-            if (r.provider === 'KTC') ktc++;
-            else if (r.provider === 'LGU') lgu++;
+            if (r.provider === 'LGU') lgu++;
             else if (r.provider === 'SKB') skb++;
+            else if (r.provider === 'KTC') ktc++;
             if (r.env === 'PR') pr++;
             else if (r.env === 'DR') dr++;
             else if (r.env === 'TS') ts++;
-            else if (r.env === 'MG') mg++;
-            if (r.usage === 'ORD') ord++;
-            else if (r.usage === 'MPR') mpr++;
+            if (r.usage === 'MKD') mkd++;
+            else if (r.usage === 'MGT') mgt++;
             if (r.datacenter_code === 'DC1') dc1++;
             else if (r.datacenter_code === 'DC2') dc2++;
-            else if (r.datacenter_code === 'DC3') dc3++;
             else if (r.datacenter_code === 'DR') dcDr++;
             if (r.expiry_date) {
                 var exp = new Date(r.expiry_date);
@@ -36,11 +34,11 @@
         });
         $('#stat_total').text(data.length.toLocaleString());
         $('#stat_members').text(Object.keys(members).length.toLocaleString());
-        $('#stat_kt').text(ktc); $('#stat_lgu').text(lgu); $('#stat_skb').text(skb);
-        $('#stat_pr').text(pr); $('#stat_dr').text(dr); $('#stat_ts').text(ts); $('#stat_mg').text(mg);
-        $('#stat_ord').text(ord); $('#stat_mpr').text(mpr);
+        $('#stat_lgu').text(lgu); $('#stat_skb').text(skb); $('#stat_ktc').text(ktc);
+        $('#stat_pr').text(pr); $('#stat_dr').text(dr); $('#stat_ts').text(ts);
+        $('#stat_mkd').text(mkd); $('#stat_mgt').text(mgt);
         $('#stat_expiring').text(expiring);
-        $('#stat_dc1').text(dc1); $('#stat_dc2').text(dc2); $('#stat_dc3').text(dc3); $('#stat_dc_dr').text(dcDr);
+        $('#stat_dc1').text(dc1); $('#stat_dc2').text(dc2); $('#stat_dc_dr').text(dcDr);
 
         // 최근 수정 내역 렌더링
         renderRecentChanges(data);
@@ -147,16 +145,16 @@
     }
 
 
-    // sise_products 목록 로드 (MPR용 캐시)
-    var mprProductOptions = '<option value="">선택</option>';
+    // sise_products 목록 로드 (MKD용 캐시)
+    var mkdProductOptions = '<option value="">선택</option>';
     function loadProductOptions() {
         fetch('/sise_products/get_products')
             .then(function(res) { return res.json(); })
             .then(function(result) {
                 if (result.success && result.data) {
-                    mprProductOptions = '<option value="">선택</option>';
+                    mkdProductOptions = '<option value="">선택</option>';
                     result.data.forEach(function(p) {
-                        mprProductOptions += '<option value="' + p.product_name + '">' + p.product_name + '</option>';
+                        mkdProductOptions += '<option value="' + p.product_name + '">' + p.product_name + '</option>';
                     });
                 }
             })
@@ -166,7 +164,7 @@
     var allFeeData = [];
 
     function loadFeeCodeOptions() {
-        fetch('/fee_schedule/get_fee_schedule')
+        fetch('/info_fee_schedule/get_info_fee_schedule')
             .then(function(res) { return res.json(); })
             .then(function(result) {
                 if (result.success && result.data) {
@@ -192,40 +190,23 @@
     // 용도에 따른 상품 옵션 변경
     function updateProductByUsage(usage, productSelect) {
         var options = '<option value="">선택</option>';
-        if (usage === 'MPR') {
-            options = mprProductOptions;
-        } else if (usage === 'ORD') {
-            var bandwidths = ['50M', '100M', '150M', '200M', '250M', '300M', '350M', '400M', '450M'];
-            bandwidths.forEach(function(bw) {
-                options += '<option value="' + bw + '">' + bw + '</option>';
-            });
+        if (usage === 'MKD') {
+            options = mkdProductOptions;
         } else if (usage === 'MGT') {
             options += '<option value="MGT">MGT</option>';
-        } else if (usage === 'PB_ORD_PRD') {
-            options = '<option value="50M" selected>50M</option>';
-        } else if (usage === 'PB_ORD_DEV') {
-            options = '<option value="공유(1G)" selected>공유(1G)</option>';
         }
         $(productSelect).html(options);
     }
 
     var allBandwidthOptions = '<option value="">선택</option>' +
-        '<option value="10M">10M</option><option value="50M">50M</option>' +
-        '<option value="100M">100M</option><option value="150M">150M</option>' +
-        '<option value="200M">200M</option><option value="250M">250M</option>' +
-        '<option value="300M">300M</option><option value="350M">350M</option>' +
-        '<option value="400M">400M</option><option value="450M">450M</option>' +
-        '<option value="공유(1G)">공유(1G)</option>';
+        '<option value="1M">1M</option><option value="20M">20M</option>' +
+        '<option value="100M">100M</option><option value="110M">110M</option>';
 
     function updateBandwidthByUsage(usage, bwSelect) {
-        if (usage === 'MPR') {
-            $(bwSelect).html('<option value="100M">100M</option>').val('100M');
+        if (usage === 'MKD') {
+            $(bwSelect).html(allBandwidthOptions);
         } else if (usage === 'MGT') {
-            $(bwSelect).html('<option value="10M">10M</option>').val('10M');
-        } else if (usage === 'PB_ORD_PRD') {
-            $(bwSelect).html('<option value="50M">50M</option>').val('50M');
-        } else if (usage === 'PB_ORD_DEV') {
-            $(bwSelect).html('<option value="공유(1G)">공유(1G)</option>').val('공유(1G)');
+            $(bwSelect).html('<option value="1M">1M</option>').val('1M');
         } else {
             var current = $(bwSelect).val();
             $(bwSelect).html(allBandwidthOptions);
@@ -235,14 +216,12 @@
 
     // 용도에 따른 추가회선 체크박스 활성/비활성화
     function updateAdditionalCircuitByUsage(usage, checkboxId) {
-        var isPB = (usage === 'PB_ORD_PRD' || usage === 'PB_ORD_DEV');
         var $cb = $(checkboxId);
-        $cb.prop('disabled', isPB);
-        if (isPB) $cb.prop('checked', false);
+        $cb.prop('disabled', false);
     }
 
     var initTable = function() {
-        circuitsTable = $('#circuitsTable').DataTable({
+        infoCompanyCircuitsTable = $('#infoCompanyCircuitsTable').DataTable({
             responsive: true,
             paging: true,
             pageLength: 100,
@@ -273,7 +252,7 @@
                     extend: 'excel',
                     text: '<i class="fa-solid fa-file-excel me-2"></i>Excel',
                     className: 'btn btn-success btn-sm',
-                    title: '회선내역_' + new Date().toISOString().slice(0,10),
+                    title: '정보이용사_회선내역_' + new Date().toISOString().slice(0,10),
                     exportOptions: {
                         columns: ':visible',
                         modifier: { page: 'all' }
@@ -283,7 +262,7 @@
                     extend: 'csv',
                     text: '<i class="fa-solid fa-file-csv me-2"></i>CSV',
                     className: 'btn btn-info btn-sm',
-                    title: '회선내역_' + new Date().toISOString().slice(0,10),
+                    title: '정보이용사_회선내역_' + new Date().toISOString().slice(0,10),
                     exportOptions: {
                         columns: ':visible',
                         modifier: { page: 'all' }
@@ -300,7 +279,7 @@
                 }
             ],
             ajax: {
-                url: '/circuits/get_circuits',
+                url: '/info_company_circuits/get_info_company_circuits',
                 type: 'GET',
                 dataSrc: function(json) {
                     if (json.success) {
@@ -318,13 +297,12 @@
             },
             columns: [
                 { data: 'member_code' },
-                { data: 'member_number' },
                 { data: 'company_name' },
                 { data: 'datacenter_code' },
                 { data: 'summary_address' },
+                { data: 'gubn' },
                 { data: 'provider' },
                 { data: 'circuit_id' },
-                { data: 'nni_id' },
                 { data: 'env' },
                 { data: 'usage' },
                 { data: 'product' },
@@ -332,8 +310,6 @@
                 { data: 'additional_circuit' },
                 { data: 'phase' },
                 { data: 'fee_price' },
-                { data: 'cot_device' },
-                { data: 'rt_device' },
                 { data: 'contract_date' },
                 { data: 'expiry_date' },
                 { data: 'contract_period' },
@@ -344,42 +320,51 @@
                 {
                     targets: 0, // 회원사코드
                     width: '4%',
-                    className: 'text-center py-2 align-middle',
+                    className: 'text-center py-2 align-middle fw-semibold',
                     render: function(data) {
                         if (!data) return '-';
                         return '<span class="badge badge-phoenix badge-phoenix-primary">' + data + '</span>';
                     }
                 },
                 {
-                    targets: 1, // 회원사넘버
-                    width: '3%',
-                    className: 'text-center py-2 align-middle',
-                    render: function(data) {
-                        if (!data && data !== 0) return '-';
-                        return '<span class="badge badge-phoenix badge-phoenix-info">' + data + '</span>';
-                    }
-                },
-                {
-                    targets: 2, // 회사명
-                    width: '5%',
+                    targets: 1, // 회사명
+                    width: '6%',
                     className: 'text-center py-2 align-middle fw-semibold'
                 },
                 {
-                    targets: 3, // DC코드
+                    targets: 2, // DC코드
                     width: '3%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data) return '-';
-                        return '<span class="badge badge-phoenix badge-phoenix-warning">' + data + '</span>';
+                        var badgeClass = 'badge-phoenix-secondary';
+                        if (data === 'DC1') badgeClass = 'badge-phoenix-primary';
+                        else if (data === 'DC2') badgeClass = 'badge-phoenix-info';
+                        else if (data === 'DR') badgeClass = 'badge-phoenix-warning';
+                        return '<span class="badge badge-phoenix ' + badgeClass + '">' + data + '</span>';
                     }
                 },
                 {
-                    targets: 4, // 요약주소
-                    width: '6%',
-                    className: 'text-start py-2 align-middle',
+                    targets: 3, // 요약주소
+                    width: '8%',
+                    className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data) return '-';
                         return '<span title="' + data + '">' + data + '</span>';
+                    }
+                },
+                {
+                    targets: 4, // 구분
+                    width: '3%',
+                    className: 'text-center py-2 align-middle',
+                    render: function(data) {
+                        if (!data) return '-';
+                        var badgeClass = 'badge-phoenix-secondary';
+                        if (data === '메인') badgeClass = 'badge-phoenix-primary';
+                        else if (data === '백업') badgeClass = 'badge-phoenix-success';
+                        else if (data === '테스트') badgeClass = 'badge-phoenix-warning';
+                        else if (data === 'DR') badgeClass = 'badge-phoenix-danger';
+                        return '<span class="badge badge-phoenix ' + badgeClass + '">' + data + '</span>';
                     }
                 },
                 {
@@ -401,56 +386,47 @@
                     }
                 },
                 {
-                    targets: 7, // NNI ID
-                    width: '5%',
-                    className: 'text-center py-2 align-middle',
-                    render: function(data) {
-                        if (!data) return '-';
-                        return '<span title="' + data + '">' + data + '</span>';
-                    }
-                },
-                {
-                    targets: 8, // 환경
+                    targets: 7, // 환경
                     width: '3%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data) return '-';
                         var badgeClass = 'badge-phoenix-secondary';
                         if (data === 'PR') badgeClass = 'badge-phoenix-success';
-                        else if (data === 'TS') badgeClass = 'badge-phoenix-info';
                         else if (data === 'DR') badgeClass = 'badge-phoenix-warning';
+                        else if (data === 'TS') badgeClass = 'badge-phoenix-info';
                         return '<span class="badge badge-phoenix ' + badgeClass + '">' + data + '</span>';
                     }
                 },
                 {
-                    targets: 9, // 용도
+                    targets: 8, // 용도
                     width: '3%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) { return data || '-'; }
                 },
                 {
-                    targets: 10, // 상품
+                    targets: 9, // 상품
                     width: '5%',
-                    className: 'text-center py-2 align-middle fw-semibold',
+                    className: 'text-center py-2 align-middle',
                     render: function(data) { return data || '-'; }
                 },
                 {
-                    targets: 11, // 대역폭
+                    targets: 10, // 대역폭
                     width: '3%',
                     className: 'text-center py-2 align-middle fw-semibold',
                     render: function(data) { return data || '-'; }
                 },
                 {
-                    targets: 12, // 추가회선
+                    targets: 11, // 추가회선
                     width: '3%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
-                        if (data === true) return '<span class="badge badge-phoenix badge-phoenix-info">추가</span>';
-                        return '';
+                        if (data === true) return '<span class="badge badge-phoenix badge-phoenix-info">Y</span>';
+                        return '<span class="text-muted">N</span>';
                     }
                 },
                 {
-                    targets: 13, // 가입 Phase
+                    targets: 12, // 가입 Phase
                     width: '3%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
@@ -461,7 +437,7 @@
                     }
                 },
                 {
-                    targets: 14, // 요금
+                    targets: 13, // 요금
                     width: '4%',
                     className: 'text-end py-2 align-middle fw-semibold',
                     render: function(data) {
@@ -470,51 +446,40 @@
                     }
                 },
                 {
-                    targets: 15, // COT장비
-                    visible: false,
-                    width: '6%',
-                    className: 'text-center py-2 align-middle',
-                    render: function(data) {
-                        if (!data) return '-';
-                        return '<span title="' + data + '">' + data + '</span>';
-                    }
-                },
-                {
-                    targets: 16, // RT장비
-                    visible: false,
-                    width: '6%',
-                    className: 'text-center py-2 align-middle',
-                    render: function(data) {
-                        if (!data) return '-';
-                        return '<span title="' + data + '">' + data + '</span>';
-                    }
-                },
-                {
-                    targets: 17, // 계약일
+                    targets: 14, // 계약일
                     width: '5%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) { return data || '-'; }
                 },
                 {
-                    targets: 18, // 만료일
+                    targets: 15, // 만료일
                     width: '5%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) { return data || '-'; }
                 },
                 {
-                    targets: 19, // 약정기간
+                    targets: 16, // 약정기간
                     width: '3%',
                     className: 'text-center py-2 align-middle',
-                    render: function(data) { return data || '-'; }
+                    render: function(data) {
+                        if (!data && data !== 0) return '-';
+                        return data + '개월';
+                    }
                 },
                 {
-                    targets: 20, // 문서번호
+                    targets: 17, // 문서번호
                     width: '6%',
                     className: 'text-center py-2 align-middle',
-                    render: function(data) { return data || '-'; }
+                    render: function(data) {
+                        if (!data) return '-';
+                        if (data.length > 20) {
+                            return '<span title="' + data + '">' + data.substring(0, 20) + '...</span>';
+                        }
+                        return data;
+                    }
                 },
                 {
-                    targets: 21, // 비고
+                    targets: 18, // 비고
                     width: '16%',
                     className: 'text-start py-2 align-middle',
                     render: function(data) {
@@ -536,17 +501,17 @@
         });
 
         // 행 클릭 커서
-        $('#circuitsTable tbody').css('cursor', 'pointer');
+        $('#infoCompanyCircuitsTable tbody').css('cursor', 'pointer');
 
-        // tfoot의 각 열에 검색 입력 필드 추가 (contracts.js 패턴)
-        $('#circuitsTable tfoot th').each(function(i) {
+        // tfoot의 각 열에 검색 입력 필드 추가
+        $('#infoCompanyCircuitsTable tfoot th').each(function(i) {
             var title = $(this).text();
             $(this).css({'font-size': '0.7rem', 'white-space': 'nowrap'});
             $(this).html('<input type="text" class="form-control form-control-sm" placeholder="' + title + ' 검색" style="font-size:0.65rem; padding:2px 4px;" />');
         });
 
         // 개별 열 검색 기능 적용
-        circuitsTable.columns().every(function() {
+        infoCompanyCircuitsTable.columns().every(function() {
             var that = this;
             $('input', this.footer()).on('keyup change', function() {
                 if (that.search() !== this.value) {
@@ -556,17 +521,17 @@
         });
 
         // 행 클릭 시 상세보기 팝업
-        $('#circuitsTable tbody').on('click', 'tr', function() {
-            var data = circuitsTable.row(this).data();
+        $('#infoCompanyCircuitsTable tbody').on('click', 'tr', function() {
+            var data = infoCompanyCircuitsTable.row(this).data();
             if (!data) return;
             showDetailModal(data);
         });
     };
 
     window.resetFilters = function() {
-        $('#circuitsTable tfoot input').val('');
-        if (circuitsTable) {
-            circuitsTable.columns().search('').draw();
+        $('#infoCompanyCircuitsTable tfoot input').val('');
+        if (infoCompanyCircuitsTable) {
+            infoCompanyCircuitsTable.columns().search('').draw();
         }
     };
 
@@ -578,8 +543,8 @@
         $('body').append(spinner);
 
         resetFilters();
-        if (circuitsTable) {
-            circuitsTable.ajax.reload(function() {
+        if (infoCompanyCircuitsTable) {
+            infoCompanyCircuitsTable.ajax.reload(function() {
                 spinner.remove();
             }, false);
         } else {
@@ -598,16 +563,14 @@
         var data = {
             member_code: $('#create_member_code').val().trim(),
             datacenter_code: $('input[name="create_datacenter_code"]:checked').val() || null,
+            gubn: $('#create_gubn').val() || null,
             provider: $('input[name="create_provider"]:checked').val() || null,
             circuit_id: $('#create_circuit_id').val().trim() || null,
-            nni_id: $('#create_nni_id').val().trim() || null,
             env: $('input[name="create_env"]:checked').val() || null,
             usage: $('#create_usage').val().trim() || null,
             product: $('#create_product').val().trim() || null,
             bandwidth: $('#create_bandwidth').val().trim() || null,
             additional_circuit: $('#create_additional_circuit').is(':checked'),
-            cot_device: $('#create_cot_device').val().trim() || null,
-            rt_device: $('#create_rt_device').val().trim() || null,
             phase: parseInt($('#create_phase').val()) || null,
             fee_code: $('#create_fee_code').val() || null,
             contract_date: $('#create_contract_date').val() || null,
@@ -622,7 +585,7 @@
             return;
         }
 
-        fetch('/circuits/create_circuit', {
+        fetch('/info_company_circuits/create_info_company_circuit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -635,7 +598,6 @@
                 if (keepOpen) {
                     // 회선별 고유값만 초기화 (회원사/DC/통신사/환경 등 공통값은 유지)
                     $('#create_circuit_id').val('');
-                    $('#create_nni_id').val('');
                     $('#create_comments').val('');
                 } else {
                     bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
@@ -658,11 +620,10 @@
         $('#detail_id').val(circuit.id);
 
         var fields = [
-            'member_code', 'member_number', 'company_name', 'datacenter_code',
-            'summary_address', 'provider', 'circuit_id', 'nni_id',
+            'member_code', 'company_name', 'datacenter_code', 'summary_address', 'gubn',
+            'provider', 'circuit_id',
             'env', 'usage', 'product', 'bandwidth',
-            'cot_device', 'rt_device', 'lldp_cot_device', 'lldp_port',
-            'lldp_rt_device', 'lldp_rt_port', 'contract_date', 'expiry_date',
+            'contract_date', 'expiry_date',
             'contract_period', 'report_number', 'comments'
         ];
         fields.forEach(function(f) {
@@ -683,10 +644,11 @@
 
         // 요약 배지
         var badges = '';
-        var usageColors = { 'ORD': ['#059669','#f0fdf4'], 'MPR': ['#2563eb','#eff6ff'], 'MGT': ['#7c3aed','#f5f3ff'] };
+        var usageColors = { 'MKD': ['#2563eb','#eff6ff'], 'MGT': ['#7c3aed','#f5f3ff'] };
         var uc = usageColors[circuit.usage] || ['#d97706','#fffbeb'];
         if (circuit.usage) badges += makeBadge(circuit.usage, uc[0], uc[1]);
         if (circuit.env) badges += makeBadge(circuit.env, '#0369a1', '#f0f9ff');
+        if (circuit.gubn) badges += makeBadge(circuit.gubn, '#7c3aed', '#f5f3ff');
         if (phase === 1 || phase === 2) badges += makeBadge('Phase ' + phase, '#6d28d9', '#f5f3ff');
         if (circuit.provider) badges += makeBadge(circuit.provider, '#334155', '#f1f5f9');
         if (circuit.bandwidth) badges += makeBadge(circuit.bandwidth, '#0891b2', '#ecfeff');
@@ -701,7 +663,7 @@
 
     window.editFromDetail = function() {
         var id = parseInt($('#detail_id').val());
-        var rowData = circuitsTable.rows().data().toArray();
+        var rowData = infoCompanyCircuitsTable.rows().data().toArray();
         var circuit = rowData.find(function(item) { return item.id === id; });
         if (!circuit) return;
 
@@ -711,10 +673,10 @@
         $('#edit_member_code').val(circuit.member_code);
         $('input[name="edit_datacenter_code"]').prop('checked', false);
         if (circuit.datacenter_code) $('input[name="edit_datacenter_code"][value="' + circuit.datacenter_code + '"]').prop('checked', true);
+        $('#edit_gubn').val(circuit.gubn || '');
         $('input[name="edit_provider"]').prop('checked', false);
         if (circuit.provider) $('input[name="edit_provider"][value="' + circuit.provider + '"]').prop('checked', true);
         $('#edit_circuit_id').val(circuit.circuit_id);
-        $('#edit_nni_id').val(circuit.nni_id);
         $('input[name="edit_env"]').prop('checked', false);
         if (circuit.env) $('input[name="edit_env"][value="' + circuit.env + '"]').prop('checked', true);
         $('#edit_usage').val(circuit.usage);
@@ -725,8 +687,6 @@
         $('#edit_bandwidth').val(circuit.bandwidth);
         $('#edit_additional_circuit').prop('checked', circuit.additional_circuit);
         updateAdditionalCircuitByUsage(circuit.usage, '#edit_additional_circuit');
-        $('#edit_cot_device').val(circuit.cot_device);
-        $('#edit_rt_device').val(circuit.rt_device);
         $('#edit_phase').val(circuit.phase);
         filterFeeCodeByUsage(circuit.usage || '', '#edit_fee_code');
         $('#edit_fee_code').val(circuit.fee_code || '');
@@ -745,7 +705,7 @@
 
     window.deleteFromDetail = function() {
         var id = parseInt($('#detail_id').val());
-        var rowData = circuitsTable.rows().data().toArray();
+        var rowData = infoCompanyCircuitsTable.rows().data().toArray();
         var circuit = rowData.find(function(item) { return item.id === id; });
         if (!circuit) return;
 
@@ -754,7 +714,7 @@
             return;
         }
 
-        fetch('/circuits/delete_circuit', {
+        fetch('/info_company_circuits/delete_info_company_circuit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id })
@@ -780,16 +740,14 @@
             id: parseInt($('#edit_id').val()),
             member_code: $('#edit_member_code').val().trim(),
             datacenter_code: $('input[name="edit_datacenter_code"]:checked').val() || null,
+            gubn: $('#edit_gubn').val() || null,
             provider: $('input[name="edit_provider"]:checked').val() || null,
             circuit_id: $('#edit_circuit_id').val().trim() || null,
-            nni_id: $('#edit_nni_id').val().trim() || null,
             env: $('input[name="edit_env"]:checked').val() || null,
             usage: $('#edit_usage').val().trim() || null,
             product: $('#edit_product').val().trim() || null,
             bandwidth: $('#edit_bandwidth').val().trim() || null,
             additional_circuit: $('#edit_additional_circuit').is(':checked'),
-            cot_device: $('#edit_cot_device').val().trim() || null,
-            rt_device: $('#edit_rt_device').val().trim() || null,
             phase: parseInt($('#edit_phase').val()) || null,
             fee_code: $('#edit_fee_code').val() || null,
             contract_date: $('#edit_contract_date').val() || null,
@@ -804,7 +762,7 @@
             return;
         }
 
-        fetch('/circuits/update_circuit', {
+        fetch('/info_company_circuits/update_info_company_circuit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -873,387 +831,6 @@
             $(toastEl).remove();
         });
     }
-
-    // 회선 현황 분석 모달
-    window.showAnalysisModal = function() {
-        var data = circuitsTable.rows().data().toArray();
-        if (!data.length) { showAlert('데이터가 없습니다.', 'warning'); return; }
-
-        // 회원사별 집계
-        var members = {};
-        var productSet = {};
-        data.forEach(function(r) {
-            var key = r.member_code || '-';
-            if (!members[key]) {
-                members[key] = { company_name: r.company_name || '-', dc: {}, usage: {}, product: {}, total: 0 };
-            }
-            var m = members[key];
-            m.total++;
-            var dc = r.datacenter_code || '-';
-            m.dc[dc] = (m.dc[dc] || 0) + 1;
-            var u = r.usage || '-';
-            m.usage[u] = (m.usage[u] || 0) + 1;
-            var p = r.product || '-';
-            m.product[p] = (m.product[p] || 0) + 1;
-            productSet[p] = true;
-        });
-
-        var memberKeys = Object.keys(members).sort(function(a, b) {
-            var na = members[a].total, nb = members[b].total;
-            return nb - na;
-        });
-        var productOrder = ['NXTA-10', 'NXTA-05', 'NXTA-03', 'NXTB-10', 'NXTB-05', 'NXTB-03'];
-        var products = productOrder.filter(function(p) { return productSet[p]; });
-        Object.keys(productSet).forEach(function(p) {
-            if (p !== '-' && products.indexOf(p) === -1) products.push(p);
-        });
-
-        // 셀 렌더 헬퍼
-        function cell(val, isTotal) {
-            if (!val) return '<td class="text-center py-2" style="color: #cbd5e1;">-</td>';
-            if (isTotal) return '<td class="text-center py-2" style="font-weight: 700; color: #1e293b; background: #f1f5f9;">' + val + '</td>';
-            return '<td class="text-center py-2" style="color: #334155;">' + val + '</td>';
-        }
-
-        // DC코드별
-        var dcTotals = { DC1: 0, DC2: 0, DC3: 0, DR: 0, sum: 0 };
-        var dcHtml = '';
-        memberKeys.forEach(function(key) {
-            var m = members[key];
-            var dc1 = m.dc['DC1'] || 0, dc2 = m.dc['DC2'] || 0, dc3 = m.dc['DC3'] || 0, dr = m.dc['DR'] || 0;
-            dcTotals.DC1 += dc1; dcTotals.DC2 += dc2; dcTotals.DC3 += dc3; dcTotals.DR += dr; dcTotals.sum += m.total;
-            dcHtml += '<tr>';
-            dcHtml += '<td class="text-center py-2 fw-semibold" style="color: #6366f1;">' + key + '</td>';
-            dcHtml += '<td class="text-center py-2" style="color: #475569;">' + m.company_name + '</td>';
-            dcHtml += cell(dc1) + cell(dc2) + cell(dc3) + cell(dr) + cell(m.total, true);
-            dcHtml += '</tr>';
-        });
-        $('#analysisDcBody').html(dcHtml);
-        $('#analysisDcFooter').html(
-            '<td class="text-center py-2" colspan="2" style="color: #1e293b;">합계</td>' +
-            cell(dcTotals.DC1, true) + cell(dcTotals.DC2, true) + cell(dcTotals.DC3, true) + cell(dcTotals.DR, true) +
-            '<td class="text-center py-2" style="font-weight: 700; color: #fff; background: #475569;">' + dcTotals.sum + '</td>'
-        );
-
-        // 용도별
-        var usageTotals = { ORD: 0, MPR: 0, MGT: 0, sum: 0 };
-        var usageHtml = '';
-        memberKeys.forEach(function(key) {
-            var m = members[key];
-            var ord = m.usage['ORD'] || 0, mpr = m.usage['MPR'] || 0, mgt = m.usage['MGT'] || 0;
-            usageTotals.ORD += ord; usageTotals.MPR += mpr; usageTotals.MGT += mgt; usageTotals.sum += m.total;
-            usageHtml += '<tr>';
-            usageHtml += '<td class="text-center py-2 fw-semibold" style="color: #6366f1;">' + key + '</td>';
-            usageHtml += '<td class="text-center py-2" style="color: #475569;">' + m.company_name + '</td>';
-            usageHtml += cell(ord) + cell(mpr) + cell(mgt) + cell(m.total, true);
-            usageHtml += '</tr>';
-        });
-        $('#analysisUsageBody').html(usageHtml);
-        $('#analysisUsageFooter').html(
-            '<td class="text-center py-2" colspan="2" style="color: #1e293b;">합계</td>' +
-            cell(usageTotals.ORD, true) + cell(usageTotals.MPR, true) + cell(usageTotals.MGT, true) +
-            '<td class="text-center py-2" style="font-weight: 700; color: #fff; background: #475569;">' + usageTotals.sum + '</td>'
-        );
-
-        // 상품별
-        var prodColors = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
-        var headerHtml = '<th class="text-center py-2" style="color: #475569; font-weight: 700;">회원사코드</th>';
-        headerHtml += '<th class="text-center py-2" style="color: #475569; font-weight: 700;">회사명</th>';
-        var prodTotals = {};
-        products.forEach(function(p, i) {
-            prodTotals[p] = 0;
-            headerHtml += '<th class="text-center py-2" style="color: ' + prodColors[i % prodColors.length] + '; font-weight: 700;">' + p + '</th>';
-        });
-        headerHtml += '<th class="text-center py-2" style="color: #1e293b; font-weight: 700; background: #e2e8f0;">합계</th>';
-        $('#analysisProductHeader').html(headerHtml);
-
-        var prodBodyHtml = '';
-        var prodSum = 0;
-        memberKeys.forEach(function(key) {
-            var m = members[key];
-            prodBodyHtml += '<tr>';
-            prodBodyHtml += '<td class="text-center py-2 fw-semibold" style="color: #6366f1;">' + key + '</td>';
-            prodBodyHtml += '<td class="text-center py-2" style="color: #475569;">' + m.company_name + '</td>';
-            products.forEach(function(p) {
-                var v = m.product[p] || 0;
-                prodTotals[p] += v;
-                prodBodyHtml += cell(v);
-            });
-            prodBodyHtml += cell(m.total, true);
-            prodSum += m.total;
-            prodBodyHtml += '</tr>';
-        });
-        $('#analysisProductBody').html(prodBodyHtml);
-        var prodFooterHtml = '<td class="text-center py-2" colspan="2" style="color: #1e293b;">합계</td>';
-        products.forEach(function(p) { prodFooterHtml += cell(prodTotals[p], true); });
-        prodFooterHtml += '<td class="text-center py-2" style="font-weight: 700; color: #fff; background: #475569;">' + prodSum + '</td>';
-        $('#analysisProductFooter').html(prodFooterHtml);
-
-        // 통합 현황 (회원사 × DC코드 × 용도(환경별) / 주문회선(환경별) / 시세상품(환경별))
-        var dcCodes = ['DC1', 'DC2', 'DC3', 'DR'];
-        var usages = ['ORD', 'MPR', 'MGT'];
-        var subEnvs = ['PR', 'TS', 'DR'];
-
-        // 상품을 주문회선(대역폭)과 시세상품으로 분리
-        var ordProducts = products.filter(function(p) { return /^\d+M$/.test(p); });
-        var mprProducts = products.filter(function(p) { return p !== '-' && p !== 'MGT' && !/^\d+M$/.test(p); });
-        // 주문회선 정렬 (숫자 기준)
-        ordProducts.sort(function(a, b) { return parseInt(a) - parseInt(b); });
-
-        // 회원사+DC별 집계 (용도×환경, 상품×환경 포함)
-        var detail = {};
-        data.forEach(function(r) {
-            var mk = r.member_code || '-';
-            var dc = r.datacenter_code || '-';
-            var key = mk + '|' + dc;
-            if (!detail[key]) {
-                detail[key] = { member_code: mk, company_name: r.company_name || '-', dc: dc, ue: {}, pe: {}, total: 0 };
-            }
-            var d = detail[key];
-            d.total++;
-            var u = r.usage || '-';
-            var e = r.env || '-';
-            var p = r.product || '-';
-            // 용도×환경
-            if (!d.ue[u]) d.ue[u] = {};
-            d.ue[u][e] = (d.ue[u][e] || 0) + 1;
-            // 상품×환경
-            if (!d.pe[p]) d.pe[p] = {};
-            d.pe[p][e] = (d.pe[p][e] || 0) + 1;
-        });
-
-        // 헤더 (3행: 그룹 → 상품명 → 환경)
-        var usageColCount = subEnvs.length * 2 + 1; // ORD(3) + MPR(3) + MGT(1)
-        var ordColCount = ordProducts.length > 0 ? ordProducts.length * subEnvs.length : 0;
-        var mprColCount = mprProducts.length > 0 ? mprProducts.length * subEnvs.length : 0;
-
-        var detailHead = '<tr style="background: #1e293b;">';
-        detailHead += '<th class="text-center py-2 text-white" rowspan="3" style="vertical-align: middle; font-weight: 700; border-right: 2px solid #475569;">회원사코드</th>';
-        detailHead += '<th class="text-center py-2 text-white" rowspan="3" style="vertical-align: middle; font-weight: 700; border-right: 2px solid #475569;">회사명</th>';
-        detailHead += '<th class="text-center py-2 text-white" rowspan="3" style="vertical-align: middle; font-weight: 700; border-right: 2px solid #475569;">DC</th>';
-        detailHead += '<th class="text-center py-2" colspan="' + usageColCount + '" style="color: #93c5fd; font-weight: 700; border-right: 2px solid #475569; border-bottom: 1px solid #475569;">회선요약</th>';
-        if (ordColCount > 0) {
-            detailHead += '<th class="text-center py-2" colspan="' + ordColCount + '" style="color: #fbbf24; font-weight: 700; border-right: 2px solid #475569; border-bottom: 1px solid #475569;">주문회선</th>';
-        }
-        if (mprColCount > 0) {
-            detailHead += '<th class="text-center py-2" colspan="' + mprColCount + '" style="color: #86efac; font-weight: 700; border-right: 2px solid #475569; border-bottom: 1px solid #475569;">시세상품</th>';
-        }
-        detailHead += '<th class="text-center py-2 text-white" rowspan="3" style="vertical-align: middle; font-weight: 700; background: #475569;">합계</th>';
-        detailHead += '</tr>';
-
-        // 2행: 용도명, 상품명
-        var ordPColors = ['#fbbf24','#fcd34d','#fde68a','#fed7aa','#fdba74','#fb923c'];
-        var mprPColors = ['#86efac','#6ee7b7','#5eead4','#67e8f9','#7dd3fc','#93c5fd','#a5b4fc','#c4b5fd'];
-        detailHead += '<tr style="background: #334155;">';
-        detailHead += '<th class="text-center py-1" colspan="' + subEnvs.length + '" style="color: #93c5fd; font-weight: 600; font-size: 0.7rem; border-bottom: 1px solid #475569; border-right: 1px solid #475569;">ORD</th>';
-        detailHead += '<th class="text-center py-1" colspan="' + subEnvs.length + '" style="color: #67e8f9; font-weight: 600; font-size: 0.7rem; border-bottom: 1px solid #475569; border-right: 1px solid #475569;">MPR</th>';
-        detailHead += '<th class="text-center py-1" rowspan="2" style="color: #6ee7b7; font-weight: 600; font-size: 0.7rem; vertical-align: middle; border-right: 2px solid #475569;">MGT</th>';
-        ordProducts.forEach(function(p, i) {
-            var borderR = i === ordProducts.length - 1 && mprProducts.length === 0 ? '2px solid #475569' : '1px solid #475569';
-            if (i === ordProducts.length - 1) borderR = '2px solid #475569';
-            detailHead += '<th class="text-center py-1" colspan="' + subEnvs.length + '" style="color: ' + ordPColors[i % ordPColors.length] + '; font-weight: 600; font-size: 0.7rem; border-bottom: 1px solid #475569; border-right: ' + borderR + ';">' + p + '</th>';
-        });
-        mprProducts.forEach(function(p, i) {
-            var borderR = i === mprProducts.length - 1 ? '2px solid #475569' : '1px solid #475569';
-            detailHead += '<th class="text-center py-1" colspan="' + subEnvs.length + '" style="color: ' + mprPColors[i % mprPColors.length] + '; font-weight: 600; font-size: 0.7rem; border-bottom: 1px solid #475569; border-right: ' + borderR + ';">' + p + '</th>';
-        });
-        detailHead += '</tr>';
-
-        // 3행: 환경 서브 헤더
-        var envColors = { PR: '#4ade80', TS: '#60a5fa', DR: '#fb923c' };
-        detailHead += '<tr style="background: #475569;">';
-        // ORD 환경
-        subEnvs.forEach(function(e, i) {
-            detailHead += '<th class="text-center py-1" style="color: ' + envColors[e] + '; font-weight: 600; font-size: 0.6rem;' + (i === subEnvs.length - 1 ? ' border-right: 1px solid #64748b;' : '') + '">' + e + '</th>';
-        });
-        // MPR 환경
-        subEnvs.forEach(function(e, i) {
-            detailHead += '<th class="text-center py-1" style="color: ' + envColors[e] + '; font-weight: 600; font-size: 0.6rem;' + (i === subEnvs.length - 1 ? ' border-right: 1px solid #64748b;' : '') + '">' + e + '</th>';
-        });
-        // MGT는 rowspan=2로 이미 처리
-        // 주문회선별 환경
-        ordProducts.forEach(function(p, pi) {
-            var borderR = pi === ordProducts.length - 1 ? '2px solid #64748b' : '1px solid #64748b';
-            subEnvs.forEach(function(e, ei) {
-                detailHead += '<th class="text-center py-1" style="color: ' + envColors[e] + '; font-weight: 600; font-size: 0.6rem;' + (ei === subEnvs.length - 1 ? ' border-right: ' + borderR + ';' : '') + '">' + e + '</th>';
-            });
-        });
-        // 시세상품별 환경
-        mprProducts.forEach(function(p, pi) {
-            var borderR = pi === mprProducts.length - 1 ? '2px solid #64748b' : '1px solid #64748b';
-            subEnvs.forEach(function(e, ei) {
-                detailHead += '<th class="text-center py-1" style="color: ' + envColors[e] + '; font-weight: 600; font-size: 0.6rem;' + (ei === subEnvs.length - 1 ? ' border-right: ' + borderR + ';' : '') + '">' + e + '</th>';
-            });
-        });
-        detailHead += '</tr>';
-        $('#analysisDetailHeader').html(detailHead);
-
-        // 본문
-        var allDetailProducts = ordProducts.concat(mprProducts);
-        var detailBodyHtml = '';
-        var detailTotals = { ue: {}, pe: {}, sum: 0 };
-        usages.forEach(function(u) {
-            detailTotals.ue[u] = {};
-            subEnvs.forEach(function(e) { detailTotals.ue[u][e] = 0; });
-            if (u === 'MGT') detailTotals.ue[u]._all = 0;
-        });
-        allDetailProducts.forEach(function(p) {
-            detailTotals.pe[p] = {};
-            subEnvs.forEach(function(e) { detailTotals.pe[p][e] = 0; });
-        });
-
-        var prevMember = '';
-        var rowIdx = 0;
-        var dcSortOrder = { 'DC1': 1, 'DC2': 2, 'DC3': 3, 'DR': 4 };
-        var detailKeys = Object.keys(detail).sort(function(a, b) {
-            var da = detail[a], db = detail[b];
-            var totalA = members[da.member_code] ? members[da.member_code].total : 0;
-            var totalB = members[db.member_code] ? members[db.member_code].total : 0;
-            if (da.member_code !== db.member_code) {
-                if (totalB !== totalA) return totalB - totalA;
-                return da.member_code.localeCompare(db.member_code);
-            }
-            return (dcSortOrder[da.dc] || 99) - (dcSortOrder[db.dc] || 99);
-        });
-
-        var memberRowCount = {};
-        detailKeys.forEach(function(key) {
-            var mk = detail[key].member_code;
-            memberRowCount[mk] = (memberRowCount[mk] || 0) + 1;
-        });
-
-        detailKeys.forEach(function(key) {
-            var d = detail[key];
-            var isNewMember = d.member_code !== prevMember;
-            if (isNewMember) { rowIdx++; prevMember = d.member_code; }
-            var bgColor = rowIdx % 2 === 0 ? '#ffffff' : '#f8fafc';
-            var borderTop = isNewMember && rowIdx > 1 ? 'border-top: 2px solid #e2e8f0;' : '';
-            var rspan = memberRowCount[d.member_code] || 1;
-
-            detailBodyHtml += '<tr data-member="' + d.member_code + '" data-company="' + d.company_name + '" style="background: ' + bgColor + '; ' + borderTop + '">';
-            if (isNewMember) {
-                detailBodyHtml += '<td class="text-center py-2 fw-bold" rowspan="' + rspan + '" style="color: #6366f1; border-right: 1px solid #f1f5f9; vertical-align: middle;">' + d.member_code + '</td>';
-                detailBodyHtml += '<td class="text-center py-2" rowspan="' + rspan + '" style="color: #475569; border-right: 1px solid #f1f5f9; vertical-align: middle;">' + d.company_name + '</td>';
-            }
-            detailBodyHtml += '<td class="text-center py-2 fw-semibold" style="border-right: 2px solid #e2e8f0;">';
-            var dcBadgeColors = { DC1: '#6366f1', DC2: '#0ea5e9', DC3: '#10b981', DR: '#f59e0b' };
-            detailBodyHtml += '<span style="display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 0.65rem; color: #fff; background: ' + (dcBadgeColors[d.dc] || '#94a3b8') + ';">' + d.dc + '</span></td>';
-
-            // ORD × 환경
-            subEnvs.forEach(function(e, ei) {
-                var v = (d.ue['ORD'] && d.ue['ORD'][e]) || 0;
-                detailTotals.ue['ORD'][e] += v;
-                detailBodyHtml += '<td class="text-center py-2" style="color: ' + (v ? '#334155' : '#cbd5e1') + ';' + (ei === subEnvs.length - 1 ? ' border-right: 1px solid #e2e8f0;' : '') + '">' + (v || '-') + '</td>';
-            });
-            // MPR × 환경
-            subEnvs.forEach(function(e, ei) {
-                var v = (d.ue['MPR'] && d.ue['MPR'][e]) || 0;
-                detailTotals.ue['MPR'][e] += v;
-                detailBodyHtml += '<td class="text-center py-2" style="color: ' + (v ? '#334155' : '#cbd5e1') + ';' + (ei === subEnvs.length - 1 ? ' border-right: 1px solid #e2e8f0;' : '') + '">' + (v || '-') + '</td>';
-            });
-            // MGT (환경 구분 없음)
-            var mgtVal = 0;
-            if (d.ue['MGT']) {
-                Object.keys(d.ue['MGT']).forEach(function(e) { mgtVal += d.ue['MGT'][e]; });
-            }
-            detailTotals.ue['MGT']._all += mgtVal;
-            detailBodyHtml += '<td class="text-center py-2" style="color: ' + (mgtVal ? '#334155' : '#cbd5e1') + '; border-right: 2px solid #e2e8f0;">' + (mgtVal || '-') + '</td>';
-
-            // 주문회선(ORD) 상품 × 환경
-            ordProducts.forEach(function(p, pi) {
-                var borderR = pi === ordProducts.length - 1 ? '2px solid #e2e8f0' : '1px solid #e2e8f0';
-                subEnvs.forEach(function(e, ei) {
-                    var v = (d.pe[p] && d.pe[p][e]) || 0;
-                    detailTotals.pe[p][e] += v;
-                    detailBodyHtml += '<td class="text-center py-2" style="color: ' + (v ? '#334155' : '#cbd5e1') + ';' + (ei === subEnvs.length - 1 ? ' border-right: ' + borderR + ';' : '') + '">' + (v || '-') + '</td>';
-                });
-            });
-            // 시세상품(MPR) 상품 × 환경
-            mprProducts.forEach(function(p, pi) {
-                var borderR = pi === mprProducts.length - 1 ? '2px solid #e2e8f0' : '1px solid #e2e8f0';
-                subEnvs.forEach(function(e, ei) {
-                    var v = (d.pe[p] && d.pe[p][e]) || 0;
-                    detailTotals.pe[p][e] += v;
-                    detailBodyHtml += '<td class="text-center py-2" style="color: ' + (v ? '#334155' : '#cbd5e1') + ';' + (ei === subEnvs.length - 1 ? ' border-right: ' + borderR + ';' : '') + '">' + (v || '-') + '</td>';
-                });
-            });
-
-            detailTotals.sum += d.total;
-            detailBodyHtml += '<td class="text-center py-2 fw-bold" style="color: #1e293b; background: #f1f5f9;">' + d.total + '</td>';
-            detailBodyHtml += '</tr>';
-        });
-        $('#analysisDetailBody').html(detailBodyHtml);
-
-        // 푸터
-        var detailFooterHtml = '<td class="text-center py-2" colspan="3" style="color: #1e293b; border-right: 2px solid #cbd5e1;">합계</td>';
-        // ORD 환경별 합계
-        subEnvs.forEach(function(e, ei) {
-            detailFooterHtml += '<td class="text-center py-2" style="color: #1e293b; font-weight: 700;' + (ei === subEnvs.length - 1 ? ' border-right: 1px solid #cbd5e1;' : '') + '">' + detailTotals.ue['ORD'][e] + '</td>';
-        });
-        // MPR 환경별 합계
-        subEnvs.forEach(function(e, ei) {
-            detailFooterHtml += '<td class="text-center py-2" style="color: #1e293b; font-weight: 700;' + (ei === subEnvs.length - 1 ? ' border-right: 1px solid #cbd5e1;' : '') + '">' + detailTotals.ue['MPR'][e] + '</td>';
-        });
-        // MGT 합계
-        detailFooterHtml += '<td class="text-center py-2" style="color: #1e293b; font-weight: 700; border-right: 2px solid #cbd5e1;">' + detailTotals.ue['MGT']._all + '</td>';
-        // 주문회선 상품별 환경 합계
-        ordProducts.forEach(function(p, pi) {
-            var borderR = pi === ordProducts.length - 1 ? '2px solid #cbd5e1' : '1px solid #cbd5e1';
-            subEnvs.forEach(function(e, ei) {
-                detailFooterHtml += '<td class="text-center py-2" style="color: #1e293b; font-weight: 700;' + (ei === subEnvs.length - 1 ? ' border-right: ' + borderR + ';' : '') + '">' + detailTotals.pe[p][e] + '</td>';
-            });
-        });
-        // 시세상품별 환경 합계
-        mprProducts.forEach(function(p, pi) {
-            var borderR = pi === mprProducts.length - 1 ? '2px solid #cbd5e1' : '1px solid #cbd5e1';
-            subEnvs.forEach(function(e, ei) {
-                detailFooterHtml += '<td class="text-center py-2" style="color: #1e293b; font-weight: 700;' + (ei === subEnvs.length - 1 ? ' border-right: ' + borderR + ';' : '') + '">' + detailTotals.pe[p][e] + '</td>';
-            });
-        });
-        detailFooterHtml += '<td class="text-center py-2" style="font-weight: 700; color: #fff; background: #475569;">' + detailTotals.sum + '</td>';
-        $('#analysisDetailFooter').html(detailFooterHtml);
-
-        // 검색 초기화
-        $('#analysisSearch').val('');
-
-        var modal = new bootstrap.Modal(document.getElementById('analysisModal'));
-        modal.show();
-    };
-
-    // 분석 모달 검색 기능 (회원사 단위)
-    $(document).on('input', '#analysisSearch', function() {
-        var keyword = $(this).val().toLowerCase();
-        if (keyword === '') {
-            $('#analysisTabContent tbody tr').show();
-            return;
-        }
-        // 통합 현황: 회원사 단위 그룹 필터 (rowspan 보호)
-        var matchedMembers = {};
-        $('#panel-detail tbody tr').each(function() {
-            var mk = $(this).attr('data-member') || '';
-            var cn = $(this).attr('data-company') || '';
-            if (mk.toLowerCase().indexOf(keyword) !== -1 || cn.toLowerCase().indexOf(keyword) !== -1) {
-                matchedMembers[mk] = true;
-            }
-        });
-        $('#panel-detail tbody tr').each(function() {
-            var mk = $(this).attr('data-member') || '';
-            if (matchedMembers[mk]) {
-                $(this).show();
-            } else {
-                $(this).hide();
-            }
-        });
-        // 다른 탭: 텍스트 기반 필터
-        $('#panel-dc tbody tr, #panel-usage tbody tr, #panel-product tbody tr').each(function() {
-            var text = $(this).text().toLowerCase();
-            if (text.indexOf(keyword) !== -1) {
-                $(this).show();
-            } else {
-                $(this).hide();
-            }
-        });
-    });
 
     $(document).ready(function() {
         initTable();

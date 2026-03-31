@@ -74,6 +74,11 @@ function renderDashboard(data) {
         renderRevenueCard(data.revenue);
         renderTopRevenueChart(data.revenue.top_members);
     }
+    if (data.profit) {
+        renderProfitCards(data.profit);
+        renderTopProfitChart(data.profit.members ? data.profit.members.slice(0, 5) : []);
+        renderProfitMemberTable(data.profit.members || []);
+    }
 }
 
 // ========== 요약 카드 ==========
@@ -91,51 +96,124 @@ function renderRevenueCard(rev) {
     setText('stat_revenue_mpr', fmtWon(rev.mpr_total));
 }
 
-// ========== 회선 분류별 통계 그리드 (컬러 도트) ==========
-function renderStatGrids(provider, env, usage) {
-    renderStatGrid('statGridProvider', '통신사별', provider, C.multi);
-    renderStatGrid('statGridEnv', '환경별', env, [C.green, C.red, C.orange, C.blue]);
-    renderStatGrid('statGridUsage', '용도별', usage, [C.orange, C.cyan, C.purple, C.green, C.red, C.blue]);
+// ========== 이익 현황 카드 ==========
+function renderProfitCards(profit) {
+    setText('stat_profit_revenue', fmtWon(profit.revenue_total));
+    setText('stat_profit_purchase', fmtWon(profit.purchase_total));
+    setText('stat_profit_total', fmtWon(profit.profit_total));
+    setText('stat_profit_rate', profit.profit_rate + '%');
 }
 
-function renderStatGrid(containerId, title, data, colors) {
+// ========== 이익 Top 5 회원사 (가로 바) ==========
+function renderTopProfitChart(members) {
+    var el = document.getElementById('chartTopProfit');
+    if (!el || !members || members.length === 0) { showNoData(el); return; }
+    var chart = initChart(el, 'chartTopProfit');
+    var top5 = members.slice(0, 5).reverse();
+    var names = top5.map(function(m, i) { return (5 - i) + '. ' + (m.company_name || m.member_code); });
+    var profits = top5.map(function(m) { return Number(m.profit) || 0; });
+    var max = Math.max.apply(null, profits);
+
+    chart.setOption({
+        tooltip: { trigger: 'axis', axisPointer: { type: 'none' }, formatter: function(p) { return p[0].name.substring(3) + ': ' + Number(p[0].value).toLocaleString() + '원'; } },
+        grid: { left: 5, right: 55, top: 5, bottom: 5, containLabel: true },
+        xAxis: { type: 'value', show: false, max: max * 1.35 },
+        yAxis: {
+            type: 'category', data: names,
+            axisLine: { show: false }, axisTick: { show: false },
+            axisLabel: { fontSize: 11, color: T('#555', '#94a3b8'), fontWeight: 500, width: 110, overflow: 'truncate' }
+        },
+        series: [{
+            type: 'bar', data: profits, barWidth: 12,
+            itemStyle: { borderRadius: [0, 6, 6, 0], color: '#f59e0b' },
+            label: { show: true, position: 'right', fontSize: 11, fontWeight: 700, color: T('#1a1a2e', '#e2e8f0'), formatter: function(p) { return fmtWon(p.value); } }
+        }]
+    });
+}
+
+// ========== 회원사별 매출/매입/이익 테이블 ==========
+function renderProfitMemberTable(members) {
+    var tbody = document.getElementById('profitMemberTableBody');
+    if (!tbody) return;
+    if (!members || members.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-3" style="color:#ccc;font-size:0.75rem;">데이터 없음</td></tr>';
+        return;
+    }
+    var sumRev = 0, sumPur = 0, sumProfit = 0;
+    var html = '';
+    members.forEach(function(m) {
+        var rev = Number(m.revenue_total) || 0;
+        var pur = Number(m.purchase_total) || 0;
+        var profit = Number(m.profit) || 0;
+        var rate = rev > 0 ? ((profit / rev) * 100).toFixed(1) : '0.0';
+        var profitColor = profit >= 0 ? '#10b981' : '#ef4444';
+        sumRev += rev; sumPur += pur; sumProfit += profit;
+        html += '<tr style="border-bottom:1px solid #f5f5f5;">' +
+            '<td class="py-2" style="font-weight:500;">' + esc(m.company_name || m.member_code) + '</td>' +
+            '<td class="text-end py-2" style="color:#1a1a2e;">' + fmtWon(rev) + '</td>' +
+            '<td class="text-end py-2" style="color:#ef4444;">' + fmtWon(pur) + '</td>' +
+            '<td class="text-end py-2" style="color:' + profitColor + ';font-weight:600;">' + fmtWon(profit) + '</td>' +
+            '<td class="text-end py-2" style="color:' + profitColor + ';font-weight:600;">' + rate + '%</td></tr>';
+    });
+    var totalRate = sumRev > 0 ? ((sumProfit / sumRev) * 100).toFixed(1) : '0.0';
+    html += '<tr style="border-top:2px solid #e0e0e0;background:' + T('#f9fafb', '#253347') + ';">' +
+        '<td class="py-2" style="font-weight:700;">합계</td>' +
+        '<td class="text-end py-2" style="font-weight:700;">' + fmtWon(sumRev) + '</td>' +
+        '<td class="text-end py-2" style="font-weight:700;color:#ef4444;">' + fmtWon(sumPur) + '</td>' +
+        '<td class="text-end py-2" style="font-weight:700;color:#10b981;">' + fmtWon(sumProfit) + '</td>' +
+        '<td class="text-end py-2" style="font-weight:700;">' + totalRate + '%</td></tr>';
+    tbody.innerHTML = html;
+}
+
+// ========== 회선 분류별 통계 그리드 (Badge Pill + 섹션 구분) ==========
+function renderStatGrids(provider, env, usage) {
+    renderStatGrid('statGridProvider', '통신사별', provider, C.multi, 'blue');
+    renderStatGrid('statGridEnv', '환경별', env, [C.green, C.red, C.orange, C.blue], 'green');
+    renderStatGrid('statGridUsage', '용도별', usage, [C.orange, C.cyan, C.purple, C.green, C.red, C.blue], 'purple');
+}
+
+function renderStatGrid(containerId, title, data, colors, accent) {
     var el = document.getElementById(containerId);
     if (!el || !data) return;
 
     var keys = Object.keys(data);
-    var labelColor = T('#8c8c8c', '#64748b');
-    var textColor = T('#555', '#94a3b8');
-    var valColor = T('#1a1a2e', '#e2e8f0');
-    var html = '<div style="font-size:0.72rem;font-weight:600;color:' + labelColor + ';margin-bottom:8px;">' + esc(title) + '</div>';
-    html += '<div class="row g-2">';
-    keys.forEach(function(k, i) {
-        html += '<div class="col-6">' +
-            '<div class="d-flex align-items-center" style="padding:4px 0;">' +
-            '<span class="dash-stat-dot" style="background:' + colors[i % colors.length] + ';"></span>' +
-            '<span style="font-size:0.72rem;color:' + textColor + ';">' + esc(k) + '</span>' +
-            '<span style="font-size:0.82rem;font-weight:700;color:' + valColor + ';margin-left:auto;">' + data[k] + '</span>' +
-            '</div></div>';
-    });
+    var total = 0;
+    keys.forEach(function(k) { total += (Number(data[k]) || 0); });
+
+    var html = '<div class="dash-stat-section accent-' + accent + '">';
+    html += '<div class="dash-stat-section-header">';
+    html += '<span class="dash-stat-section-title">' + esc(title) + '</span>';
+    html += '<span class="dash-stat-section-total">' + total + '</span>';
     html += '</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;">';
+    keys.forEach(function(k, i) {
+        html += '<span class="dash-stat-pill">' +
+            '<span class="dash-stat-pill-dot" style="background:' + colors[i % colors.length] + ';"></span>' +
+            '<span class="dash-stat-pill-label">' + esc(k) + '</span>' +
+            '<span class="dash-stat-pill-value">' + data[k] + '</span>' +
+            '</span>';
+    });
+    html += '</div></div>';
     el.innerHTML = html;
 }
 
 // ========== 멀티캐스트 상태 ==========
 function loadMulticastStatus() {
-    fetch('/multicast/init?sub_menu=pr_info_multicast', { signal: AbortSignal.timeout(25000) })
+    fetch('/multicast/init?sub_menu=pr_info_multicast', { signal: AbortSignal.timeout(10000) })
         .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (!Array.isArray(data) || data.length === 0) {
+        .then(function(resp) {
+            var items = Array.isArray(resp) ? resp : (resp.data || []);
+            if (!Array.isArray(items) || items.length === 0) {
                 setBadge('stat_multicast', '데이터 없음', 'info');
                 setTableEmpty('multicastTableBody', 6);
                 return;
             }
-            var total = data.length;
-            var normal = data.filter(function(d) { return d.check_result === '정상확인' || d.check_result === '회원사연결서버없음'; }).length;
+            var total = items.length;
+            var normal = items.filter(function(d) { return d.check_result === '정상확인' || d.check_result === '회원사연결서버없음'; }).length;
             var abnormal = total - normal;
             if (abnormal === 0) setBadge('stat_multicast', total + '/' + total + ' 정상', 'success');
             else setBadge('stat_multicast', abnormal + '건 확인필요', 'warn');
-            renderMulticastTable(data);
+            renderMulticastTable(items);
         })
         .catch(function() {
             setBadge('stat_multicast', '연결 실패', 'error');
@@ -144,7 +222,7 @@ function loadMulticastStatus() {
 }
 
 function loadPtpStatus() {
-    fetch('/information/init?sub_menu=info_ptp', { signal: AbortSignal.timeout(25000) })
+    fetch('/information/init?sub_menu=info_ptp', { signal: AbortSignal.timeout(10000) })
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (!Array.isArray(data) || data.length === 0) {

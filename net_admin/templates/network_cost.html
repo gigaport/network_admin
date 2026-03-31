@@ -14,54 +14,61 @@
         <div class="col-auto">
           <h2 class="mb-0">통신사 원가정보</h2>
         </div>
-        <div class="col-auto ms-auto">
-          <button class="btn btn-sm btn-success me-2" onclick="showAddForm()">
-            <i class="fas fa-plus me-1"></i>항목 추가
+        <div class="col-auto ms-auto d-flex gap-2">
+          <button class="btn btn-sm" onclick="showAddForm()" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; font-weight:500; font-size:0.85rem; padding:6px 16px;">
+            <i class="fas fa-plus me-1" style="font-size:0.7rem;"></i>항목 추가
           </button>
-          <button class="btn btn-sm btn-primary" onclick="loadNetworkCost()">
-            <i class="fas fa-sync-alt me-1"></i>새로고침
+          <button class="btn btn-sm" onclick="loadNetworkCost()" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; font-size:0.85rem; padding:6px 16px;">
+            <i class="fas fa-sync-alt me-1" style="font-size:0.7rem;"></i>새로고침
           </button>
         </div>
       </div>
 
       <!-- 요약 통계 카드 -->
       <div class="row g-3 mb-4">
-        <div class="col-md-2">
+        <div class="col">
           <div class="h-100 position-relative" style="border-radius: 14px; padding: 16px; background: linear-gradient(135deg, #6366F1, #818CF8); box-shadow: 0 4px 15px rgba(99,102,241,0.3); overflow: hidden;">
             <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">전체 항목</div>
             <div class="fw-bold" id="stat_total" style="font-size: 1.6rem; color: #fff; line-height: 1;">-</div>
             <div id="stat_total_avg" style="font-size: 0.65rem; color: rgba(255,255,255,0.7); margin-top: 6px;">평균 -</div>
           </div>
         </div>
-        <div class="col-md-2">
+        <div class="col">
           <div class="h-100 position-relative" style="border-radius: 14px; padding: 16px; background: linear-gradient(135deg, #0369A1, #0EA5E9); box-shadow: 0 4px 15px rgba(14,165,233,0.3); overflow: hidden;">
-            <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">KT</div>
+            <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">KTC</div>
             <div class="fw-bold" id="stat_kt" style="font-size: 1.6rem; color: #fff; line-height: 1;">-</div>
             <div id="stat_kt_avg" style="font-size: 0.65rem; color: rgba(255,255,255,0.7); margin-top: 6px;">평균 -</div>
           </div>
         </div>
-        <div class="col-md-2">
+        <div class="col">
           <div class="h-100 position-relative" style="border-radius: 14px; padding: 16px; background: linear-gradient(135deg, #047857, #10B981); box-shadow: 0 4px 15px rgba(16,185,129,0.3); overflow: hidden;">
             <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">LGU</div>
             <div class="fw-bold" id="stat_lgu" style="font-size: 1.6rem; color: #fff; line-height: 1;">-</div>
             <div id="stat_lgu_avg" style="font-size: 0.65rem; color: rgba(255,255,255,0.7); margin-top: 6px;">평균 -</div>
           </div>
         </div>
-        <div class="col-md-2">
+        <div class="col">
           <div class="h-100 position-relative" style="border-radius: 14px; padding: 16px; background: linear-gradient(135deg, #B91C1C, #EF4444); box-shadow: 0 4px 15px rgba(239,68,68,0.3); overflow: hidden;">
             <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">SKB</div>
             <div class="fw-bold" id="stat_skb" style="font-size: 1.6rem; color: #fff; line-height: 1;">-</div>
             <div id="stat_skb_avg" style="font-size: 0.65rem; color: rgba(255,255,255,0.7); margin-top: 6px;">평균 -</div>
           </div>
         </div>
-        <div class="col-md-2">
+        <div class="col">
           <div class="h-100 position-relative" style="border-radius: 14px; padding: 16px; background: linear-gradient(135deg, #6D28D9, #8B5CF6); box-shadow: 0 4px 15px rgba(139,92,246,0.3); overflow: hidden;">
             <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">세종</div>
             <div class="fw-bold" id="stat_sejong" style="font-size: 1.6rem; color: #fff; line-height: 1;">-</div>
             <div id="stat_sejong_avg" style="font-size: 0.65rem; color: rgba(255,255,255,0.7); margin-top: 6px;">평균 -</div>
           </div>
         </div>
-        <div class="col-md-2">
+        <div class="col">
+          <div class="h-100 position-relative" style="border-radius: 14px; padding: 16px; background: linear-gradient(135deg, #0E7490, #0891B2); box-shadow: 0 4px 15px rgba(8,145,178,0.3); overflow: hidden;">
+            <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">코스콤</div>
+            <div class="fw-bold" id="stat_koscom" style="font-size: 1.6rem; color: #fff; line-height: 1;">-</div>
+            <div id="stat_koscom_avg" style="font-size: 0.65rem; color: rgba(255,255,255,0.7); margin-top: 6px;">평균 -</div>
+          </div>
+        </div>
+        <div class="col">
           <div class="h-100 position-relative" style="border-radius: 14px; padding: 16px; background: linear-gradient(135deg, #B45309, #F59E0B); box-shadow: 0 4px 15px rgba(245,158,11,0.3); overflow: hidden;">
             <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 4px;">기타</div>
             <div class="fw-bold" id="stat_etc" style="font-size: 1.6rem; color: #fff; line-height: 1;">-</div>
@@ -82,10 +89,12 @@
                 <label class="form-label small fw-semibold text-muted">통신사 <span class="text-danger">*</span></label>
                 <select class="form-select form-select-sm" id="add_provider">
                   <option value="">선택</option>
-                  <option value="KT">KT</option>
+                  <option value="KTC">KTC</option>
                   <option value="LGU">LGU</option>
                   <option value="SKB">SKB</option>
                   <option value="세종">세종</option>
+                  <option value="코스콤">코스콤</option>
+                  <option value="기타">기타</option>
                 </select>
               </div>
               <div class="col-md-2">
@@ -125,15 +134,15 @@
         </div>
       </div>
 
-      <!-- KT 그룹 -->
+      <!-- KTC 그룹 -->
       <div class="card border-0 shadow-sm bg-body-emphasis mb-4" style="border-radius: 12px; overflow: hidden;">
         <div class="card-header border-0 py-3" style="background: linear-gradient(135deg, #1e40af, #3b82f6);">
           <div class="d-flex align-items-center">
             <i class="fas fa-building me-2 text-white" style="opacity: 0.8;"></i>
-            <h6 class="mb-0 text-white fw-bold">KT</h6>
+            <h6 class="mb-0 text-white fw-bold">KTC</h6>
           </div>
         </div>
-        <div class="card-body p-0" id="group_KT">
+        <div class="card-body p-0" id="group_KTC">
           <div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i>로딩 중...</div>
         </div>
       </div>
@@ -173,6 +182,19 @@
           </div>
         </div>
         <div class="card-body p-0" id="group_SEJONG">
+          <div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i>로딩 중...</div>
+        </div>
+      </div>
+
+      <!-- 코스콤 그룹 -->
+      <div class="card border-0 shadow-sm bg-body-emphasis mb-4" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-header border-0 py-3" style="background: linear-gradient(135deg, #0e7490, #0891b2);">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-landmark me-2 text-white" style="opacity: 0.8;"></i>
+            <h6 class="mb-0 text-white fw-bold">코스콤</h6>
+          </div>
+        </div>
+        <div class="card-body p-0" id="group_KOSCOM">
           <div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-1"></i>로딩 중...</div>
         </div>
       </div>
@@ -226,10 +248,12 @@
                 <label class="form-label small fw-semibold text-muted">통신사</label>
                 <select class="form-select form-select-sm" id="edit_provider">
                   <option value="">선택</option>
-                  <option value="KT">KT</option>
+                  <option value="KTC">KTC</option>
                   <option value="LGU">LGU</option>
                   <option value="SKB">SKB</option>
                   <option value="세종">세종</option>
+                  <option value="코스콤">코스콤</option>
+                  <option value="기타">기타</option>
                 </select>
               </div>
               <div class="col-md-6">

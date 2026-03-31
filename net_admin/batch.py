@@ -1,6 +1,6 @@
 import json, logging, re, time, html, sys, asyncio, requests, os
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pprint import pprint
 from typing import List, Dict, Tuple, Union, Optional
 ## Netmiko 라이브러리
@@ -11,6 +11,74 @@ from utils.cisco_arp import ProcessCiscoArpInfo
 
 ## 장비관리 라이브러리
 from genie.testbed import load
+
+# ── 수집 메타데이터 유틸 ──────────────────────────────────
+
+def get_collection_meta(response_json: dict) -> dict:
+    """API 수집 결과에서 장비별 성공/실패 통계를 추출"""
+    total = len(response_json)
+    failed_list = []
+    success_count = 0
+
+    for device_name, device_data in response_json.items():
+        if device_data.get('error') or not device_data.get('cmd_response_list'):
+            failed_list.append(device_name)
+        else:
+            success_count += 1
+
+    if success_count == total:
+        status = "success"
+    elif success_count > 0:
+        status = "partial"
+    else:
+        status = "failed"
+
+    return {
+        "collected_at": datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S'),
+        "status": status,
+        "total_devices": total,
+        "success_devices": success_count,
+        "failed_devices": len(failed_list),
+        "failed_list": failed_list[:10]
+    }
+
+
+def save_json_with_validation(file_path: str, new_data: dict, meta: dict):
+    """검증 후 JSON 저장. 수집 실패 시 기존 정상 데이터를 보존한다."""
+    new_records = new_data.get('data', []) if isinstance(new_data, dict) else []
+
+    # 기존 파일 읽기
+    existing_data = None
+    existing_records = []
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            existing_data = json.load(f)
+            existing_records = existing_data.get('data', []) if isinstance(existing_data, dict) else []
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+
+    if len(new_records) > 0:
+        # 새 데이터가 있으면 저장
+        new_data['_meta'] = meta
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(new_data, f, indent=4, ensure_ascii=False)
+        logger.info(f"[SAVE] {os.path.basename(file_path)}: {len(new_records)}건 저장 (status={meta['status']})")
+    elif existing_data and len(existing_records) > 0:
+        # 새 데이터 없지만 기존에 데이터 있으면 → 기존 data 유지, _meta만 갱신
+        meta['status'] = 'failed'
+        meta['preserved_from'] = existing_data.get('_meta', {}).get('collected_at', 'unknown')
+        existing_data['_meta'] = meta
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(existing_data, f, indent=4, ensure_ascii=False)
+        logger.warning(f"[SAVE] {os.path.basename(file_path)}: 수집 실패 → 기존 {len(existing_records)}건 유지 (preserved_from={meta.get('preserved_from')})")
+    else:
+        # 새 데이터도 없고 기존도 없으면 빈 데이터 + meta 저장
+        new_data['_meta'] = meta
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(new_data, f, indent=4, ensure_ascii=False)
+        logger.warning(f"[SAVE] {os.path.basename(file_path)}: 데이터 없음 (status={meta['status']})")
+
+# ─────────────────────────────────────────────────────────
 
 # 로깅 설정
 logging.basicConfig(
@@ -58,24 +126,30 @@ def main():
                 logger.info("✅ API 요청 성공")
                 response_json = response.json()
 
-                # response_json = response.json()
-                # result = {"data": [item["data"] for item in response_json['data']]}
-                # logger.info(f"[[DEBUG]{data['market_gubn']}] RESPONSE_RESULT: {json.dumps(response_json, indent=4, ensure_ascii=False)}")
+                # 수집 결과 통계 (성공/실패 장비 수)
+                meta = get_collection_meta(response_json)
+                logger.info(f"[{data['market_gubn']}] 수집 통계: {meta['success_devices']}/{meta['total_devices']} 성공 (status={meta['status']})")
 
                 SaveToCommonInfoJson(response_json, data["market_gubn"])
 
                 # CISCO 멀티캐스트 정보 처리
                 cisco_multicast_info = ProcessMulticastInfo(response_json, data["market_gubn"])
-                # logger.info(f"[{data['market_gubn']}] CISCO_MULTICAST_INFO: {json.dumps(cisco_multicast_info, indent=4, ensure_ascii=False)}")
-                SaveToMulticastJson(cisco_multicast_info, data["market_gubn"])
+                save_json_with_validation(
+                    f"{FILE_PATH}{data['market_gubn']}_members_mroute.json",
+                    cisco_multicast_info, dict(meta)
+                )
 
                 cisco_interface_info = ProcessCiscoInterfaceInfo(response_json, data["market_gubn"])
-                # logger.info(f"[DEBUG] [{data['market_gubn']}] CISCO_INTERFACE_INFO: {json.dumps(cisco_interface_info, indent=4, ensure_ascii=False)}")
-                SaveToInterfaceJson(cisco_interface_info, data["market_gubn"])
+                save_json_with_validation(
+                    f"{FILE_PATH}{data['market_gubn']}_cisco_interface_info.json",
+                    cisco_interface_info, dict(meta)
+                )
 
                 cisco_arp_info = ProcessCiscoArpInfo(response_json, data["market_gubn"])
-                # # logger.info(f"[DEBUG] [{data['market_gubn']}] CISCO_ARP_INFO: {json.dumps(cisco_arp_info, indent=4, ensure_ascii=False)}")
-                SaveToArpJson(cisco_arp_info, data["market_gubn"])
+                save_json_with_validation(
+                    f"{FILE_PATH}{data['market_gubn']}_cisco_arp_info.json",
+                    cisco_arp_info, dict(meta)
+                )
 
                 # ## 확인필요 결과가 있을경우 슬랙으로 메세지 전송
                 check_multicast_info(data["market_gubn"], cisco_multicast_info)
@@ -281,10 +355,9 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
     return result
 
 def SaveToMulticastJson(data, market_gubn):
+    """Legacy: save_json_with_validation으로 대체됨"""
     logger.info("SaveToMulticastJson...")
-    ## write json
     file_name = f"{FILE_PATH}{market_gubn}_members_mroute.json"
-
     with open(file_name, 'w', encoding='utf-8') as json_file:
         json.dump(data, json_file, indent=4, ensure_ascii=False)
 
@@ -312,12 +385,14 @@ def SaveToCommonInfoJson(data, market_gubn):
         raise e
 
 def SaveToInterfaceJson(data, market_gubn):
+    """Legacy: save_json_with_validation으로 대체됨"""
     logger.info("SaveToInterfaceJson...")
     file_name = f"{FILE_PATH}{market_gubn}_cisco_interface_info.json"
     with open(file_name, 'w', encoding='utf-8') as json_file:
         json.dump(data, json_file, indent=4, ensure_ascii=False)
 
 def SaveToArpJson(data, market_gubn):
+    """Legacy: save_json_with_validation으로 대체됨"""
     logger.info("SaveToArpJson...")
     file_name = f"{FILE_PATH}{market_gubn}_cisco_arp_info.json"
     with open(file_name, 'w', encoding='utf-8') as json_file:

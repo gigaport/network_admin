@@ -1,1 +1,1036 @@
-{}
+{
+  "ts:kr_1_tx_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:34",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "KR",
+      "member_name": "한국투자증권",
+      "device_name": "kr_1_tx_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-3",
+        "A-5",
+        "A-10",
+        "A-COM",
+        "B-3",
+        "B-5",
+        "B-10",
+        "B-COM"
+      ],
+      "pim_rp": [
+        "192.21.180.1"
+      ],
+      "product_cnt": 16,
+      "mroute_cnt": 16,
+      "oif_cnt": 16,
+      "rpf_nbr": [
+        "99.3.3.5",
+        "99.3.3.9",
+        "99.3.3.33",
+        "99.3.3.37",
+        "99.3.3.13",
+        "99.3.3.29"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "ts:kr_2_tx_ydkr_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:34",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "KR",
+      "member_name": "한국투자증권",
+      "device_name": "kr_2_tx_ydkr_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.21.180.1"
+      ],
+      "product_cnt": 6,
+      "mroute_cnt": 6,
+      "oif_cnt": 6,
+      "rpf_nbr": [
+        "99.3.3.21"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "ts:pb_1_tx_ydkx_n_com_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:34",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "PB",
+      "member_name": "PowerBase",
+      "device_name": "pb_1_tx_ydkx_n_com_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.21.180.1"
+      ],
+      "product_cnt": 6,
+      "mroute_cnt": 6,
+      "oif_cnt": 6,
+      "rpf_nbr": [
+        "99.101.3.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "ts:kw_3_tx_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:34",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "KW",
+      "member_name": "키움증권",
+      "device_name": "kw_3_tx_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.21.180.1"
+      ],
+      "product_cnt": 6,
+      "mroute_cnt": 6,
+      "oif_cnt": 6,
+      "rpf_nbr": [
+        "99.50.3.17"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "ts:ka_r_tr_pkka_n_com_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:34",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "KA",
+      "member_name": "카카오페이증권",
+      "device_name": "ka_r_tr_pkka_n_com_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.21.180.1"
+      ],
+      "product_cnt": 6,
+      "mroute_cnt": 6,
+      "oif_cnt": 6,
+      "rpf_nbr": [
+        "99.69.6.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "ts:ts_1_tx_yslg_n_com_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:34",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "TS",
+      "member_name": "토스증권",
+      "device_name": "ts_1_tx_yslg_n_com_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.21.180.1"
+      ],
+      "product_cnt": 6,
+      "mroute_cnt": 6,
+      "oif_cnt": 6,
+      "rpf_nbr": [
+        "99.77.3.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr_information:tn_1_px_ydkt_a_mkd_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:00:36",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "TN",
+      "member_name": "TNS",
+      "device_name": "tn_1_px_ydkt_a_mkd_01",
+      "device_os": "eos",
+      "products": [
+        "NXTB-10",
+        "NXTB-COM"
+      ],
+      "pim_rp": "192.23.180.1",
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": "99.208.1.1",
+      "connected_server_cnt": 3,
+      "check_result": "정상확인"
+    }
+  },
+  "pr:kw_2_px_mdkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "KW",
+      "member_name": "키움증권",
+      "device_name": "kw_2_px_mdkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.50.1.13"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:ky_1_px_mdkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "KY",
+      "member_name": "교보증권",
+      "device_name": "ky_1_px_mdkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.1.1.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:ky_2_px_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "KY",
+      "member_name": "교보증권",
+      "device_name": "ky_2_px_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.1.1.17"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:sh_1_px_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "SH",
+      "member_name": "신한투자증권",
+      "device_name": "sh_1_px_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.2.1.9"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:sh_1_px_ydkt_n_mpr_03": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "SH",
+      "member_name": "신한투자증권",
+      "device_name": "sh_1_px_ydkt_n_mpr_03",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM",
+        "B-10",
+        "B-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 24,
+      "mroute_cnt": 24,
+      "oif_cnt": 24,
+      "rpf_nbr": [
+        "99.2.1.21",
+        "99.2.1.25"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:kr_1_px_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "KR",
+      "member_name": "한국투자증권",
+      "device_name": "kr_1_px_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-3",
+        "A-5",
+        "A-10",
+        "A-COM",
+        "B-3",
+        "B-5",
+        "B-10",
+        "B-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 32,
+      "mroute_cnt": 32,
+      "oif_cnt": 32,
+      "rpf_nbr": [
+        "99.3.1.9",
+        "99.3.1.13",
+        "99.3.1.41",
+        "99.3.1.45",
+        "99.3.1.17",
+        "99.3.1.25"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:kr_2_px_ydkr_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상그룹개수초과",
+    "details": {
+      "member_code": "KR",
+      "member_name": "한국투자증권",
+      "device_name": "kr_2_px_ydkr_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM",
+        "B-10",
+        "B-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 24,
+      "mroute_cnt": 33,
+      "oif_cnt": 22,
+      "rpf_nbr": [
+        "99.3.1.29",
+        "99.3.1.33"
+      ],
+      "check_result": "정상그룹개수초과"
+    }
+  },
+  "pr:da_r_pr_jgda_n_com_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "DA",
+      "member_name": "대신증권",
+      "device_name": "da_r_pr_jgda_n_com_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.4.5.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:mr_1_px_ydmr_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "MR",
+      "member_name": "미래에셋증권",
+      "device_name": "mr_1_px_ydmr_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.5.1.9"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:sy_1_px_mdkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "SY",
+      "member_name": "신영증권",
+      "device_name": "sy_1_px_mdkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.6.1.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:eu_1_px_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "EU",
+      "member_name": "유진투자증권",
+      "device_name": "eu_1_px_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM",
+        "B-3",
+        "B-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 22,
+      "mroute_cnt": 22,
+      "oif_cnt": 22,
+      "rpf_nbr": [
+        "99.8.1.5",
+        "99.8.1.9"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:me_1_px_mdkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "ME",
+      "member_name": "메리츠증권",
+      "device_name": "me_1_px_mdkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.10.1.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:nh_1_px_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "NH",
+      "member_name": "NH투자증권",
+      "device_name": "nh_1_px_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.12.1.9"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:nh_2_px_ydnh_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "NH",
+      "member_name": "NH투자증권",
+      "device_name": "nh_2_px_ydnh_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.12.1.33"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:kb_1_px_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "KB",
+      "member_name": "KB증권",
+      "device_name": "kb_1_px_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.17.1.9"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:hw_1_px_mdkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "HW",
+      "member_name": "한화투자증권",
+      "device_name": "hw_1_px_mdkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.21.1.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:hw_r_px_yihw_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "HW",
+      "member_name": "한화투자증권",
+      "device_name": "hw_r_px_yihw_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.21.4.1"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:yu_1_px_mdkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "YU",
+      "member_name": "유안타증권",
+      "device_name": "yu_1_px_mdkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.24.1.9"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:yu_2_px_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "YU",
+      "member_name": "유안타증권",
+      "device_name": "yu_2_px_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM",
+        "B-10",
+        "B-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 24,
+      "mroute_cnt": 24,
+      "oif_cnt": 24,
+      "rpf_nbr": [
+        "99.24.1.29",
+        "99.24.1.25"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:yu_r_pr_bdkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "YU",
+      "member_name": "유안타증권",
+      "device_name": "yu_r_pr_bdkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.24.5.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:sk_1_px_ydsk_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "SK",
+      "member_name": "SK증권",
+      "device_name": "sk_1_px_ydsk_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.25.1.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:ss_1_px_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "SS",
+      "member_name": "삼성증권",
+      "device_name": "ss_1_px_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.30.1.9"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:db_1_px_mdkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "DB",
+      "member_name": "DB금융투자",
+      "device_name": "db_1_px_mdkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.31.1.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:db_2_px_yddb_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "DB",
+      "member_name": "DB금융투자",
+      "device_name": "db_2_px_yddb_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.31.1.13"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:im_1_px_ydim_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "IM",
+      "member_name": "IM증권",
+      "device_name": "im_1_px_ydim_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.46.1.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:kw_3_px_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "KW",
+      "member_name": "키움증권",
+      "device_name": "kw_3_px_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.50.1.25"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:ls_1_px_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상그룹개수초과",
+    "details": {
+      "member_code": "LS",
+      "member_name": "LS증권",
+      "device_name": "ls_1_px_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 24,
+      "oif_cnt": 24,
+      "rpf_nbr": [
+        "99.63.1.5",
+        "99.63.1.9",
+        "99.63.1.13",
+        "99.63.1.17"
+      ],
+      "check_result": "정상그룹개수초과"
+    }
+  },
+  "pr:ka_r_px_pkka_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "KA",
+      "member_name": "카카오페이증권",
+      "device_name": "ka_r_px_pkka_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.69.4.1"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:do_1_px_ydkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "DO",
+      "member_name": "다올투자증권",
+      "device_name": "do_1_px_ydkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.71.1.5"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:do_2_px_mdkt_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "DO",
+      "member_name": "다올투자증권",
+      "device_name": "do_2_px_mdkt_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.71.1.13"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:ts_1_px_yslg_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "TS",
+      "member_name": "토스증권",
+      "device_name": "ts_1_px_yslg_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.77.1.9"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:ts_r_px_pclg_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "TS",
+      "member_name": "토스증권",
+      "device_name": "ts_r_px_pclg_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.77.4.1"
+      ],
+      "check_result": "정상확인"
+    }
+  },
+  "pr:pb_1_px_ydkx_n_mpr_01": {
+    "status": "normal",
+    "last_checked_at": "2026-03-31 16:02:18",
+    "check_result": "정상확인",
+    "details": {
+      "member_code": "PB",
+      "member_name": "PowerBase",
+      "device_name": "pb_1_px_ydkx_n_mpr_01",
+      "device_os": "nxos",
+      "products": [
+        "A-10",
+        "A-COM"
+      ],
+      "pim_rp": [
+        "192.23.180.1"
+      ],
+      "product_cnt": 12,
+      "mroute_cnt": 12,
+      "oif_cnt": 12,
+      "rpf_nbr": [
+        "99.101.1.33"
+      ],
+      "check_result": "정상확인"
+    }
+  }
+}

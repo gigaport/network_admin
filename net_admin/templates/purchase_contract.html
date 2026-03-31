@@ -28,12 +28,12 @@
         <div class="col-auto">
           <h2 class="mb-0">회원사 매입내역</h2>
         </div>
-        <div class="col-auto ms-auto">
-          <button class="btn btn-sm btn-success me-2" onclick="showCreateModal()">
-            <i class="fas fa-plus me-1"></i>추가
+        <div class="col-auto ms-auto d-flex gap-2">
+          <button class="btn btn-sm" onclick="showCreateModal()" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; font-weight:500; font-size:0.85rem; padding:6px 16px;">
+            <i class="fas fa-plus me-1" style="font-size:0.7rem;"></i>추가
           </button>
-          <button class="btn btn-sm btn-primary" onclick="refreshTable()">
-            <i class="fas fa-sync-alt me-1"></i>새로고침
+          <button class="btn btn-sm" onclick="refreshTable()" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; font-size:0.85rem; padding:6px 16px;">
+            <i class="fas fa-sync-alt me-1" style="font-size:0.7rem;"></i>새로고침
           </button>
         </div>
       </div>
@@ -63,13 +63,13 @@
             <div class="fw-bold" id="stat_grand_total" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</div>
           </div>
         </div>
-        <!-- KT 매입 -->
+        <!-- KTC 매입 -->
         <div class="col-md-3">
           <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); box-shadow: 0 4px 15px rgba(14,165,233,0.3); overflow: hidden;">
             <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
             <div class="d-flex align-items-center" style="margin-bottom: 6px;">
               <i class="fas fa-network-wired" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
-              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">KT 매입</span>
+              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">KTC 매입</span>
             </div>
             <div class="fw-bold" id="stat_kt" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
             <div id="stat_kt_amount" style="font-size: 0.65rem; color: rgba(255,255,255,0.7); margin-top: 6px;">매입 -</div>
@@ -220,7 +220,7 @@
                 <label class="form-label small fw-semibold text-muted">통신사</label>
                 <select class="form-select form-select-sm" id="add_provider">
                   <option value="">선택</option>
-                  <option value="KT">KT</option>
+                  <option value="KTC">KTC</option>
                   <option value="LGU">LGU</option>
                   <option value="SKB">SKB</option>
                 </select>
@@ -297,7 +297,7 @@
                 <label class="form-label small fw-semibold text-muted">통신사</label>
                 <select class="form-select form-select-sm" id="edit_provider">
                   <option value="">선택</option>
-                  <option value="KT">KT</option>
+                  <option value="KTC">KTC</option>
                   <option value="LGU">LGU</option>
                   <option value="SKB">SKB</option>
                 </select>

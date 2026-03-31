@@ -19,7 +19,7 @@ NETWORK_PASSWD = os.getenv('NETWORK_PASSWD')
 NOW_DATETIME    = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
-def CallAristaAPI(ip, cmds, params=None):
+def CallAristaAPI(ip, cmds, params=None, auth=None):
     # eAPI 엔드포인트 URL
     url = f"http://{ip}/command-api"
 
@@ -45,7 +45,7 @@ def CallAristaAPI(ip, cmds, params=None):
             url,
             headers=headers,
             data=json.dumps(payload),
-            auth=(NETWORK_ID, NETWORK_PASSWD),
+            auth=auth or (NETWORK_ID, NETWORK_PASSWD),
             verify=False,
             timeout=10  # 10초 타임아웃 설정 (장비당 최대 대기 시간)
         )

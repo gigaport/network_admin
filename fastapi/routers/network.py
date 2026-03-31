@@ -80,8 +80,8 @@ async def CollectCisco(target: str):
     ]
 
     results = await asyncio.gather(*tasks)
-    # dictionary 형태로 변환
-    results_dict = {item["device_name"]: item for item in results}
+    # dictionary 형태로 변환 (None 결과 필터링)
+    results_dict = {item["device_name"]: item for item in results if item is not None}
 
     logger.info(f"Cisco 정보 수집 완료: {len(results_dict)}개 장비")
     return results_dict
@@ -1305,8 +1305,8 @@ async def GetCircuits():
                     ca.summary_address,
                     c.side_a, c.provider, c.circuit_id, c.nni_id,
                     c.type, c.state, c.env, c.usage, c.product, c.bandwidth,
-                    c.additional_circuit, c.phase,
-                    mfs.price AS fee_price,
+                    c.additional_circuit, c.phase, c.fee_code,
+                    mfs.price AS fee_price, mfs.description AS fee_description,
                     c.cot_device, c.rt_device,
                     c.lldp_cot_device, c.lldp_port, c.lldp_rt_device, c.lldp_rt_port,
                     c.join_type, c.contract_date, c.expiry_date, c.contract_period,
@@ -1317,11 +1317,7 @@ async def GetCircuits():
                 LEFT JOIN customer_addresses ca
                     ON c.member_code = ca.member_code
                     AND c.datacenter_code = ca.datacenter_code
-                LEFT JOIN member_fee_schedule mfs
-                    ON c.usage = mfs.usage
-                    AND c.phase = mfs.phase
-                    AND c.additional_circuit = mfs.additional_circuit
-                    AND (c.bandwidth = mfs.bandwidth OR (c.bandwidth IS NULL AND mfs.bandwidth IS NULL))
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 ORDER BY sc.member_number ASC,
                     CASE c.datacenter_code
                         WHEN 'DC1' THEN 1
@@ -1362,9 +1358,7 @@ async def CreateCircuit(request: Request):
     try:
         data = await request.json()
 
-        required_fields = ['member_code', 'datacenter_code', 'side_a', 'provider',
-                           'circuit_id', 'nni_id', 'type', 'state', 'env', 'usage', 'bandwidth',
-                           'cot_device', 'rt_device']
+        required_fields = ['member_code', 'datacenter_code']
         missing = [f for f in required_fields if not data.get(f)]
         if missing:
             raise HTTPException(status_code=400, detail=f"필수 필드 누락: {', '.join(missing)}")
@@ -1378,31 +1372,32 @@ async def CreateCircuit(request: Request):
                     type, state, env, usage, product, bandwidth, additional_circuit,
                     cot_device, rt_device, lldp_cot_device, lldp_port, lldp_rt_device, lldp_rt_port,
                     join_type, contract_date, expiry_date, contract_period,
-                    report_number, comments
+                    report_number, comments, phase, fee_code
                 ) VALUES (
                     %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s,
-                    %s, %s
+                    %s, %s, %s, %s
                 )
             """
 
             cur.execute(insert_query, (
                 data.get('member_code'), data.get('datacenter_code'),
-                data.get('side_a'), data.get('provider'),
-                data.get('circuit_id'), data.get('nni_id'),
-                data.get('type'), data.get('state'),
-                data.get('env'), data.get('usage'),
-                data.get('product') or None, data.get('bandwidth'),
+                data.get('side_a') or '', data.get('provider') or '',
+                data.get('circuit_id') or '', data.get('nni_id') or None,
+                data.get('type') or '', data.get('state') or '',
+                data.get('env') or '', data.get('usage') or '',
+                data.get('product') or None, data.get('bandwidth') or '',
                 data.get('additional_circuit', False),
-                data.get('cot_device'), data.get('rt_device'),
+                data.get('cot_device') or '', data.get('rt_device') or '',
                 data.get('lldp_cot_device') or None, data.get('lldp_port') or None,
                 data.get('lldp_rt_device') or None, data.get('lldp_rt_port') or None,
                 data.get('join_type', 0),
                 data.get('contract_date') or None, data.get('expiry_date') or None,
                 data.get('contract_period') or None,
                 data.get('report_number') or None, data.get('comments') or None,
+                data.get('phase') or 0, data.get('fee_code') or None,
             ))
 
             cur.close()
@@ -1436,16 +1431,25 @@ async def UpdateCircuit(circuit_id: int, request: Request):
             'cot_device', 'rt_device',
             'lldp_cot_device', 'lldp_port', 'lldp_rt_device', 'lldp_rt_port',
             'join_type', 'contract_date', 'expiry_date', 'contract_period',
-            'report_number', 'comments', 'phase', 'side_a'
+            'report_number', 'comments', 'phase', 'side_a', 'fee_code'
         }
 
         # 요청 데이터에 포함된 필드만 SET 절 구성
+        # 빈 문자열/None 허용 컬럼 (nullable 필드)
+        nullable_columns = {'comments', 'report_number',
+                            'lldp_cot_device', 'lldp_port', 'lldp_rt_device', 'lldp_rt_port'}
         set_parts = []
         values = []
         for key, value in data.items():
-            if key in allowed_columns:
+            if key not in allowed_columns:
+                continue
+            # nullable 컬럼은 빈 문자열도 허용 (NULL로 저장)
+            if key in nullable_columns:
                 set_parts.append(f"{key} = %s")
-                values.append(value if value != '' else None)
+                values.append(value if value else None)
+            elif value is not None and value != '':
+                set_parts.append(f"{key} = %s")
+                values.append(value)
 
         if not set_parts:
             raise HTTPException(status_code=400, detail="수정할 데이터가 없습니다.")
@@ -1500,6 +1504,204 @@ async def DeleteCircuit(circuit_id: int):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
+# ==================== 정보이용사 회선내역 (Info Company Circuits) ====================
+
+@router.get("/info_company_circuits")
+async def GetInfoCompanyCircuits():
+    """정보이용사 회선내역 전체 조회"""
+    logger.info("정보이용사 회선내역 조회 시작")
+
+    try:
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            query = """
+                SELECT
+                    c.id, c.member_code,
+                    sc.member_number, sc.company_name,
+                    c.datacenter_code, c.gubn,
+                    ca.summary_address,
+                    c.side_a, c.provider, c.circuit_id,
+                    c.type, c.env, c.usage, c.product, c.bandwidth,
+                    c.additional_circuit, c.phase, c.fee_code,
+                    mfs.price AS fee_price, mfs.description AS fee_description,
+                    c.lldp_port,
+                    c.join_type, c.contract_date, c.expiry_date, c.contract_period,
+                    c.report_number, c.comments,
+                    c.created_at, c.updated_at
+                FROM info_company_circuit c
+                LEFT JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN customer_addresses ca
+                    ON c.member_code = ca.member_code
+                    AND c.datacenter_code = ca.datacenter_code
+                LEFT JOIN info_fee_schedule mfs ON c.fee_code = mfs.fee_code
+                ORDER BY sc.member_number ASC,
+                    CASE c.datacenter_code
+                        WHEN 'DC1' THEN 1
+                        WHEN 'DC2' THEN 2
+                        WHEN 'DC3' THEN 3
+                        WHEN 'DR' THEN 4
+                        ELSE 5
+                    END ASC,
+                    c.id ASC
+            """
+
+            cur.execute(query)
+            results = cur.fetchall()
+
+            for row in results:
+                for key in ['created_at', 'updated_at']:
+                    if row.get(key):
+                        row[key] = row[key].strftime('%Y-%m-%d %H:%M:%S')
+                for key in ['contract_date', 'expiry_date']:
+                    if row.get(key):
+                        row[key] = row[key].strftime('%Y-%m-%d')
+
+            cur.close()
+
+        logger.info(f"정보이용사 회선내역 조회 완료: {len(results)}건")
+        return {"success": True, "data": results}
+
+    except Exception as e:
+        logger.error(f"정보이용사 회선내역 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.post("/info_company_circuits")
+async def CreateInfoCompanyCircuit(request: Request):
+    """정보이용사 회선내역 추가"""
+    logger.info("정보이용사 회선내역 추가 요청")
+
+    try:
+        data = await request.json()
+
+        required_fields = ['member_code', 'datacenter_code']
+        missing = [f for f in required_fields if not data.get(f)]
+        if missing:
+            raise HTTPException(status_code=400, detail=f"필수 필드 누락: {', '.join(missing)}")
+
+        with get_connection() as conn:
+            cur = conn.cursor()
+
+            insert_query = """
+                INSERT INTO info_company_circuit (
+                    member_code, datacenter_code, gubn, side_a, provider, circuit_id,
+                    type, env, usage, product, bandwidth, additional_circuit,
+                    lldp_port, join_type, contract_date, expiry_date, contract_period,
+                    report_number, comments, phase, fee_code
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s
+                )
+            """
+
+            cur.execute(insert_query, (
+                data.get('member_code'), data.get('datacenter_code'),
+                data.get('gubn') or None, data.get('side_a') or None,
+                data.get('provider') or '', data.get('circuit_id') or '',
+                data.get('type') or '', data.get('env') or '',
+                data.get('usage') or '', data.get('product') or None,
+                data.get('bandwidth') or None,
+                data.get('additional_circuit', False),
+                data.get('lldp_port') or None,
+                data.get('join_type', 0),
+                data.get('contract_date') or None, data.get('expiry_date') or None,
+                data.get('contract_period') or None,
+                data.get('report_number') or None, data.get('comments') or None,
+                data.get('phase') or 0, data.get('fee_code') or None,
+            ))
+
+            cur.close()
+
+        logger.info(f"정보이용사 회선내역 추가 완료: {data.get('circuit_id')}")
+        return {"success": True, "message": "정보이용사 회선내역이 추가되었습니다."}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"정보이용사 회선내역 추가 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.put("/info_company_circuits/{circuit_id}")
+async def UpdateInfoCompanyCircuit(circuit_id: int, request: Request):
+    """정보이용사 회선내역 수정"""
+    logger.info(f"정보이용사 회선내역 수정 요청: ID={circuit_id}")
+
+    try:
+        data = await request.json()
+        data.pop('id', None)
+
+        allowed_columns = {
+            'member_code', 'datacenter_code', 'gubn', 'side_a', 'provider',
+            'circuit_id', 'type', 'env', 'usage',
+            'product', 'bandwidth', 'additional_circuit',
+            'lldp_port', 'join_type', 'contract_date', 'expiry_date', 'contract_period',
+            'report_number', 'comments', 'phase', 'fee_code'
+        }
+
+        nullable_columns = {'comments', 'report_number', 'lldp_port'}
+        set_parts = []
+        values = []
+        for key, value in data.items():
+            if key not in allowed_columns:
+                continue
+            if key in nullable_columns:
+                set_parts.append(f"{key} = %s")
+                values.append(value if value else None)
+            elif value is not None and value != '':
+                set_parts.append(f"{key} = %s")
+                values.append(value)
+
+        if not set_parts:
+            raise HTTPException(status_code=400, detail="수정할 데이터가 없습니다.")
+
+        set_parts.append("updated_at = CURRENT_TIMESTAMP")
+        values.append(circuit_id)
+
+        with get_connection() as conn:
+            cur = conn.cursor()
+            update_query = f"UPDATE info_company_circuit SET {', '.join(set_parts)} WHERE id = %s"
+            cur.execute(update_query, values)
+            if cur.rowcount == 0:
+                raise HTTPException(status_code=404, detail="정보이용사 회선내역을 찾을 수 없습니다.")
+            cur.close()
+
+        logger.info(f"정보이용사 회선내역 수정 완료: ID={circuit_id}")
+        return {"success": True, "message": "정보이용사 회선내역이 수정되었습니다."}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"정보이용사 회선내역 수정 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.delete("/info_company_circuits/{circuit_id}")
+async def DeleteInfoCompanyCircuit(circuit_id: int):
+    """정보이용사 회선내역 삭제"""
+    logger.info(f"정보이용사 회선내역 삭제 요청: ID={circuit_id}")
+
+    try:
+        with get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM info_company_circuit WHERE id = %s", (circuit_id,))
+            if cur.rowcount == 0:
+                raise HTTPException(status_code=404, detail="정보이용사 회선내역을 찾을 수 없습니다.")
+            cur.close()
+
+        logger.info(f"정보이용사 회선내역 삭제 완료: ID={circuit_id}")
+        return {"success": True, "message": "정보이용사 회선내역이 삭제되었습니다."}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"정보이용사 회선내역 삭제 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
 @router.get("/fee_schedule")
 async def GetFeeSchedule():
     """과금기준 목록 조회"""
@@ -1510,7 +1712,7 @@ async def GetFeeSchedule():
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
             cur.execute("""
-                SELECT id, usage, description, price, phase, bandwidth, additional_circuit
+                SELECT id, fee_code, usage, description, price, phase, bandwidth, additional_circuit
                 FROM member_fee_schedule
                 ORDER BY id
             """)
@@ -1537,10 +1739,10 @@ async def CreateFeeSchedule(request: Request):
             cur = conn.cursor()
 
             cur.execute("""
-                INSERT INTO member_fee_schedule (usage, description, price, phase, bandwidth, additional_circuit)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO member_fee_schedule (fee_code, usage, description, price, phase, bandwidth, additional_circuit)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
-                data.get('usage'), data.get('description'),
+                data.get('fee_code'), data.get('usage'), data.get('description'),
                 data.get('price', 0), data.get('phase', 0),
                 data.get('bandwidth') or None, data.get('additional_circuit', False)
             ))
@@ -1568,12 +1770,12 @@ async def UpdateFeeSchedule(fee_id: int, request: Request):
 
             cur.execute("""
                 UPDATE member_fee_schedule SET
-                    usage = %s, description = %s,
+                    fee_code = %s, usage = %s, description = %s,
                     price = %s, phase = %s,
                     bandwidth = %s, additional_circuit = %s
                 WHERE id = %s
             """, (
-                data.get('usage'), data.get('description'),
+                data.get('fee_code'), data.get('usage'), data.get('description'),
                 data.get('price', 0), data.get('phase', 0),
                 data.get('bandwidth') or None, data.get('additional_circuit', False),
                 fee_id
@@ -1617,6 +1819,128 @@ async def DeleteFeeSchedule(fee_id: int):
         raise
     except Exception as e:
         logger.error(f"과금기준 삭제 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+# ==================== 정보이용사 요금기준 (Info Fee Schedule) ====================
+
+@router.get("/info_fee_schedule")
+async def GetInfoFeeSchedule():
+    """정보이용사 과금기준 목록 조회"""
+    logger.info("정보이용사 과금기준 목록 조회 시작")
+
+    try:
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            cur.execute("""
+                SELECT id, fee_code, usage, description, price, phase, bandwidth, additional_circuit
+                FROM info_fee_schedule
+                ORDER BY id
+            """)
+            results = cur.fetchall()
+            cur.close()
+
+        logger.info(f"정보이용사 과금기준 목록 조회 완료: {len(results)}건")
+        return {"success": True, "data": results}
+
+    except Exception as e:
+        logger.error(f"정보이용사 과금기준 목록 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.post("/info_fee_schedule")
+async def CreateInfoFeeSchedule(request: Request):
+    """정보이용사 과금기준 추가"""
+    logger.info("정보이용사 과금기준 추가 요청")
+
+    try:
+        data = await request.json()
+
+        with get_connection() as conn:
+            cur = conn.cursor()
+
+            cur.execute("""
+                INSERT INTO info_fee_schedule (fee_code, usage, description, price, phase, bandwidth, additional_circuit)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                data.get('fee_code'), data.get('usage'), data.get('description'),
+                data.get('price', 0), data.get('phase', 0),
+                data.get('bandwidth') or None, data.get('additional_circuit', False)
+            ))
+
+            cur.close()
+
+        logger.info(f"정보이용사 과금기준 추가 완료: {data.get('usage')} - {data.get('description')}")
+        return {"success": True, "message": "정보이용사 과금기준이 추가되었습니다."}
+
+    except Exception as e:
+        logger.error(f"정보이용사 과금기준 추가 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.put("/info_fee_schedule/{fee_id}")
+async def UpdateInfoFeeSchedule(fee_id: int, request: Request):
+    """정보이용사 과금기준 수정"""
+    logger.info(f"정보이용사 과금기준 수정 요청: ID={fee_id}")
+
+    try:
+        data = await request.json()
+
+        with get_connection() as conn:
+            cur = conn.cursor()
+
+            cur.execute("""
+                UPDATE info_fee_schedule SET
+                    fee_code = %s, usage = %s, description = %s,
+                    price = %s, phase = %s,
+                    bandwidth = %s, additional_circuit = %s
+                WHERE id = %s
+            """, (
+                data.get('fee_code'), data.get('usage'), data.get('description'),
+                data.get('price', 0), data.get('phase', 0),
+                data.get('bandwidth') or None, data.get('additional_circuit', False),
+                fee_id
+            ))
+
+            if cur.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Info fee schedule not found")
+
+            cur.close()
+
+        logger.info(f"정보이용사 과금기준 수정 완료: ID={fee_id}")
+        return {"success": True, "message": "정보이용사 과금기준이 수정되었습니다."}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"정보이용사 과금기준 수정 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.delete("/info_fee_schedule/{fee_id}")
+async def DeleteInfoFeeSchedule(fee_id: int):
+    """정보이용사 과금기준 삭제"""
+    logger.info(f"정보이용사 과금기준 삭제 요청: ID={fee_id}")
+
+    try:
+        with get_connection() as conn:
+            cur = conn.cursor()
+
+            cur.execute("DELETE FROM info_fee_schedule WHERE id = %s", (fee_id,))
+
+            if cur.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Info fee schedule not found")
+
+            cur.close()
+
+        logger.info(f"정보이용사 과금기준 삭제 완료: ID={fee_id}")
+        return {"success": True, "message": "정보이용사 과금기준이 삭제되었습니다."}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"정보이용사 과금기준 삭제 실패: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
@@ -1724,10 +2048,7 @@ async def get_dashboard():
                     COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
                     COALESCE(SUM(mfs.price), 0) AS grand_total
                 FROM circuit c
-                LEFT JOIN member_fee_schedule mfs
-                    ON c.usage = mfs.usage AND c.phase = mfs.phase
-                    AND c.additional_circuit = mfs.additional_circuit
-                    AND (c.bandwidth = mfs.bandwidth OR (c.bandwidth IS NULL AND mfs.bandwidth IS NULL))
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
             """)
             revenue_total = dict(cur.fetchone())
@@ -1740,10 +2061,7 @@ async def get_dashboard():
                        COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_revenue
                 FROM circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
-                LEFT JOIN member_fee_schedule mfs
-                    ON c.usage = mfs.usage AND c.phase = mfs.phase
-                    AND c.additional_circuit = mfs.additional_circuit
-                    AND (c.bandwidth = mfs.bandwidth OR (c.bandwidth IS NULL AND mfs.bandwidth IS NULL))
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
                 GROUP BY sc.company_name, sc.member_code
                 HAVING SUM(mfs.price) > 0
@@ -1757,15 +2075,49 @@ async def get_dashboard():
                 SELECT c.usage,
                        COALESCE(SUM(mfs.price), 0) AS revenue
                 FROM circuit c
-                LEFT JOIN member_fee_schedule mfs
-                    ON c.usage = mfs.usage AND c.phase = mfs.phase
-                    AND c.additional_circuit = mfs.additional_circuit
-                    AND (c.bandwidth = mfs.bandwidth OR (c.bandwidth IS NULL AND mfs.bandwidth IS NULL))
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
                 GROUP BY c.usage
                 ORDER BY c.usage
             """)
             revenue_by_usage = {row['usage']: int(row['revenue']) for row in cur.fetchall()}
+
+            # 11. 이익 현황 (매출 - 매입)
+            cur.execute("""
+                SELECT COALESCE(SUM(nc.cost_price), 0) AS purchase_total
+                FROM purchase_contract pc
+                LEFT JOIN network_cost nc ON pc.cost_code = nc.code
+            """)
+            purchase_total_row = cur.fetchone()
+            purchase_grand_total = float(purchase_total_row['purchase_total'] or 0)
+
+            # 12. 회원사별 이익 (전체)
+            cur.execute("""
+                WITH rev AS (
+                    SELECT sc.member_code, sc.company_name,
+                           COALESCE(SUM(mfs.price), 0) AS revenue_total
+                    FROM circuit c
+                    JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                    LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
+                    WHERE c.usage IN ('ORD', 'MPR')
+                    GROUP BY sc.member_code, sc.company_name
+                ),
+                pur AS (
+                    SELECT pc.member_code,
+                           COALESCE(SUM(nc.cost_price), 0) AS purchase_total
+                    FROM purchase_contract pc
+                    LEFT JOIN network_cost nc ON pc.cost_code = nc.code
+                    GROUP BY pc.member_code
+                )
+                SELECT rev.member_code, rev.company_name,
+                       rev.revenue_total,
+                       COALESCE(pur.purchase_total, 0) AS purchase_total,
+                       rev.revenue_total - COALESCE(pur.purchase_total, 0) AS profit
+                FROM rev
+                LEFT JOIN pur ON rev.member_code = pur.member_code
+                ORDER BY profit DESC
+            """)
+            all_profit_members = [dict(row) for row in cur.fetchall()]
 
             cur.close()
 
@@ -1791,6 +2143,13 @@ async def get_dashboard():
                     "mpr_total": int(revenue_total['mpr_total']),
                     "by_usage": revenue_by_usage,
                     "top_members": top_revenue_members
+                },
+                "profit": {
+                    "revenue_total": int(revenue_total['grand_total']),
+                    "purchase_total": int(purchase_grand_total),
+                    "profit_total": int(revenue_total['grand_total']) - int(purchase_grand_total),
+                    "profit_rate": round(((int(revenue_total['grand_total']) - int(purchase_grand_total)) / int(revenue_total['grand_total'])) * 100, 1) if int(revenue_total['grand_total']) > 0 else 0.0,
+                    "members": all_profit_members
                 }
             }
         }
@@ -1824,10 +2183,7 @@ async def GetRevenueSummary():
                     COALESCE(SUM(mfs.price), 0) AS grand_total
                 FROM circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
-                LEFT JOIN member_fee_schedule mfs
-                    ON c.usage = mfs.usage AND c.phase = mfs.phase
-                    AND c.additional_circuit = mfs.additional_circuit
-                    AND (c.bandwidth = mfs.bandwidth OR (c.bandwidth IS NULL AND mfs.bandwidth IS NULL))
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
                 GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
                 ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
@@ -1844,10 +2200,7 @@ async def GetRevenueSummary():
                     mfs.price AS fee_price, mfs.description AS fee_description
                 FROM circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
-                LEFT JOIN member_fee_schedule mfs
-                    ON c.usage = mfs.usage AND c.phase = mfs.phase
-                    AND c.additional_circuit = mfs.additional_circuit
-                    AND (c.bandwidth = mfs.bandwidth OR (c.bandwidth IS NULL AND mfs.bandwidth IS NULL))
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
                 ORDER BY sc.member_number, c.datacenter_code, c.usage
             """
@@ -1909,10 +2262,7 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
                 LEFT JOIN circuit c ON c.usage IN ('ORD', 'MPR')
                     AND (c.contract_date IS NULL OR c.contract_date <= mr.m_end)
                     AND (c.expiry_date IS NULL OR c.expiry_date >= mr.m_start)
-                LEFT JOIN member_fee_schedule mfs
-                    ON c.usage = mfs.usage AND c.phase = mfs.phase
-                    AND c.additional_circuit = mfs.additional_circuit
-                    AND (c.bandwidth = mfs.bandwidth OR (c.bandwidth IS NULL AND mfs.bandwidth IS NULL))
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 GROUP BY mr.m_start
                 ORDER BY mr.m_start
             """
@@ -1932,10 +2282,7 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
                     COALESCE(SUM(mfs.price), 0) AS grand_total
                 FROM circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
-                LEFT JOIN member_fee_schedule mfs
-                    ON c.usage = mfs.usage AND c.phase = mfs.phase
-                    AND c.additional_circuit = mfs.additional_circuit
-                    AND (c.bandwidth = mfs.bandwidth OR (c.bandwidth IS NULL AND mfs.bandwidth IS NULL))
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
                     AND (c.contract_date IS NULL OR c.contract_date <= %s)
                     AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
@@ -1955,10 +2302,7 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
                     mfs.price AS fee_price, mfs.description AS fee_description
                 FROM circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
-                LEFT JOIN member_fee_schedule mfs
-                    ON c.usage = mfs.usage AND c.phase = mfs.phase
-                    AND c.additional_circuit = mfs.additional_circuit
-                    AND (c.bandwidth = mfs.bandwidth OR (c.bandwidth IS NULL AND mfs.bandwidth IS NULL))
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
                     AND (c.contract_date IS NULL OR c.contract_date <= %s)
                     AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
@@ -2014,10 +2358,7 @@ async def GetRevenueReportPdf(year_month: str = Query(..., description="보고�
                     COALESCE(SUM(mfs.price), 0) AS grand_total
                 FROM circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
-                LEFT JOIN member_fee_schedule mfs
-                    ON c.usage = mfs.usage AND c.phase = mfs.phase
-                    AND c.additional_circuit = mfs.additional_circuit
-                    AND (c.bandwidth = mfs.bandwidth OR (c.bandwidth IS NULL AND mfs.bandwidth IS NULL))
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
                     AND (c.contract_date IS NULL OR c.contract_date <= %s)
                     AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
@@ -2707,6 +3048,934 @@ async def DeletePurchaseContract(item_id: int):
 
 
 # ============================================================
+# 회원사 이익내역 (Profit Summary)
+# ============================================================
+
+@router.get("/profit_summary")
+async def GetProfitSummary():
+    """회원사별 이익내역 조회 (매출 - 매입)"""
+    logger.info("회원사 이익내역 조회 시작")
+
+    try:
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            # 1) 매출 집계 (member_code + phase 기준)
+            revenue_query = """
+                SELECT
+                    sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
+                    sc.is_pb, c.phase,
+                    COUNT(*) FILTER (WHERE c.usage = 'ORD') AS ord_count,
+                    COUNT(*) FILTER (WHERE c.usage = 'MPR') AS mpr_count,
+                    COUNT(*) AS total_count,
+                    COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'ORD'), 0) AS ord_total,
+                    COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
+                    COALESCE(SUM(mfs.price), 0) AS revenue_total
+                FROM circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
+                WHERE c.usage IN ('ORD', 'MPR')
+                GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
+                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
+            """
+            cur.execute(revenue_query)
+            revenue_rows = cur.fetchall()
+
+            # 2) 매입 집계 (member_code 기준)
+            purchase_query = """
+                SELECT
+                    pc.member_code,
+                    COUNT(*) AS purchase_count,
+                    COALESCE(SUM(nc.cost_price), 0) AS purchase_total
+                FROM purchase_contract pc
+                LEFT JOIN network_cost nc ON pc.cost_code = nc.code
+                GROUP BY pc.member_code
+            """
+            cur.execute(purchase_query)
+            purchase_rows = cur.fetchall()
+            cur.close()
+
+        # 3) 매입 데이터를 member_code 기준 dict로 변환
+        purchase_map = {}
+        for p in purchase_rows:
+            purchase_map[p['member_code']] = {
+                'purchase_count': int(p['purchase_count'] or 0),
+                'purchase_total': float(p['purchase_total'] or 0)
+            }
+
+        # 4) 매출 + 매입 병합하여 이익 계산
+        result = []
+        for r in revenue_rows:
+            member_code = r['member_code']
+            purchase_info = purchase_map.get(member_code, {'purchase_count': 0, 'purchase_total': 0})
+            revenue_total = float(r['revenue_total'] or 0)
+            purchase_total = float(purchase_info['purchase_total'])
+            profit = revenue_total - purchase_total
+            profit_rate = round((profit / revenue_total) * 100, 1) if revenue_total > 0 else 0.0
+
+            result.append({
+                'member_code': r['member_code'],
+                'member_number': r['member_number'],
+                'company_name': r['company_name'],
+                'subscription_type': r['subscription_type'],
+                'is_pb': r['is_pb'],
+                'phase': r['phase'],
+                'ord_count': int(r['ord_count'] or 0),
+                'mpr_count': int(r['mpr_count'] or 0),
+                'total_count': int(r['total_count'] or 0),
+                'ord_total': float(r['ord_total'] or 0),
+                'mpr_total': float(r['mpr_total'] or 0),
+                'revenue_total': revenue_total,
+                'purchase_count': purchase_info['purchase_count'],
+                'purchase_total': purchase_total,
+                'profit': profit,
+                'profit_rate': profit_rate
+            })
+
+        logger.info(f"회원사 이익내역 조회 완료: {len(result)}건")
+        return {"success": True, "data": result}
+
+    except Exception as e:
+        logger.error(f"회원사 이익내역 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.get("/profit_monthly")
+async def GetProfitMonthly():
+    """월별 이익 추이 조회 (최근 12개월)"""
+    logger.info("월별 이익 추이 조회 시작")
+
+    try:
+        today = datetime.now().date()
+        current_month_start = today.replace(day=1)
+        trend_start = current_month_start - relativedelta(months=11)
+
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            # 12개월 매출 추이
+            trend_query = """
+                WITH months AS (
+                    SELECT generate_series(
+                        %s::date, %s::date, '1 month'::interval
+                    )::date AS m_start
+                ),
+                month_ranges AS (
+                    SELECT m_start,
+                           (m_start + interval '1 month' - interval '1 day')::date AS m_end
+                    FROM months
+                )
+                SELECT
+                    to_char(mr.m_start, 'YYYY-MM') AS month,
+                    COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'ORD'), 0) AS ord_total,
+                    COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
+                    COALESCE(SUM(mfs.price), 0) AS revenue_total
+                FROM month_ranges mr
+                LEFT JOIN circuit c ON c.usage IN ('ORD', 'MPR')
+                    AND (c.contract_date IS NULL OR c.contract_date <= mr.m_end)
+                    AND (c.expiry_date IS NULL OR c.expiry_date >= mr.m_start)
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
+                GROUP BY mr.m_start
+                ORDER BY mr.m_start
+            """
+            cur.execute(trend_query, (trend_start, current_month_start))
+            revenue_trend = cur.fetchall()
+
+            # 총 매입 (날짜 필터 없음 - 고정값)
+            purchase_query = """
+                SELECT COALESCE(SUM(nc.cost_price), 0) AS purchase_total
+                FROM purchase_contract pc
+                LEFT JOIN network_cost nc ON pc.cost_code = nc.code
+            """
+            cur.execute(purchase_query)
+            purchase_result = cur.fetchone()
+            purchase_total = float(purchase_result['purchase_total'] or 0)
+            cur.close()
+
+        # 월별 이익 계산
+        trend = []
+        for r in revenue_trend:
+            rev = float(r['revenue_total'] or 0)
+            profit = rev - purchase_total
+            trend.append({
+                'month': r['month'],
+                'revenue_total': rev,
+                'purchase_total': purchase_total,
+                'profit': profit,
+                'ord_total': float(r['ord_total'] or 0),
+                'mpr_total': float(r['mpr_total'] or 0)
+            })
+
+        logger.info(f"월별 이익 추이 조회 완료: {len(trend)}개월")
+        return {"success": True, "data": trend}
+
+    except Exception as e:
+        logger.error(f"월별 이익 추이 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.get("/profit_report_pdf")
+async def GetProfitReportPdf():
+    """회원사 이익내역 보고서 PDF 다운로드"""
+    logger.info("이익내역 보고서 PDF 생성 시작")
+
+    try:
+        from fpdf import FPDF
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        import matplotlib.font_manager as fm
+        import tempfile
+
+        # 한글 폰트 설정
+        font_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "DroidSansFallback.ttf")
+        font_prop = fm.FontProperties(fname=font_path)
+        fm.fontManager.addfont(font_path)
+        plt.rcParams['font.family'] = fm.FontProperties(fname=font_path).get_name()
+        plt.rcParams['axes.unicode_minus'] = False
+
+        # ── 데이터 조회 ──
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            revenue_query = """
+                SELECT
+                    sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
+                    sc.is_pb, c.phase,
+                    COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'ORD'), 0) AS ord_total,
+                    COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
+                    COALESCE(SUM(mfs.price), 0) AS revenue_total
+                FROM circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
+                WHERE c.usage IN ('ORD', 'MPR')
+                GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
+                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
+            """
+            cur.execute(revenue_query)
+            revenue_rows = cur.fetchall()
+
+            purchase_query = """
+                SELECT pc.member_code, COALESCE(SUM(nc.cost_price), 0) AS purchase_total
+                FROM purchase_contract pc
+                LEFT JOIN network_cost nc ON pc.cost_code = nc.code
+                GROUP BY pc.member_code
+            """
+            cur.execute(purchase_query)
+            purchase_rows = cur.fetchall()
+            cur.close()
+
+        purchase_map = {p['member_code']: float(p['purchase_total'] or 0) for p in purchase_rows}
+
+        detail_rows = []
+        for r in revenue_rows:
+            mc = r['member_code']
+            rev = float(r['revenue_total'] or 0)
+            pur = purchase_map.get(mc, 0)
+            profit = rev - pur
+            rate = round((profit / rev) * 100, 1) if rev > 0 else 0.0
+            detail_rows.append({
+                'member_code': mc, 'member_number': r['member_number'],
+                'company_name': r['company_name'], 'subscription_type': r['subscription_type'],
+                'is_pb': r['is_pb'], 'phase': r['phase'],
+                'ord_total': float(r['ord_total'] or 0), 'mpr_total': float(r['mpr_total'] or 0),
+                'revenue_total': rev, 'purchase_total': pur, 'profit': profit, 'profit_rate': rate
+            })
+
+        member_agg = {}
+        for r in detail_rows:
+            mc = r['member_code']
+            if mc not in member_agg:
+                member_agg[mc] = {
+                    'member_number': r['member_number'], 'company_name': r['company_name'],
+                    'subscription_type': r['subscription_type'], 'is_pb': r['is_pb'],
+                    'ord_total': 0, 'mpr_total': 0, 'revenue_total': 0, 'purchase_total': 0, 'profit': 0
+                }
+            for k in ('ord_total', 'mpr_total', 'revenue_total', 'purchase_total', 'profit'):
+                member_agg[mc][k] += r[k]
+
+        total_revenue = sum(m['revenue_total'] for m in member_agg.values())
+        total_purchase = sum(m['purchase_total'] for m in member_agg.values())
+        total_profit = sum(m['profit'] for m in member_agg.values())
+        total_ord = sum(m['ord_total'] for m in member_agg.values())
+        total_mpr = sum(m['mpr_total'] for m in member_agg.values())
+        member_count = len(member_agg)
+        profit_rate_total = round((total_profit / total_revenue) * 100, 1) if total_revenue > 0 else 0.0
+
+        # ── 월별 추이 데이터 ──
+        today = datetime.now().date()
+        current_month_start = today.replace(day=1)
+        trend_start = current_month_start - relativedelta(months=11)
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute("""
+                WITH months AS (
+                    SELECT generate_series(%s::date, %s::date, '1 month'::interval)::date AS m_start
+                ),
+                month_ranges AS (
+                    SELECT m_start, (m_start + interval '1 month' - interval '1 day')::date AS m_end FROM months
+                )
+                SELECT to_char(mr.m_start, 'YYYY-MM') AS month,
+                    COALESCE(SUM(mfs.price), 0) AS revenue_total
+                FROM month_ranges mr
+                LEFT JOIN circuit c ON c.usage IN ('ORD', 'MPR')
+                    AND (c.contract_date IS NULL OR c.contract_date <= mr.m_end)
+                    AND (c.expiry_date IS NULL OR c.expiry_date >= mr.m_start)
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
+                GROUP BY mr.m_start ORDER BY mr.m_start
+            """, (trend_start, current_month_start))
+            monthly_trend = cur.fetchall()
+            cur.close()
+
+        monthly_data = []
+        for r in monthly_trend:
+            rev = float(r['revenue_total'] or 0)
+            monthly_data.append({'month': r['month'], 'revenue': rev, 'purchase': total_purchase, 'profit': rev - total_purchase})
+
+        # ──────────────────────────────────────
+        # 차트 생성 (모노톤 + 절제된 컬러)
+        # ──────────────────────────────────────
+        # 색상 팔레트 (네이비 기반 모노톤)
+        C_NAVY = '#1b2a4a'
+        C_STEEL = '#4a5568'
+        C_SLATE = '#8896ab'
+        C_SILVER = '#cbd5e0'
+        C_BG = '#f7f8fa'
+        C_ACCENT = '#2b6cb0'  # 딥블루 액센트
+        C_RED = '#c53030'
+        C_GRID = '#e8ecf1'
+
+        chart_files = []
+
+        # 공통 차트 스타일
+        def apply_chart_style(ax, title_text):
+            ax.set_facecolor('white')
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.spines['left'].set_color(C_GRID)
+            ax.spines['bottom'].set_color(C_GRID)
+            ax.tick_params(colors=C_STEEL, labelsize=7)
+            for tick in ax.get_xticklabels():
+                tick.set_fontproperties(font_prop)
+            for tick in ax.get_yticklabels():
+                tick.set_fontproperties(font_prop)
+            if title_text:
+                ax.set_title(title_text, fontproperties=font_prop, fontsize=10, fontweight='bold', color=C_NAVY, pad=10, loc='left')
+
+        # 차트0: 월별 추이 (막대+라인) - 절제된 톤
+        fig0, ax0 = plt.subplots(figsize=(10, 3.2))
+        fig0.patch.set_facecolor('white')
+        m_labels = [d['month'][2:].replace('-', '.') for d in monthly_data]
+        m_revenues = [d['revenue'] / 10000 for d in monthly_data]
+        m_purchases = [d['purchase'] / 10000 for d in monthly_data]
+        m_profits = [d['profit'] / 10000 for d in monthly_data]
+        x_idx = range(len(m_labels))
+        bar_w = 0.28
+        ax0.bar([i - bar_w/2 for i in x_idx], m_revenues, width=bar_w, label='매출', color=C_ACCENT, alpha=0.25, edgecolor=C_ACCENT, linewidth=0.6)
+        ax0.bar([i + bar_w/2 for i in x_idx], m_purchases, width=bar_w, label='매입', color=C_RED, alpha=0.2, edgecolor=C_RED, linewidth=0.6)
+        ax0_twin = ax0.twinx()
+        ax0_twin.plot(x_idx, m_profits, color=C_NAVY, linewidth=2, marker='o', markersize=4, markerfacecolor='white', markeredgecolor=C_NAVY, markeredgewidth=1.5, label='이익', zorder=5)
+        ax0_twin.fill_between(x_idx, m_profits, alpha=0.04, color=C_NAVY)
+        apply_chart_style(ax0, None)
+        ax0_twin.spines['top'].set_visible(False)
+        ax0_twin.spines['right'].set_color(C_GRID)
+        for tick in ax0_twin.get_yticklabels():
+            tick.set_fontproperties(font_prop)
+            tick.set_fontsize(7)
+            tick.set_color(C_STEEL)
+        ax0.set_ylabel('매출/매입 (만원)', fontproperties=font_prop, fontsize=7.5, color=C_SLATE)
+        ax0_twin.set_ylabel('이익 (만원)', fontproperties=font_prop, fontsize=7.5, color=C_SLATE)
+        ax0.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:,.0f}'))
+        ax0_twin.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:,.0f}'))
+        ax0.grid(axis='y', alpha=0.08, color=C_STEEL)
+        # 범례를 차트 바깥 상단 우측에 가로로 배치
+        lines1, labels1 = ax0.get_legend_handles_labels()
+        lines2, labels2 = ax0_twin.get_legend_handles_labels()
+        leg = fig0.legend(lines1 + lines2, labels1 + labels2, prop=font_prop, fontsize=8,
+                          loc='upper right', bbox_to_anchor=(0.98, 0.98), ncol=3,
+                          frameon=True, fancybox=False, edgecolor=C_GRID, framealpha=0.95)
+        leg.get_frame().set_linewidth(0.5)
+        fig0.subplots_adjust(top=0.88)
+        tmp0 = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        fig0.savefig(tmp0.name, dpi=160, bbox_inches='tight', facecolor='white')
+        plt.close(fig0)
+        chart_files.append(tmp0.name)
+
+        # 차트1: 이익 TOP 10 (가로 막대) - 단색 계열
+        top10_chart = sorted(member_agg.values(), key=lambda x: x['profit'], reverse=True)[:10]
+        top10_chart.reverse()
+        fig1, ax1 = plt.subplots(figsize=(6.5, 4))
+        fig1.patch.set_facecolor('white')
+        y_pos = range(len(top10_chart))
+        names = [m['company_name'] for m in top10_chart]
+        profits_c = [m['profit'] / 10000 for m in top10_chart]
+        # 단일 색상 그라데이션 (진한 순서대로)
+        bar_colors = [C_ACCENT if i >= 7 else (C_SLATE if i >= 4 else C_SILVER) for i in range(len(top10_chart))]
+        bars = ax1.barh(y_pos, profits_c, height=0.55, color=bar_colors, edgecolor='none')
+        # 값 표시
+        for i, (bar, val) in enumerate(zip(bars, profits_c)):
+            ax1.text(bar.get_width() + max(profits_c) * 0.01, bar.get_y() + bar.get_height()/2,
+                     f'{val:,.0f}', va='center', fontproperties=font_prop, fontsize=7, color=C_STEEL)
+        ax1.set_yticks(list(y_pos))
+        ax1.set_yticklabels(names, fontproperties=font_prop, fontsize=8, color=C_NAVY)
+        ax1.set_xlabel('이익 (만원)', fontproperties=font_prop, fontsize=7.5, color=C_SLATE)
+        apply_chart_style(ax1, '이익 상위 10 회원사')
+        ax1.grid(axis='x', alpha=0.06, color=C_STEEL)
+        ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:,.0f}'))
+        fig1.tight_layout()
+        tmp1 = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        fig1.savefig(tmp1.name, dpi=160, bbox_inches='tight', facecolor='white')
+        plt.close(fig1)
+        chart_files.append(tmp1.name)
+
+        # 차트2: 매출 vs 매입 (도넛) - 절제된 2색
+        fig2, ax2 = plt.subplots(figsize=(3.2, 3))
+        fig2.patch.set_facecolor('white')
+        wedges, texts, autotexts = ax2.pie(
+            [total_revenue, total_purchase], labels=['매출', '매입'],
+            colors=[C_ACCENT, '#a0aec0'],
+            autopct='%1.1f%%', startangle=90, pctdistance=0.78,
+            wedgeprops=dict(width=0.35, edgecolor='white', linewidth=2)
+        )
+        for t in texts: t.set_fontproperties(font_prop); t.set_fontsize(9); t.set_color(C_NAVY)
+        for t in autotexts: t.set_fontproperties(font_prop); t.set_fontsize(8); t.set_fontweight('bold'); t.set_color(C_NAVY)
+        ax2.text(0, 0, f'{profit_rate_total}%', ha='center', va='center',
+                 fontproperties=font_prop, fontsize=14, fontweight='bold', color=C_NAVY)
+        ax2.set_title('매출 / 매입 구성', fontproperties=font_prop, fontsize=9, fontweight='bold', color=C_NAVY, pad=6, loc='center')
+        fig2.tight_layout()
+        tmp2 = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        fig2.savefig(tmp2.name, dpi=160, bbox_inches='tight', facecolor='white')
+        plt.close(fig2)
+        chart_files.append(tmp2.name)
+
+        # 차트3: 이익률 분포 (도넛) - 모노톤 4단계
+        dist = {'90% 이상': 0, '70~90%': 0, '50~70%': 0, '50% 미만': 0}
+        for m in member_agg.values():
+            rate = (m['profit'] / m['revenue_total'] * 100) if m['revenue_total'] > 0 else 0
+            if rate >= 90: dist['90% 이상'] += 1
+            elif rate >= 70: dist['70~90%'] += 1
+            elif rate >= 50: dist['50~70%'] += 1
+            else: dist['50% 미만'] += 1
+        fig3, ax3 = plt.subplots(figsize=(3.2, 3))
+        fig3.patch.set_facecolor('white')
+        dist_colors = [C_NAVY, C_ACCENT, C_SLATE, C_SILVER]
+        wedges3, texts3, autotexts3 = ax3.pie(
+            list(dist.values()), labels=list(dist.keys()), colors=dist_colors,
+            autopct=lambda pct: f'{int(round(pct/100.*sum(dist.values())))}',
+            startangle=90, pctdistance=0.78,
+            wedgeprops=dict(width=0.35, edgecolor='white', linewidth=2)
+        )
+        for t in texts3: t.set_fontproperties(font_prop); t.set_fontsize(8); t.set_color(C_NAVY)
+        for t in autotexts3: t.set_fontproperties(font_prop); t.set_fontsize(8); t.set_fontweight('bold'); t.set_color('white')
+        ax3.text(0, 0, f'{member_count}', ha='center', va='center',
+                 fontproperties=font_prop, fontsize=16, fontweight='bold', color=C_NAVY)
+        ax3.set_title('이익률 분포', fontproperties=font_prop, fontsize=9, fontweight='bold', color=C_NAVY, pad=6, loc='center')
+        fig3.tight_layout()
+        tmp3 = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        fig3.savefig(tmp3.name, dpi=160, bbox_inches='tight', facecolor='white')
+        plt.close(fig3)
+        chart_files.append(tmp3.name)
+
+        # ──────────────────────────────────────
+        # PDF 생성 (미니멀 기업 보고서)
+        # ──────────────────────────────────────
+        class ProfitPDF(FPDF):
+            def header(self):
+                if self.page_no() == 1:
+                    return
+                # 상단: 얇은 네이비 라인
+                self.set_draw_color(27, 42, 74)
+                self.set_line_width(0.6)
+                self.line(15, 12, 282, 12)
+                self.set_line_width(0.2)
+                # 좌측: 보고서명
+                self.set_xy(15, 5)
+                self.set_font("Korean", "", 7)
+                self.set_text_color(27, 42, 74)
+                _now = datetime.now()
+                self.cell(0, 5, f"{_now.strftime('%y')}년 {_now.month}월 회원사 이익내역 보고서", align='L')
+                # 우측: 날짜
+                self.set_xy(15, 5)
+                self.set_text_color(136, 150, 171)
+                self.cell(0, 5, datetime.now().strftime('%Y.%m.%d'), align='R')
+                self.set_y(16)
+
+            def footer(self):
+                self.set_y(-12)
+                self.set_draw_color(27, 42, 74)
+                self.set_line_width(0.3)
+                self.line(15, self.get_y(), 282, self.get_y())
+                self.set_line_width(0.2)
+                self.set_font("Korean", "", 6)
+                self.set_text_color(136, 150, 171)
+                self.cell(0, 8, "NEXTRADE MKNM", align='L')
+                self.cell(0, 8, f"{self.page_no()} / {{nb}}", align='R')
+
+        pdf = ProfitPDF(orientation='L', unit='mm', format='A4')
+        pdf.add_font("Korean", "", font_path, uni=True)
+        pdf.add_font("Korean", "B", font_path, uni=True)
+        pdf.alias_nb_pages()
+        pdf.set_auto_page_break(auto=True, margin=15)
+
+        # ── 1페이지: 표지 (미니멀) ──
+        pdf.add_page()
+        # 전체 흰 배경 + 좌측 네이비 세로 바
+        pdf.set_fill_color(27, 42, 74)
+        pdf.rect(0, 0, 12, 210, 'F')
+
+        # 상단 얇은 수평선
+        pdf.set_draw_color(27, 42, 74)
+        pdf.set_line_width(0.4)
+        pdf.line(20, 30, 280, 30)
+
+        # 타이틀
+        now = datetime.now()
+        title_date = f"{now.strftime('%y')}년 {now.month}월"
+        pdf.set_xy(20, 38)
+        pdf.set_font("Korean", "B", 28)
+        pdf.set_text_color(27, 42, 74)
+        pdf.cell(0, 14, f"{title_date} 회원사 이익내역")
+        pdf.set_xy(20, 52)
+        pdf.set_font("Korean", "", 28)
+        pdf.set_text_color(136, 150, 171)
+        pdf.cell(0, 14, "보고서")
+
+        # 서브타이틀
+        pdf.set_xy(20, 72)
+        pdf.set_font("Korean", "", 10)
+        pdf.set_text_color(136, 150, 171)
+        pdf.cell(0, 6, "NEXTRADE MKNM  Network Management System")
+
+        # 하단 구분선
+        pdf.set_draw_color(228, 232, 240)
+        pdf.set_line_width(0.2)
+        pdf.line(20, 85, 280, 85)
+
+        # KPI 요약 (4개 수치 - 수평 배치, 최소한의 장식)
+        kpi_y = 95
+        kpi_data = [
+            ("전체 회원사", f"{member_count}개사", "회선계약 기준"),
+            ("총 매출", f"{total_revenue:,.0f}원", f"ORD {total_ord:,.0f} + MPR {total_mpr:,.0f}"),
+            ("총 매입", f"{total_purchase:,.0f}원", "매입계약 기준"),
+            ("총 이익", f"{total_profit:,.0f}원", f"이익률 {profit_rate_total}%"),
+        ]
+        kpi_w = 65
+        kpi_start = 20
+        for i, (label, value, sub) in enumerate(kpi_data):
+            x = kpi_start + i * kpi_w
+            # 라벨
+            pdf.set_xy(x, kpi_y)
+            pdf.set_font("Korean", "", 7.5)
+            pdf.set_text_color(136, 150, 171)
+            pdf.cell(kpi_w, 4, label)
+            # 값
+            pdf.set_xy(x, kpi_y + 6)
+            pdf.set_font("Korean", "B", 16)
+            pdf.set_text_color(27, 42, 74)
+            pdf.cell(kpi_w, 9, value)
+            # 보조
+            pdf.set_xy(x, kpi_y + 17)
+            pdf.set_font("Korean", "", 6.5)
+            pdf.set_text_color(168, 178, 195)
+            pdf.cell(kpi_w, 4, sub)
+            # 세로 구분선 (마지막 제외)
+            if i < 3:
+                pdf.set_draw_color(228, 232, 240)
+                pdf.line(x + kpi_w - 1, kpi_y, x + kpi_w - 1, kpi_y + 22)
+
+        # 하단 구분선
+        pdf.set_draw_color(228, 232, 240)
+        pdf.line(20, kpi_y + 28, 280, kpi_y + 28)
+
+        # 생성 정보
+        pdf.set_xy(20, 170)
+        pdf.set_font("Korean", "", 8)
+        pdf.set_text_color(168, 178, 195)
+        pdf.cell(0, 5, f"Report generated  {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+
+        # 하단 네이비 바
+        pdf.set_fill_color(27, 42, 74)
+        pdf.rect(0, 198, 297, 12, 'F')
+
+        # ── 2페이지: 월별 추이 + 요약 ──
+        pdf.add_page()
+
+        def section_heading(text, num):
+            """섹션 제목 (넘버링 + 밑줄)"""
+            pdf.set_font("Korean", "B", 14)
+            pdf.set_text_color(27, 42, 74)
+            pdf.cell(0, 9, f"{num}.  {text}", ln=True)
+            pdf.set_draw_color(27, 42, 74)
+            pdf.set_line_width(0.5)
+            pdf.line(15, pdf.get_y(), 70, pdf.get_y())
+            pdf.set_line_width(0.2)
+            pdf.ln(4)
+
+        section_heading("월별 추이 분석", "01")
+        chart0_y = pdf.get_y()
+        pdf.image(chart_files[0], x=15, y=chart0_y, w=267)
+
+        # ── 3페이지: 요약 ──
+        pdf.add_page()
+        section_heading("요약", "02")
+
+        # 추가 지표 산출
+        member_list_sorted = sorted(member_agg.values(), key=lambda x: x['profit'], reverse=True)
+        avg_revenue = total_revenue / member_count if member_count > 0 else 0
+        avg_profit = total_profit / member_count if member_count > 0 else 0
+        max_profit_m = member_list_sorted[0] if member_list_sorted else None
+        min_profit_m = member_list_sorted[-1] if member_list_sorted else None
+        pb_count = sum(1 for m in member_agg.values() if m.get('is_pb'))
+        non_pb_count = member_count - pb_count
+        pb_revenue = sum(m['revenue_total'] for m in member_agg.values() if m.get('is_pb'))
+        non_pb_revenue = total_revenue - pb_revenue
+        ord_ratio = round((total_ord / total_revenue) * 100, 1) if total_revenue > 0 else 0
+        mpr_ratio = round((total_mpr / total_revenue) * 100, 1) if total_revenue > 0 else 0
+        profit_over_90 = sum(1 for m in member_agg.values() if m['revenue_total'] > 0 and (m['profit'] / m['revenue_total'] * 100) >= 90)
+        profit_under_50 = sum(1 for m in member_agg.values() if m['revenue_total'] > 0 and (m['profit'] / m['revenue_total'] * 100) < 50)
+
+        # 표 그리기 함수
+        def draw_summary_table(title, rows, start_y):
+            """rows: [(label, value), ...]"""
+            pdf.set_xy(15, start_y)
+            # 소제목
+            pdf.set_font("Korean", "B", 9)
+            pdf.set_text_color(27, 42, 74)
+            pdf.cell(0, 7, title, ln=True)
+            pdf.ln(1)
+
+            table_x = 15
+            col_label_w = 55
+            col_value_w = 75
+            row_h = 7.5
+
+            for i, (label, value) in enumerate(rows):
+                ry = pdf.get_y()
+                # 짝수행 배경
+                if i % 2 == 0:
+                    pdf.set_fill_color(248, 250, 252)
+                    pdf.rect(table_x, ry, col_label_w + col_value_w, row_h, 'F')
+                # 라벨
+                pdf.set_xy(table_x + 4, ry)
+                pdf.set_font("Korean", "", 7.5)
+                pdf.set_text_color(100, 116, 139)
+                pdf.cell(col_label_w - 4, row_h, label)
+                # 값
+                pdf.set_xy(table_x + col_label_w, ry)
+                pdf.set_font("Korean", "B", 8)
+                pdf.set_text_color(27, 42, 74)
+                pdf.cell(col_value_w - 4, row_h, value, align='R')
+                # 하단 선
+                pdf.set_draw_color(236, 239, 243)
+                pdf.line(table_x, ry + row_h, table_x + col_label_w + col_value_w, ry + row_h)
+                pdf.set_y(ry + row_h)
+
+            return pdf.get_y()
+
+        # ── 좌측: 매출/매입/이익 요약 ──
+        tbl1_rows = [
+            ("전체 회원사", f"{member_count}개사"),
+            ("총 매출", f"{total_revenue:,.0f}원"),
+            ("  ORD 매출", f"{total_ord:,.0f}원  ({ord_ratio}%)"),
+            ("  MPR 매출", f"{total_mpr:,.0f}원  ({mpr_ratio}%)"),
+            ("총 매입", f"{total_purchase:,.0f}원"),
+            ("총 이익", f"{total_profit:,.0f}원"),
+            ("이익률", f"{profit_rate_total}%"),
+            ("회원사당 평균 매출", f"{avg_revenue:,.0f}원"),
+            ("회원사당 평균 이익", f"{avg_profit:,.0f}원"),
+        ]
+        tbl1_start = pdf.get_y()
+        draw_summary_table("매출 / 매입 / 이익 현황", tbl1_rows, tbl1_start)
+
+        # ── 우측: 분석 지표 ──
+        tbl2_rows = [
+            ("이익 최고 회원사", f"{max_profit_m['company_name']}  ({max_profit_m['profit']:,.0f}원)" if max_profit_m else "-"),
+            ("이익 최저 회원사", f"{min_profit_m['company_name']}  ({min_profit_m['profit']:,.0f}원)" if min_profit_m else "-"),
+            ("PB 회원사", f"{pb_count}개사  (매출 {pb_revenue:,.0f}원)"),
+            ("비PB 회원사", f"{non_pb_count}개사  (매출 {non_pb_revenue:,.0f}원)"),
+            ("이익률 90% 이상", f"{profit_over_90}개사"),
+            ("이익률 50% 미만", f"{profit_under_50}개사"),
+        ]
+        pdf.set_y(tbl1_start)
+        # 우측 테이블은 X 좌표를 이동
+        old_l_margin = pdf.l_margin
+        pdf.l_margin = 150
+        pdf.set_x(150)
+        tbl2_y = tbl1_start
+
+        pdf.set_xy(150, tbl2_y)
+        pdf.set_font("Korean", "B", 9)
+        pdf.set_text_color(27, 42, 74)
+        pdf.cell(0, 7, "분석 지표", ln=True)
+        pdf.ln(1)
+
+        table_x2 = 150
+        col_label_w2 = 50
+        col_value_w2 = 82
+        row_h2 = 7.5
+
+        for i, (label, value) in enumerate(tbl2_rows):
+            ry = pdf.get_y()
+            if i % 2 == 0:
+                pdf.set_fill_color(248, 250, 252)
+                pdf.rect(table_x2, ry, col_label_w2 + col_value_w2, row_h2, 'F')
+            pdf.set_xy(table_x2 + 4, ry)
+            pdf.set_font("Korean", "", 7.5)
+            pdf.set_text_color(100, 116, 139)
+            pdf.cell(col_label_w2 - 4, row_h2, label)
+            pdf.set_xy(table_x2 + col_label_w2, ry)
+            pdf.set_font("Korean", "B", 8)
+            pdf.set_text_color(27, 42, 74)
+            pdf.cell(col_value_w2 - 4, row_h2, value, align='R')
+            pdf.set_draw_color(236, 239, 243)
+            pdf.line(table_x2, ry + row_h2, table_x2 + col_label_w2 + col_value_w2, ry + row_h2)
+            pdf.set_y(ry + row_h2)
+
+        pdf.l_margin = old_l_margin
+
+        # 하단 여백에 이익률 분포 미니 요약 바
+        dist_bar_y = max(tbl1_start + len(tbl1_rows) * 7.5 + 20, pdf.get_y() + 15)
+        pdf.set_xy(15, dist_bar_y)
+        pdf.set_font("Korean", "B", 9)
+        pdf.set_text_color(27, 42, 74)
+        pdf.cell(0, 7, "이익률 분포 현황", ln=True)
+        pdf.ln(2)
+
+        dist_cats = [
+            ("90% 이상", profit_over_90, (27, 42, 74)),
+            ("70~90%", sum(1 for m in member_agg.values() if m['revenue_total'] > 0 and 70 <= (m['profit'] / m['revenue_total'] * 100) < 90), (43, 108, 176)),
+            ("50~70%", sum(1 for m in member_agg.values() if m['revenue_total'] > 0 and 50 <= (m['profit'] / m['revenue_total'] * 100) < 70), (136, 150, 171)),
+            ("50% 미만", profit_under_50, (197, 48, 48)),
+        ]
+        bar_x = 15
+        bar_total_w = 267
+        bar_h = 10
+        bar_y = pdf.get_y()
+
+        # 전체 바 배경
+        pdf.set_fill_color(240, 242, 245)
+        pdf.rect(bar_x, bar_y, bar_total_w, bar_h, 'F')
+
+        # 각 구간 비율별 바
+        offset = 0
+        for cat_label, cat_count, (cr, cg, cb) in dist_cats:
+            if member_count == 0:
+                continue
+            seg_w = (cat_count / member_count) * bar_total_w
+            if seg_w > 0:
+                pdf.set_fill_color(cr, cg, cb)
+                pdf.rect(bar_x + offset, bar_y, seg_w, bar_h, 'F')
+                # 바 안에 텍스트 (충분한 너비일 때만)
+                if seg_w > 25:
+                    pdf.set_xy(bar_x + offset, bar_y + 1)
+                    pdf.set_font("Korean", "B", 6.5)
+                    pdf.set_text_color(255, 255, 255)
+                    pdf.cell(seg_w, 4, f"{cat_label}", align='C')
+                    pdf.set_xy(bar_x + offset, bar_y + 5)
+                    pdf.set_font("Korean", "", 6)
+                    pdf.cell(seg_w, 4, f"{cat_count}개사 ({cat_count/member_count*100:.0f}%)", align='C')
+            offset += seg_w
+
+        # 바 아래 범례
+        pdf.set_y(bar_y + bar_h + 4)
+        legend_x = 15
+        for cat_label, cat_count, (cr, cg, cb) in dist_cats:
+            pdf.set_fill_color(cr, cg, cb)
+            pdf.rect(legend_x, pdf.get_y() + 1.5, 3, 3, 'F')
+            pdf.set_xy(legend_x + 5, pdf.get_y())
+            pdf.set_font("Korean", "", 6.5)
+            pdf.set_text_color(74, 85, 104)
+            pdf.cell(0, 5, f"{cat_label}: {cat_count}개사")
+            legend_x += 55
+
+        # ── 4페이지: 차트 ──
+        pdf.add_page()
+        section_heading("이익 분석", "03")
+        chart_y = pdf.get_y()
+        pdf.image(chart_files[1], x=15, y=chart_y, w=150)
+        pdf.image(chart_files[2], x=172, y=chart_y, w=55)
+        pdf.image(chart_files[3], x=230, y=chart_y, w=55)
+
+        # ── 5페이지: TOP 10 테이블 ──
+        pdf.add_page()
+        section_heading("이익 상위 10 회원사", "04")
+
+        top10 = sorted(member_agg.values(), key=lambda x: x['profit'], reverse=True)[:10]
+        max_profit = top10[0]['profit'] if top10 else 1
+
+        top_col_w = [10, 18, 55, 38, 38, 38, 22, 45]
+        top_headers = ['순위', '회원번호', '회사명', '총매출(원)', '총매입(원)', '이익(원)', '이익률', '점유율']
+
+        # 헤더
+        pdf.set_font("Korean", "B", 7)
+        pdf.set_text_color(136, 150, 171)
+        for i, h in enumerate(top_headers):
+            pdf.cell(top_col_w[i], 6, h, align='C')
+        pdf.ln()
+        hdr_y = pdf.get_y()
+        pdf.set_draw_color(27, 42, 74)
+        pdf.set_line_width(0.4)
+        pdf.line(15, hdr_y, 15 + sum(top_col_w), hdr_y)
+        pdf.set_line_width(0.2)
+        pdf.ln(1)
+
+        for idx, m in enumerate(top10, 1):
+            row_y = pdf.get_y()
+            rate = round((m['profit'] / m['revenue_total'] * 100), 1) if m['revenue_total'] > 0 else 0.0
+
+            # 순위
+            pdf.set_font("Korean", "B" if idx <= 3 else "", 7.5)
+            pdf.set_text_color(27, 42, 74)
+            pdf.cell(top_col_w[0], 7, str(idx), align='C')
+            # 회원번호
+            pdf.set_font("Korean", "", 7)
+            pdf.set_text_color(136, 150, 171)
+            pdf.cell(top_col_w[1], 7, str(m['member_number'] or ''), align='C')
+            # 회사명
+            pdf.set_text_color(27, 42, 74)
+            pdf.cell(top_col_w[2], 7, str(m['company_name'] or '')[:24])
+            # 매출
+            pdf.set_text_color(74, 85, 104)
+            pdf.cell(top_col_w[3], 7, f"{m['revenue_total']:,.0f}", align='R')
+            # 매입
+            pdf.cell(top_col_w[4], 7, f"{m['purchase_total']:,.0f}", align='R')
+            # 이익 (볼드)
+            pdf.set_font("Korean", "B", 7.5)
+            pdf.set_text_color(27, 42, 74)
+            pdf.cell(top_col_w[5], 7, f"{m['profit']:,.0f}", align='R')
+            # 이익률
+            pdf.set_font("Korean", "", 7)
+            pdf.set_text_color(74, 85, 104)
+            pdf.cell(top_col_w[6], 7, f"{rate}%", align='C')
+            # 점유율 바
+            bar_x = pdf.get_x() + 1
+            bar_full_w = top_col_w[7] - 16
+            ratio = m['profit'] / max_profit if max_profit > 0 else 0
+            pdf.set_fill_color(240, 242, 245)
+            pdf.rect(bar_x, row_y + 2.2, bar_full_w, 2.5, 'F')
+            pdf.set_fill_color(27, 42, 74)
+            pdf.rect(bar_x, row_y + 2.2, bar_full_w * ratio, 2.5, 'F')
+            pct = (m['profit'] / total_profit * 100) if total_profit > 0 else 0
+            pdf.set_font("Korean", "", 6.5)
+            pdf.set_text_color(136, 150, 171)
+            pdf.cell(top_col_w[7], 7, f"{pct:.1f}%", align='R')
+            pdf.ln()
+            # 행 구분선
+            pdf.set_draw_color(240, 242, 245)
+            pdf.line(15, pdf.get_y(), 15 + sum(top_col_w), pdf.get_y())
+
+        # ── 5페이지~: 상세 테이블 ──
+        pdf.add_page()
+        section_heading("회원사별 상세 내역", "05")
+
+        col_widths = [9, 16, 55, 14, 32, 32, 34, 34, 34, 22]
+        headers = ['No', '회원번호', '회사명', 'Phase', 'ORD매출(원)', 'MPR매출(원)', '총매출(원)', '총매입(원)', '이익(원)', '이익률']
+
+        def draw_detail_header():
+            pdf.set_font("Korean", "B", 7)
+            pdf.set_text_color(136, 150, 171)
+            for i, h in enumerate(headers):
+                pdf.cell(col_widths[i], 6, h, align='C')
+            pdf.ln()
+            y = pdf.get_y()
+            pdf.set_draw_color(27, 42, 74)
+            pdf.set_line_width(0.4)
+            pdf.line(15, y, 15 + sum(col_widths), y)
+            pdf.set_line_width(0.2)
+            pdf.ln(0.5)
+
+        draw_detail_header()
+
+        for idx, row in enumerate(detail_rows, 1):
+            if pdf.get_y() > 178:
+                pdf.add_page()
+                section_heading("회원사별 상세 내역 (계속)", "05")
+                draw_detail_header()
+
+            row_y = pdf.get_y()
+            # 짝수행 배경
+            if idx % 2 == 0:
+                pdf.set_fill_color(250, 251, 252)
+                pdf.rect(15, row_y, sum(col_widths), 6.2, 'F')
+
+            pdf.set_font("Korean", "", 6.5)
+            pdf.set_text_color(136, 150, 171)
+            pdf.cell(col_widths[0], 6.2, str(idx), align='C')
+            pdf.cell(col_widths[1], 6.2, str(row['member_number'] or ''), align='C')
+            pdf.set_text_color(27, 42, 74)
+            pdf.cell(col_widths[2], 6.2, str(row['company_name'] or '')[:24])
+            pdf.set_text_color(136, 150, 171)
+            pdf.cell(col_widths[3], 6.2, str(row['phase'] or ''), align='C')
+
+            # 금액들 - 통일된 색상
+            pdf.set_text_color(74, 85, 104)
+            pdf.cell(col_widths[4], 6.2, f"{row['ord_total']:,.0f}", align='R')
+            pdf.cell(col_widths[5], 6.2, f"{row['mpr_total']:,.0f}", align='R')
+            # 총매출 (볼드)
+            pdf.set_font("Korean", "B", 6.5)
+            pdf.set_text_color(43, 108, 176)
+            pdf.cell(col_widths[6], 6.2, f"{row['revenue_total']:,.0f}", align='R')
+            # 총매입
+            pdf.set_font("Korean", "", 6.5)
+            pdf.set_text_color(74, 85, 104)
+            pdf.cell(col_widths[7], 6.2, f"{row['purchase_total']:,.0f}", align='R')
+            # 이익
+            profit_val = row['profit']
+            pdf.set_font("Korean", "B", 6.5)
+            pdf.set_text_color(27, 42, 74) if profit_val >= 0 else pdf.set_text_color(197, 48, 48)
+            pdf.cell(col_widths[8], 6.2, f"{profit_val:,.0f}", align='R')
+            # 이익률
+            pdf.set_font("Korean", "", 6.5)
+            pdf.set_text_color(136, 150, 171)
+            pdf.cell(col_widths[9], 6.2, f"{row['profit_rate']}%", align='C')
+            pdf.ln()
+            # 행 구분선
+            pdf.set_draw_color(244, 245, 247)
+            pdf.line(15, pdf.get_y(), 15 + sum(col_widths), pdf.get_y())
+
+        # 합계 행
+        total_y = pdf.get_y()
+        pdf.set_draw_color(27, 42, 74)
+        pdf.set_line_width(0.5)
+        pdf.line(15, total_y, 15 + sum(col_widths), total_y)
+        pdf.set_line_width(0.2)
+        pdf.ln(0.5)
+
+        pdf.set_font("Korean", "B", 7)
+        pdf.set_fill_color(27, 42, 74)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(col_widths[0] + col_widths[1] + col_widths[2] + col_widths[3], 7, "TOTAL", fill=True, align='C')
+        pdf.cell(col_widths[4], 7, f"{total_ord:,.0f}", fill=True, align='R')
+        pdf.cell(col_widths[5], 7, f"{total_mpr:,.0f}", fill=True, align='R')
+        pdf.cell(col_widths[6], 7, f"{total_revenue:,.0f}", fill=True, align='R')
+        pdf.cell(col_widths[7], 7, f"{total_purchase:,.0f}", fill=True, align='R')
+        pdf.cell(col_widths[8], 7, f"{total_profit:,.0f}", fill=True, align='R')
+        pdf.cell(col_widths[9], 7, f"{profit_rate_total}%", fill=True, align='C')
+        pdf.ln()
+
+        # PDF 출력
+        pdf_output = pdf.output()
+        pdf_buffer = io.BytesIO(pdf_output)
+        pdf_buffer.seek(0)
+
+        for f in chart_files:
+            try:
+                os.remove(f)
+            except OSError:
+                pass
+
+        filename = f"profit_report_{datetime.now().strftime('%Y%m%d')}.pdf"
+        return StreamingResponse(
+            pdf_buffer,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+
+    except Exception as e:
+        logger.error(f"이익내역 보고서 PDF 생성 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"PDF generation error: {str(e)}")
+
+
+# ============================================================
 # NetBox Proxy Endpoints
 # ============================================================
 import requests as http_requests
@@ -3107,9 +4376,7 @@ async def unified_search(q: str = Query("", min_length=0)):
                        COALESCE(sum(mf.price), 0) AS total_revenue
                 FROM circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
-                LEFT JOIN member_fee_schedule mf
-                    ON c.usage = mf.usage AND c.bandwidth = mf.bandwidth
-                    AND c.phase = mf.phase AND c.additional_circuit = mf.additional_circuit
+                LEFT JOIN member_fee_schedule mf ON c.fee_code = mf.fee_code
                 WHERE (sc.company_name ILIKE %s OR sc.member_code ILIKE %s)
                     AND c.usage IN ('ORD', 'MPR')
                 GROUP BY sc.company_name, sc.member_code
@@ -3126,9 +4393,7 @@ async def unified_search(q: str = Query("", min_length=0)):
                 SELECT count(DISTINCT sc.member_code)
                 FROM circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
-                LEFT JOIN member_fee_schedule mf
-                    ON c.usage = mf.usage AND c.bandwidth = mf.bandwidth
-                    AND c.phase = mf.phase AND c.additional_circuit = mf.additional_circuit
+                LEFT JOIN member_fee_schedule mf ON c.fee_code = mf.fee_code
                 WHERE (sc.company_name ILIKE %s OR sc.member_code ILIKE %s)
                     AND c.usage IN ('ORD', 'MPR')
             """, (pattern, pattern))
