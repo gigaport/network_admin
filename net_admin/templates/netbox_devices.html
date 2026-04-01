@@ -121,15 +121,15 @@
         </div>
       </div>
 
-      <!-- 제조사별 현황 + 유휴 Top 모델 요약 -->
+      <!-- 제조사별 현황 + 모델별 수량 + 역할별 + 유휴 Top -->
       <div class="row g-3 mb-3" id="summaryPanels">
         <!-- 제조사별 현황 -->
-        <div class="col-lg-5">
+        <div class="col-lg-3">
           <div class="card border-0 shadow-sm bg-body-emphasis h-100">
             <div class="card-body py-3 px-4">
               <div class="d-flex align-items-center mb-2">
                 <span style="font-size: 0.78rem; font-weight: 700;"><i class="fas fa-industry me-2" style="color: #6366f1;"></i>제조사별 현황</span>
-                <span class="ms-auto" style="font-size: 0.65rem; color: #94a3b8;">전체 / 운영 / 유휴</span>
+                <span class="ms-auto" style="font-size: 0.6rem; color: #94a3b8;">전체/운영/유휴</span>
               </div>
               <div id="mfrSummaryArea" style="font-size: 0.78rem;">
                 <div class="text-center py-2" style="color: #b0b0b0; font-size: 0.75rem;"><span class="spinner-border spinner-border-sm me-1" style="width:0.65rem;height:0.65rem;"></span>로딩 중...</div>
@@ -137,8 +137,21 @@
             </div>
           </div>
         </div>
-        <!-- 역할별 분포 -->
+        <!-- 장비모델별 수량 -->
         <div class="col-lg-3">
+          <div class="card border-0 shadow-sm bg-body-emphasis h-100">
+            <div class="card-body py-3 px-4">
+              <div class="d-flex align-items-center mb-2">
+                <span style="font-size: 0.78rem; font-weight: 700;"><i class="fas fa-microchip me-2" style="color: #10b981;"></i>장비모델별 수량</span>
+              </div>
+              <div id="modelSummaryArea" style="font-size: 0.78rem; max-height: 180px; overflow-y: auto;">
+                <div class="text-center py-2" style="color: #b0b0b0; font-size: 0.75rem;"><span class="spinner-border spinner-border-sm me-1" style="width:0.65rem;height:0.65rem;"></span>로딩 중...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 역할별 분포 -->
+        <div class="col-lg-2">
           <div class="card border-0 shadow-sm bg-body-emphasis h-100">
             <div class="card-body py-3 px-4">
               <div class="d-flex align-items-center mb-2">

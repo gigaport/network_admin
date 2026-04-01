@@ -251,6 +251,7 @@
         var roleCounts = {};
         var siteSet = {};
         var mfrMap = {};
+        var modelCounts = {};
         var idleModels = {};
 
         results.forEach(function(d) {
@@ -264,10 +265,14 @@
             if (!mfrMap[mfr]) mfrMap[mfr] = { total: 0, operating: 0, idle: 0 };
             mfrMap[mfr].total++;
             if (isIdle) { mfrMap[mfr].idle++; } else { mfrMap[mfr].operating++; }
+            // 모델별 수량 집계
+            var modelName = (d.device_type && d.device_type.model) || 'Unknown';
+            var modelKey = mfr + '|||' + modelName;
+            if (!modelCounts[modelKey]) modelCounts[modelKey] = 0;
+            modelCounts[modelKey]++;
             // 유휴 모델별 집계
             if (isIdle) {
-                var model = (d.device_type && d.device_type.model) || 'Unknown';
-                var key = mfr + '|||' + model;
+                var key = mfr + '|||' + modelName;
                 idleModels[key] = (idleModels[key] || 0) + 1;
             }
         });
@@ -283,6 +288,9 @@
 
         // 제조사별 현황 렌더링
         renderMfrSummary(mfrMap, total);
+
+        // 장비모델별 수량 렌더링
+        renderModelSummary(modelCounts, total);
 
         // 역할별 분포 렌더링
         renderRoleSummary(roleCounts, total);
@@ -313,6 +321,29 @@
                 '<span style="color:#f59e0b;margin-left:6px;">' + m.d.idle + '</span>' +
                 '<span style="color:#94a3b8;margin-left:4px;font-size:0.65rem;">(' + pct + '%)</span>' +
                 '</span></div>';
+        });
+        el.innerHTML = html;
+    }
+
+    function renderModelSummary(modelCounts, total) {
+        var el = document.getElementById('modelSummaryArea');
+        if (!el) return;
+        var sorted = Object.keys(modelCounts).map(function(k) {
+            var parts = k.split('|||');
+            return { mfr: parts[0], model: parts[1], count: modelCounts[k] };
+        }).sort(function(a, b) { return b.count - a.count; });
+        if (sorted.length === 0) { el.innerHTML = '<div class="text-center py-2" style="color:#ccc;">데이터 없음</div>'; return; }
+        var maxCount = sorted[0].count;
+        var html = '';
+        sorted.forEach(function(item) {
+            var barW = maxCount > 0 ? Math.round(item.count / maxCount * 100) : 0;
+            html += '<div class="d-flex align-items-center mb-1" style="line-height:1.3;">' +
+                '<span style="min-width:100px;font-size:0.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + esc(item.model) + '">' + esc(item.model) + '</span>' +
+                '<div class="flex-grow-1 mx-2" style="height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden;position:relative;">' +
+                '<div style="position:absolute;top:0;left:0;height:100%;width:' + barW + '%;background:linear-gradient(90deg,#10b981,#6ee7b7);border-radius:7px;transition:width 0.5s;"></div>' +
+                '</div>' +
+                '<span style="min-width:28px;text-align:right;font-size:0.72rem;font-weight:700;">' + item.count + '</span>' +
+                '</div>';
         });
         el.innerHTML = html;
     }
