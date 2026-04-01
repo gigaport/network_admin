@@ -348,40 +348,27 @@
         el.innerHTML = html;
     }
 
-    var roleChartInstance = null;
     function renderRoleSummary(roleCounts, total) {
         var el = document.getElementById('roleSummaryArea');
         if (!el) return;
         var roleColors = { 'PRD': '#10b981', 'TST': '#f59e0b', 'DR': '#a855f7', 'DEV': '#3b82f6', 'IDLE': '#6b7280' };
-        var defaultColors = ['#10b981', '#f59e0b', '#a855f7', '#3b82f6', '#6b7280', '#f06595', '#00b8d9', '#20c997'];
+        var defaultColors = ['#10b981', '#f59e0b', '#a855f7', '#3b82f6', '#6b7280', '#f06595', '#00b8d9'];
         var sorted = Object.keys(roleCounts).map(function(k) { return { name: k, count: roleCounts[k] }; })
             .sort(function(a, b) { return b.count - a.count; });
-        if (sorted.length === 0) { el.innerHTML = '<div class="text-center py-4" style="color:#ccc;">데이터 없음</div>'; return; }
+        if (sorted.length === 0) { el.innerHTML = '<div class="text-center py-2" style="color:#ccc;">데이터 없음</div>'; return; }
 
-        var seriesData = sorted.map(function(r, i) {
-            return { value: r.count, name: r.name, itemStyle: { color: roleColors[r.name] || defaultColors[i % defaultColors.length] } };
+        var html = '<div class="row g-2">';
+        sorted.forEach(function(r, i) {
+            var c = roleColors[r.name] || defaultColors[i % defaultColors.length];
+            var pct = total > 0 ? (r.count / total * 100).toFixed(1) : '0.0';
+            html += '<div class="col-6">' +
+                '<div style="padding:8px 10px; border-radius:10px; background:linear-gradient(135deg, ' + c + '0f, ' + c + '05); border-left:3px solid ' + c + ';">' +
+                '<div style="font-size:0.62rem; color:#94a3b8; font-weight:500;">' + esc(r.name) + '</div>' +
+                '<div style="font-size:1rem; font-weight:700; color:' + c + '; margin-top:1px;">' + r.count + '<span style="font-size:0.6rem; font-weight:400; color:#94a3b8; margin-left:3px;">(' + pct + '%)</span></div>' +
+                '</div></div>';
         });
-
-        if (roleChartInstance) roleChartInstance.dispose();
-        roleChartInstance = echarts.init(el);
-        roleChartInstance.setOption({
-            tooltip: {
-                trigger: 'item',
-                formatter: function(p) { return p.name + ': ' + p.value + '대 (' + p.percent + '%)'; }
-            },
-            legend: {
-                bottom: 0,
-                textStyle: { fontSize: 10, color: '#94a3b8' },
-                itemWidth: 10, itemHeight: 10, itemGap: 8
-            },
-            series: [{
-                type: 'pie', radius: ['40%', '70%'], center: ['50%', '42%'],
-                itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
-                label: { show: false },
-                emphasis: { label: { show: false } },
-                data: seriesData
-            }]
-        });
+        html += '</div>';
+        el.innerHTML = html;
     }
 
     function renderIdleTopModels(idleModels, idleTotal) {
