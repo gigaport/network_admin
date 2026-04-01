@@ -720,11 +720,16 @@ function renderIdleAssetTable(results) {
 function loadRevenueTrend() {
     var now = new Date();
     var ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-    fetch('/revenue_summary/get_revenue_monthly?year_month=' + ym, { signal: AbortSignal.timeout(15000) })
-        .then(function(res) { return res.json(); })
-        .then(function(resp) {
-            if (resp.success && resp.trend) {
-                renderRevenueTrendChart(resp.trend);
+    Promise.all([
+        fetch('/revenue_summary/get_revenue_monthly?year_month=' + ym, { signal: AbortSignal.timeout(15000) }).then(function(r) { return r.json(); }),
+        fetch('/info_revenue_summary/get_info_revenue_monthly?year_month=' + ym, { signal: AbortSignal.timeout(15000) }).then(function(r) { return r.json(); })
+    ])
+        .then(function(results) {
+            var memberResp = results[0];
+            var infoResp = results[1];
+            if (memberResp.success && memberResp.trend) {
+                var infoTrend = (infoResp.success && infoResp.trend) ? infoResp.trend : [];
+                renderRevenueTrendChart(memberResp.trend, infoTrend);
             }
         })
         .catch(function(err) {
@@ -734,15 +739,22 @@ function loadRevenueTrend() {
         });
 }
 
-function renderRevenueTrendChart(trend) {
+function renderRevenueTrendChart(trend, infoTrend) {
     var el = document.getElementById('chartRevenueTrend');
     if (!el || !trend || trend.length === 0) { showNoData(el); return; }
     var chart = initChart(el, 'chartRevenueTrend');
 
+    // 정보이용사 데이터를 month 키로 매핑
+    var infoMap = {};
+    if (infoTrend && infoTrend.length > 0) {
+        infoTrend.forEach(function(t) { infoMap[t.month] = Number(t.mkd_total) || 0; });
+    }
+
     var months = trend.map(function(t) { return t.month; });
     var ordData = trend.map(function(t) { return Number(t.ord_total) || 0; });
     var mprData = trend.map(function(t) { return Number(t.mpr_total) || 0; });
-    var totalData = trend.map(function(t) { return Number(t.grand_total) || 0; });
+    var mkdData = months.map(function(m) { return infoMap[m] || 0; });
+    var totalData = trend.map(function(t, i) { return (Number(t.grand_total) || 0) + (mkdData[i] || 0); });
     var circuitData = trend.map(function(t) { return Number(t.circuit_count) || 0; });
 
     chart.setOption({
@@ -763,7 +775,7 @@ function renderRevenueTrendChart(trend) {
         legend: {
             bottom: 0,
             textStyle: { fontSize: 11, color: T('#999', '#94a3b8') },
-            data: ['ORD 매출', 'MPR 매출', '합계', '유효 회선수']
+            data: ['ORD 매출', 'MPR 매출', 'MKD 매출', '합계', '유효 회선수']
         },
         grid: { left: 10, right: 50, top: 15, bottom: 36, containLabel: true },
         xAxis: {
@@ -806,7 +818,12 @@ function renderRevenueTrendChart(trend) {
             {
                 name: 'MPR 매출', type: 'bar', stack: 'revenue', yAxisIndex: 0,
                 data: mprData, barWidth: 18,
-                itemStyle: { color: C.blue, borderRadius: [3, 3, 0, 0] }
+                itemStyle: { color: C.blue, borderRadius: [0, 0, 0, 0] }
+            },
+            {
+                name: 'MKD 매출', type: 'bar', stack: 'revenue', yAxisIndex: 0,
+                data: mkdData, barWidth: 18,
+                itemStyle: { color: C.purple, borderRadius: [3, 3, 0, 0] }
             },
             {
                 name: '합계', type: 'line', yAxisIndex: 0,
@@ -822,8 +839,8 @@ function renderRevenueTrendChart(trend) {
             {
                 name: '유효 회선수', type: 'line', yAxisIndex: 1,
                 data: circuitData,
-                lineStyle: { color: '#a855f7', width: 1.5 },
-                itemStyle: { color: '#a855f7' },
+                lineStyle: { color: '#ff6b6b', width: 1.5 },
+                itemStyle: { color: '#ff6b6b' },
                 symbol: 'diamond', symbolSize: 5
             }
         ]
