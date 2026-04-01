@@ -16,7 +16,7 @@ def index(request):
     path = f"{org_path}.html"
 
     # circuits, revenue_summary, purchase_contract는 회선계약 관리 메뉴 하위
-    if org_path in ("circuits", "revenue_summary", "purchase_contract", "profit_summary", "info_company_circuits"):
+    if org_path in ("circuits", "revenue_summary", "purchase_contract", "info_purchase_contract", "profit_summary", "info_company_circuits"):
         parent_menu = "network_contracts"
     elif org_path == "network_cost":
         parent_menu = "subscriber_management"
@@ -1174,6 +1174,71 @@ def delete_purchase_contract(request):
         return JsonResponse(response.json())
     except Exception as e:
         logger.error(f"회원사 매입내역 삭제 실패: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ==================== 정보이용사 매입내역 (Info Purchase Contract) ====================
+
+def get_info_purchase_contract(request):
+    """정보이용사 매입내역 조회"""
+    try:
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_purchase_contract"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.get(api_url)
+        return JsonResponse(response.json())
+    except Exception as e:
+        logger.error(f"정보이용사 매입내역 조회 실패: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_info_purchase_contract(request):
+    """정보이용사 매입내역 추가"""
+    try:
+        data = json.loads(request.body)
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_purchase_contract"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.post(api_url, json=data)
+        return JsonResponse(response.json())
+    except Exception as e:
+        logger.error(f"정보이용사 매입내역 추가 실패: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_info_purchase_contract(request):
+    """정보이용사 매입내역 수정"""
+    try:
+        data = json.loads(request.body)
+        item_id = data.get('id')
+        if not item_id:
+            return JsonResponse({'success': False, 'error': 'ID가 필요합니다.'}, status=400)
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_purchase_contract/{item_id}"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.put(api_url, json=data)
+        return JsonResponse(response.json())
+    except Exception as e:
+        logger.error(f"정보이용사 매입내역 수정 실패: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def delete_info_purchase_contract(request):
+    """정보이용사 매입내역 삭제"""
+    try:
+        data = json.loads(request.body)
+        item_id = data.get('id')
+        if not item_id:
+            return JsonResponse({'success': False, 'error': 'ID가 필요합니다.'}, status=400)
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_purchase_contract/{item_id}"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.delete(api_url)
+        return JsonResponse(response.json())
+    except Exception as e:
+        logger.error(f"정보이용사 매입내역 삭제 실패: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 

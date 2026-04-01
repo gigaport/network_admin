@@ -3048,6 +3048,136 @@ async def DeletePurchaseContract(item_id: int):
 
 
 # ============================================================
+# 정보이용사 매입내역 (Info Purchase Contract) CRUD
+# ============================================================
+
+@router.get("/info_purchase_contract")
+async def GetInfoPurchaseContract():
+    """정보이용사 매입내역 전체 조회 (network_cost JOIN)"""
+    logger.info("정보이용사 매입내역 조회 시작")
+    try:
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute("""
+                SELECT pc.id, pc.member_code, pc.datacenter_code, pc.provider,
+                       TO_CHAR(pc.billing_start_date, 'YYYY-MM-DD') as billing_start_date,
+                       TO_CHAR(pc.contract_end_date, 'YYYY-MM-DD') as contract_end_date,
+                       pc.service_id, pc.nni_id, pc.cost_code,
+                       nc.cost_price, nc.cost_standart,
+                       sc.company_name
+                FROM info_purchase_contract pc
+                LEFT JOIN network_cost nc ON pc.cost_code = nc.code
+                LEFT JOIN subscriber_codes sc ON pc.member_code = sc.member_code
+                ORDER BY pc.member_code, pc.datacenter_code, pc.provider
+            """)
+            results = cur.fetchall()
+            cur.close()
+        logger.info(f"정보이용사 매입내역 조회 완료: {len(results)}건")
+        return {"success": True, "data": results}
+    except Exception as e:
+        logger.error(f"정보이용사 매입내역 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/info_purchase_contract")
+async def CreateInfoPurchaseContract(request: Request):
+    """정보이용사 매입내역 추가"""
+    logger.info("정보이용사 매입내역 추가 요청")
+    try:
+        data = await request.json()
+        member_code = (data.get('member_code') or '').strip()
+        datacenter_code = (data.get('datacenter_code') or '').strip()
+        provider = (data.get('provider') or '').strip()
+        billing_start_date = data.get('billing_start_date') or None
+        contract_end_date = data.get('contract_end_date') or None
+        service_id = (data.get('service_id') or '').strip() or None
+        nni_id = (data.get('nni_id') or '').strip() or None
+        cost_code = (data.get('cost_code') or '').strip() or None
+
+        if not member_code:
+            raise HTTPException(status_code=400, detail="정보이용사코드는 필수입니다.")
+
+        with get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO info_purchase_contract
+                    (member_code, datacenter_code, provider, billing_start_date, contract_end_date, service_id, nni_id, cost_code)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (member_code, datacenter_code, provider, billing_start_date, contract_end_date, service_id, nni_id, cost_code))
+            cur.close()
+
+        logger.info(f"정보이용사 매입내역 추가 완료: {member_code}")
+        return {"success": True, "message": "매입내역이 추가되었습니다."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"정보이용사 매입내역 추가 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/info_purchase_contract/{item_id}")
+async def UpdateInfoPurchaseContract(item_id: int, request: Request):
+    """정보이용사 매입내역 수정"""
+    logger.info(f"정보이용사 매입내역 수정 요청: ID={item_id}")
+    try:
+        data = await request.json()
+        member_code = (data.get('member_code') or '').strip()
+        datacenter_code = (data.get('datacenter_code') or '').strip()
+        provider = (data.get('provider') or '').strip()
+        billing_start_date = data.get('billing_start_date') or None
+        contract_end_date = data.get('contract_end_date') or None
+        service_id = (data.get('service_id') or '').strip() or None
+        nni_id = (data.get('nni_id') or '').strip() or None
+        cost_code = (data.get('cost_code') or '').strip() or None
+
+        if not member_code:
+            raise HTTPException(status_code=400, detail="정보이용사코드는 필수입니다.")
+
+        with get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                UPDATE info_purchase_contract SET
+                    member_code = %s, datacenter_code = %s, provider = %s,
+                    billing_start_date = %s, contract_end_date = %s,
+                    service_id = %s, nni_id = %s, cost_code = %s,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, (member_code, datacenter_code, provider, billing_start_date, contract_end_date, service_id, nni_id, cost_code, item_id))
+            if cur.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Info purchase contract not found")
+            cur.close()
+
+        logger.info(f"정보이용사 매입내역 수정 완료: ID={item_id}")
+        return {"success": True, "message": "매입내역이 수정되었습니다."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"정보이용사 매입내역 수정 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/info_purchase_contract/{item_id}")
+async def DeleteInfoPurchaseContract(item_id: int):
+    """정보이용사 매입내역 삭제"""
+    logger.info(f"정보이용사 매입내역 삭제 요청: ID={item_id}")
+    try:
+        with get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM info_purchase_contract WHERE id = %s", (item_id,))
+            if cur.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Info purchase contract not found")
+            cur.close()
+
+        logger.info(f"정보이용사 매입내역 삭제 완료: ID={item_id}")
+        return {"success": True, "message": "매입내역이 삭제되었습니다."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"정보이용사 매입내역 삭제 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================
 # 회원사 이익내역 (Profit Summary)
 # ============================================================
 

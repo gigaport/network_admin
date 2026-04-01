@@ -45,6 +45,7 @@ urlpatterns = [
     path('revenue_summary/', include('setting.urls')),
     path('network_cost/', include('setting.urls')),
     path('purchase_contract/', include('setting.urls')),
+    path('info_purchase_contract/', include('setting.urls')),
     path('profit_summary/', include('setting.urls')),
     path('equipment_cost/', include('setting.urls')),
     path('index', include('app.urls')),
