@@ -2333,7 +2333,7 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
 
 @router.get("/info_revenue_summary")
 async def GetInfoRevenueSummary():
-    """정보이용사별 매출내역 조회 (ORD/MPR 회선 요금 집계)"""
+    """정보이용사별 매출내역 조회 (MKD 회선 요금 집계)"""
     logger.info("정보이용사 매출내역 조회 시작")
 
     try:
@@ -2344,16 +2344,12 @@ async def GetInfoRevenueSummary():
                 SELECT
                     sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
                     sc.is_pb, c.phase,
-                    COUNT(*) FILTER (WHERE c.usage = 'ORD') AS ord_count,
-                    COUNT(*) FILTER (WHERE c.usage = 'MPR') AS mpr_count,
-                    COUNT(*) AS total_count,
-                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'ORD'), 0) AS ord_total,
-                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
-                    COALESCE(SUM(ifs.price), 0) AS grand_total
+                    COUNT(*) AS mkd_count,
+                    COALESCE(SUM(ifs.price), 0) AS mkd_total
                 FROM info_company_circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
-                WHERE c.usage IN ('ORD', 'MPR')
+                WHERE c.usage = 'MKD'
                 GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
                 ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
             """
@@ -2369,8 +2365,8 @@ async def GetInfoRevenueSummary():
                 FROM info_company_circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
-                WHERE c.usage IN ('ORD', 'MPR')
-                ORDER BY sc.member_number, c.datacenter_code, c.usage
+                WHERE c.usage = 'MKD'
+                ORDER BY sc.member_number, c.datacenter_code
             """
             cur.execute(detail_query)
             details = cur.fetchall()
@@ -2410,14 +2406,10 @@ async def GetInfoRevenueMonthly(year_month: str = Query(..., description="조회
                 )
                 SELECT
                     to_char(mr.m_start, 'YYYY-MM') AS month,
-                    COUNT(*) FILTER (WHERE c.usage = 'ORD') AS ord_count,
-                    COUNT(*) FILTER (WHERE c.usage = 'MPR') AS mpr_count,
-                    COUNT(*) AS circuit_count,
-                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'ORD'), 0) AS ord_total,
-                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
-                    COALESCE(SUM(ifs.price), 0) AS grand_total
+                    COUNT(*) AS mkd_count,
+                    COALESCE(SUM(ifs.price), 0) AS mkd_total
                 FROM month_ranges mr
-                LEFT JOIN info_company_circuit c ON c.usage IN ('ORD', 'MPR')
+                LEFT JOIN info_company_circuit c ON c.usage = 'MKD'
                     AND (c.contract_date IS NULL OR c.contract_date <= mr.m_end)
                     AND (c.expiry_date IS NULL OR c.expiry_date >= mr.m_start)
                 LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
@@ -2431,16 +2423,12 @@ async def GetInfoRevenueMonthly(year_month: str = Query(..., description="조회
                 SELECT
                     sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
                     sc.is_pb, c.phase,
-                    COUNT(*) FILTER (WHERE c.usage = 'ORD') AS ord_count,
-                    COUNT(*) FILTER (WHERE c.usage = 'MPR') AS mpr_count,
-                    COUNT(*) AS total_count,
-                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'ORD'), 0) AS ord_total,
-                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
-                    COALESCE(SUM(ifs.price), 0) AS grand_total
+                    COUNT(*) AS mkd_count,
+                    COALESCE(SUM(ifs.price), 0) AS mkd_total
                 FROM info_company_circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
-                WHERE c.usage IN ('ORD', 'MPR')
+                WHERE c.usage = 'MKD'
                     AND (c.contract_date IS NULL OR c.contract_date <= %s)
                     AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
                 GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
@@ -2459,10 +2447,10 @@ async def GetInfoRevenueMonthly(year_month: str = Query(..., description="조회
                 FROM info_company_circuit c
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
-                WHERE c.usage IN ('ORD', 'MPR')
+                WHERE c.usage = 'MKD'
                     AND (c.contract_date IS NULL OR c.contract_date <= %s)
                     AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
-                ORDER BY sc.member_number, c.datacenter_code, c.usage
+                ORDER BY sc.member_number, c.datacenter_code
             """
             cur.execute(detail_query, (month_end, month_start))
             details = cur.fetchall()
