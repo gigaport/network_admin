@@ -2329,6 +2329,156 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
+# ==================== 정보이용사 매출내역 (Info Revenue Summary) ====================
+
+@router.get("/info_revenue_summary")
+async def GetInfoRevenueSummary():
+    """정보이용사별 매출내역 조회 (ORD/MPR 회선 요금 집계)"""
+    logger.info("정보이용사 매출내역 조회 시작")
+
+    try:
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            summary_query = """
+                SELECT
+                    sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
+                    sc.is_pb, c.phase,
+                    COUNT(*) FILTER (WHERE c.usage = 'ORD') AS ord_count,
+                    COUNT(*) FILTER (WHERE c.usage = 'MPR') AS mpr_count,
+                    COUNT(*) AS total_count,
+                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'ORD'), 0) AS ord_total,
+                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
+                    COALESCE(SUM(ifs.price), 0) AS grand_total
+                FROM info_company_circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
+                WHERE c.usage IN ('ORD', 'MPR')
+                GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
+                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
+            """
+            cur.execute(summary_query)
+            summary = cur.fetchall()
+
+            detail_query = """
+                SELECT
+                    c.id, c.member_code, sc.member_number, sc.company_name,
+                    c.datacenter_code, c.usage, c.product, c.bandwidth,
+                    c.additional_circuit, c.phase, c.provider, c.circuit_id,
+                    ifs.price AS fee_price, ifs.description AS fee_description
+                FROM info_company_circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
+                WHERE c.usage IN ('ORD', 'MPR')
+                ORDER BY sc.member_number, c.datacenter_code, c.usage
+            """
+            cur.execute(detail_query)
+            details = cur.fetchall()
+
+            cur.close()
+
+        logger.info(f"정보이용사 매출내역 조회 완료: {len(summary)}건, 상세 {len(details)}건")
+        return {"success": True, "summary": summary, "details": details}
+
+    except Exception as e:
+        logger.error(f"정보이용사 매출내역 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.get("/info_revenue_monthly")
+async def GetInfoRevenueMonthly(year_month: str = Query(..., description="조회 월 (YYYY-MM 형식)")):
+    """정보이용사 월별 매출내역 조회 (12개월 추이 + 해당 월 요약/상세)"""
+    logger.info(f"정보이용사 월별 매출내역 조회: {year_month}")
+
+    try:
+        target = datetime.strptime(year_month, "%Y-%m").date()
+        month_start = target.replace(day=1)
+        next_month = month_start + relativedelta(months=1)
+        month_end = next_month - relativedelta(days=1)
+        trend_start = month_start - relativedelta(months=11)
+
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            trend_query = """
+                WITH months AS (
+                    SELECT generate_series(%s::date, %s::date, '1 month'::interval)::date AS m_start
+                ),
+                month_ranges AS (
+                    SELECT m_start, (m_start + interval '1 month' - interval '1 day')::date AS m_end
+                    FROM months
+                )
+                SELECT
+                    to_char(mr.m_start, 'YYYY-MM') AS month,
+                    COUNT(*) FILTER (WHERE c.usage = 'ORD') AS ord_count,
+                    COUNT(*) FILTER (WHERE c.usage = 'MPR') AS mpr_count,
+                    COUNT(*) AS circuit_count,
+                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'ORD'), 0) AS ord_total,
+                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
+                    COALESCE(SUM(ifs.price), 0) AS grand_total
+                FROM month_ranges mr
+                LEFT JOIN info_company_circuit c ON c.usage IN ('ORD', 'MPR')
+                    AND (c.contract_date IS NULL OR c.contract_date <= mr.m_end)
+                    AND (c.expiry_date IS NULL OR c.expiry_date >= mr.m_start)
+                LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
+                GROUP BY mr.m_start
+                ORDER BY mr.m_start
+            """
+            cur.execute(trend_query, (trend_start, month_start))
+            trend = cur.fetchall()
+
+            summary_query = """
+                SELECT
+                    sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
+                    sc.is_pb, c.phase,
+                    COUNT(*) FILTER (WHERE c.usage = 'ORD') AS ord_count,
+                    COUNT(*) FILTER (WHERE c.usage = 'MPR') AS mpr_count,
+                    COUNT(*) AS total_count,
+                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'ORD'), 0) AS ord_total,
+                    COALESCE(SUM(ifs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
+                    COALESCE(SUM(ifs.price), 0) AS grand_total
+                FROM info_company_circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
+                WHERE c.usage IN ('ORD', 'MPR')
+                    AND (c.contract_date IS NULL OR c.contract_date <= %s)
+                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
+                GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
+                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
+            """
+            cur.execute(summary_query, (month_end, month_start))
+            summary = cur.fetchall()
+
+            detail_query = """
+                SELECT
+                    c.id, c.member_code, sc.member_number, sc.company_name,
+                    c.datacenter_code, c.usage, c.product, c.bandwidth,
+                    c.additional_circuit, c.phase, c.provider, c.circuit_id,
+                    c.contract_date, c.expiry_date,
+                    ifs.price AS fee_price, ifs.description AS fee_description
+                FROM info_company_circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
+                WHERE c.usage IN ('ORD', 'MPR')
+                    AND (c.contract_date IS NULL OR c.contract_date <= %s)
+                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
+                ORDER BY sc.member_number, c.datacenter_code, c.usage
+            """
+            cur.execute(detail_query, (month_end, month_start))
+            details = cur.fetchall()
+
+            cur.close()
+
+        logger.info(f"정보이용사 월별 매출내역 조회 완료: 추이 {len(trend)}건, 요약 {len(summary)}건, 상세 {len(details)}건")
+        return {"success": True, "year_month": year_month, "trend": trend, "summary": summary, "details": details}
+
+    except ValueError:
+        raise HTTPException(status_code=400, detail="year_month 형식이 잘못되었습니다. YYYY-MM 형식으로 입력해주세요.")
+    except Exception as e:
+        logger.error(f"정보이용사 월별 매출내역 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
 @router.get("/revenue_report_pdf")
 async def GetRevenueReportPdf(year_month: str = Query(..., description="보고서 월 (YYYY-MM 형식)")):
     """월별 매출 보고서 PDF 다운로드"""
