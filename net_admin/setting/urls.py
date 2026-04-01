@@ -56,6 +56,7 @@ urlpatterns = [
     path('delete_info_purchase_contract', views.delete_info_purchase_contract, name='delete_info_purchase_contract'),
     path('get_info_revenue_summary', views.get_info_revenue_summary, name='get_info_revenue_summary'),
     path('get_info_revenue_monthly', views.get_info_revenue_monthly, name='get_info_revenue_monthly'),
+    path('download_info_revenue_pdf', views.download_info_revenue_pdf, name='download_info_revenue_pdf'),
     path('get_profit_summary', views.get_profit_summary, name='get_profit_summary'),
     path('get_profit_monthly', views.get_profit_monthly, name='get_profit_monthly'),
     path('download_profit_pdf', views.download_profit_pdf, name='download_profit_pdf'),

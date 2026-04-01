@@ -969,6 +969,26 @@ def get_info_revenue_summary(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
+def download_info_revenue_pdf(request):
+    """정보이용사 월별 매출 보고서 PDF 다운로드 (FastAPI 호출)"""
+    try:
+        year_month = request.GET.get('year_month', '')
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_revenue_report_pdf?year_month={year_month}"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.get(api_url, stream=True)
+        if response.status_code == 200:
+            django_response = HttpResponse(response.content, content_type='application/pdf')
+            django_response['Content-Disposition'] = response.headers.get(
+                'Content-Disposition', f'attachment; filename=info_revenue_report_{year_month}.pdf'
+            )
+            return django_response
+        else:
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"정보이용사 매출 PDF 다운로드 실패: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
 def get_info_revenue_monthly(request):
     """정보이용사 월별 매출내역 데이터 조회 (FastAPI 호출)"""
     try:
