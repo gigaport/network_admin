@@ -381,14 +381,14 @@ function renderRevenueUsageChart(data, infoRev) {
             formatter: function(p) { return p.name + ': ' + Number(p.value).toLocaleString() + '원 (' + p.percent + '%)'; }
         },
         graphic: [{
-            type: 'group', left: 'center', top: '30%',
+            type: 'group', left: '35%', top: '38%',
             children: [
-                { type: 'text', left: 'center', style: { text: fmtWon(grandTotal), textAlign: 'center', fontSize: 14, fontWeight: 'bold', fill: T('#1a1a2e', '#e2e8f0') } },
-                { type: 'text', left: 'center', top: 20, style: { text: '전체매출', textAlign: 'center', fontSize: 9, fill: T('#b0b0b0', '#64748b') } }
+                { type: 'text', left: 'center', style: { text: fmtWon(grandTotal), textAlign: 'center', fontSize: 18, fontWeight: 'bold', fill: T('#1a1a2e', '#e2e8f0') } },
+                { type: 'text', left: 'center', top: 24, style: { text: '전체매출', textAlign: 'center', fontSize: 11, fill: T('#b0b0b0', '#64748b') } }
             ]
         }],
         series: [{
-            type: 'pie', radius: ['50%', '78%'], center: ['50%', '45%'],
+            type: 'pie', radius: ['45%', '74%'], center: ['50%', '50%'],
             itemStyle: { borderRadius: 4, borderColor: T('#fff', '#1e2a3a'), borderWidth: 2 },
             label: { show: false },
             emphasis: { label: { show: false }, itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,0.08)' } },
