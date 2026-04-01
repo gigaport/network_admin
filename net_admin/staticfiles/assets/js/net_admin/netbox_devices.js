@@ -339,7 +339,7 @@
             var barW = maxCount > 0 ? Math.round(item.count / maxCount * 100) : 0;
             html += '<div class="d-flex align-items-center mb-1" style="line-height:1.3;">' +
                 '<span style="flex:1;min-width:0;font-size:0.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + esc(item.model) + '">' + esc(item.model) + '</span>' +
-                '<div style="width:160px;min-width:160px;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden;position:relative;margin:0 6px;">' +
+                '<div style="width:320px;min-width:320px;height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden;position:relative;margin:0 6px;">' +
                 '<div style="position:absolute;top:0;left:0;height:100%;width:' + barW + '%;background:linear-gradient(90deg,#10b981,#6ee7b7);border-radius:7px;transition:width 0.5s;"></div>' +
                 '</div>' +
                 '<span style="min-width:22px;text-align:right;font-size:0.72rem;font-weight:700;">' + item.count + '</span>' +
