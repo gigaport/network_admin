@@ -348,24 +348,40 @@
         el.innerHTML = html;
     }
 
+    var roleChartInstance = null;
     function renderRoleSummary(roleCounts, total) {
         var el = document.getElementById('roleSummaryArea');
         if (!el) return;
         var roleColors = { 'PRD': '#10b981', 'TST': '#f59e0b', 'DR': '#a855f7', 'DEV': '#3b82f6', 'IDLE': '#6b7280' };
+        var defaultColors = ['#10b981', '#f59e0b', '#a855f7', '#3b82f6', '#6b7280', '#f06595', '#00b8d9', '#20c997'];
         var sorted = Object.keys(roleCounts).map(function(k) { return { name: k, count: roleCounts[k] }; })
             .sort(function(a, b) { return b.count - a.count; });
-        if (sorted.length === 0) { el.innerHTML = '<div class="text-center py-2" style="color:#ccc;">데이터 없음</div>'; return; }
-        var html = '';
-        sorted.forEach(function(r) {
-            var c = roleColors[r.name] || '#6b7280';
-            var pct = total > 0 ? (r.count / total * 100).toFixed(1) : 0;
-            html += '<div class="d-flex align-items-center mb-2">' +
-                '<span style="width:10px;height:10px;min-width:10px;border-radius:50%;background:' + c + ';margin-right:8px;"></span>' +
-                '<span style="font-size:0.75rem;font-weight:600;">' + esc(r.name) + '</span>' +
-                '<span class="ms-auto" style="font-size:0.75rem;font-weight:700;">' + r.count + '</span>' +
-                '<span style="font-size:0.65rem;color:#94a3b8;min-width:42px;text-align:right;">(' + pct + '%)</span></div>';
+        if (sorted.length === 0) { el.innerHTML = '<div class="text-center py-4" style="color:#ccc;">데이터 없음</div>'; return; }
+
+        var seriesData = sorted.map(function(r, i) {
+            return { value: r.count, name: r.name, itemStyle: { color: roleColors[r.name] || defaultColors[i % defaultColors.length] } };
         });
-        el.innerHTML = html;
+
+        if (roleChartInstance) roleChartInstance.dispose();
+        roleChartInstance = echarts.init(el);
+        roleChartInstance.setOption({
+            tooltip: {
+                trigger: 'item',
+                formatter: function(p) { return p.name + ': ' + p.value + '대 (' + p.percent + '%)'; }
+            },
+            legend: {
+                bottom: 0,
+                textStyle: { fontSize: 10, color: '#94a3b8' },
+                itemWidth: 10, itemHeight: 10, itemGap: 8
+            },
+            series: [{
+                type: 'pie', radius: ['40%', '70%'], center: ['50%', '42%'],
+                itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
+                label: { show: false },
+                emphasis: { label: { show: false } },
+                data: seriesData
+            }]
+        });
     }
 
     function renderIdleTopModels(idleModels, idleTotal) {
