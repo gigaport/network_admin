@@ -388,7 +388,7 @@ function renderRevenueUsageChart(data, infoRev) {
             ]
         }],
         series: [{
-            type: 'pie', radius: ['45%', '74%'], center: ['50%', '50%'],
+            type: 'pie', radius: ['48%', '82%'], center: ['50%', '50%'],
             itemStyle: { borderRadius: 4, borderColor: T('#fff', '#1e2a3a'), borderWidth: 2 },
             label: { show: false },
             emphasis: { label: { show: false }, itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,0.08)' } },
