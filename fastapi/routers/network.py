@@ -2082,6 +2082,40 @@ async def get_dashboard():
             """)
             revenue_by_usage = {row['usage']: int(row['revenue']) for row in cur.fetchall()}
 
+            # 10-1. 정보이용사 MKD 매출 총액
+            cur.execute("""
+                SELECT
+                    COUNT(*) AS mkd_count,
+                    COALESCE(SUM(ifs.price), 0) AS mkd_total
+                FROM info_company_circuit c
+                LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
+                WHERE c.usage = 'MKD'
+            """)
+            info_revenue_row = dict(cur.fetchone())
+
+            # 10-2. 정보이용사 매출 Top 10
+            cur.execute("""
+                SELECT sc.company_name, sc.member_code,
+                       COALESCE(SUM(ifs.price), 0) AS total_revenue
+                FROM info_company_circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
+                WHERE c.usage = 'MKD'
+                GROUP BY sc.company_name, sc.member_code
+                HAVING SUM(ifs.price) > 0
+                ORDER BY total_revenue DESC
+                LIMIT 10
+            """)
+            info_top_revenue_members = [dict(row) for row in cur.fetchall()]
+
+            # 10-3. 정보이용사 매입 총액
+            cur.execute("""
+                SELECT COALESCE(SUM(nc.cost_price), 0) AS purchase_total
+                FROM info_purchase_contract pc
+                LEFT JOIN network_cost nc ON pc.cost_code = nc.code
+            """)
+            info_purchase_total = float(cur.fetchone()['purchase_total'] or 0)
+
             # 11. 이익 현황 (매출 - 매입)
             cur.execute("""
                 SELECT COALESCE(SUM(nc.cost_price), 0) AS purchase_total
@@ -2144,11 +2178,19 @@ async def get_dashboard():
                     "by_usage": revenue_by_usage,
                     "top_members": top_revenue_members
                 },
+                "info_revenue": {
+                    "mkd_count": int(info_revenue_row['mkd_count']),
+                    "mkd_total": int(info_revenue_row['mkd_total']),
+                    "top_members": info_top_revenue_members,
+                    "purchase_total": int(info_purchase_total)
+                },
                 "profit": {
                     "revenue_total": int(revenue_total['grand_total']),
                     "purchase_total": int(purchase_grand_total),
                     "profit_total": int(revenue_total['grand_total']) - int(purchase_grand_total),
                     "profit_rate": round(((int(revenue_total['grand_total']) - int(purchase_grand_total)) / int(revenue_total['grand_total'])) * 100, 1) if int(revenue_total['grand_total']) > 0 else 0.0,
+                    "info_revenue_total": int(info_revenue_row['mkd_total']),
+                    "info_purchase_total": int(info_purchase_total),
                     "members": all_profit_members
                 }
             }

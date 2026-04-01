@@ -68,10 +68,10 @@ function renderDashboard(data) {
     renderSummaryCards(data.summary);
     renderTopMembersChart(data.top_members);
     renderStatGrids(data.circuits_by_provider, data.circuits_by_env, data.circuits_by_usage);
-    renderRevenueUsageChart(data.revenue ? data.revenue.by_usage : null);
+    renderRevenueUsageChart(data.revenue ? data.revenue.by_usage : null, data.info_revenue);
     renderDcChart(data.circuits_by_dc);
     if (data.revenue) {
-        renderRevenueCard(data.revenue);
+        renderRevenueCard(data.revenue, data.info_revenue);
         renderTopRevenueChart(data.revenue.top_members);
     }
     if (data.profit) {
@@ -90,18 +90,25 @@ function renderSummaryCards(s) {
 }
 
 // ========== 매출 카드 ==========
-function renderRevenueCard(rev) {
-    setText('stat_revenue_total', fmtWon(rev.grand_total));
+function renderRevenueCard(rev, infoRev) {
+    var infoMkd = infoRev ? (infoRev.mkd_total || 0) : 0;
+    var grandAll = rev.grand_total + infoMkd;
     setText('stat_revenue_ord', fmtWon(rev.ord_total));
     setText('stat_revenue_mpr', fmtWon(rev.mpr_total));
+    setText('stat_revenue_info_mkd', fmtWon(infoMkd));
+    setText('stat_revenue_total', fmtWon(grandAll));
 }
 
 // ========== 이익 현황 카드 ==========
 function renderProfitCards(profit) {
-    setText('stat_profit_revenue', fmtWon(profit.revenue_total));
-    setText('stat_profit_purchase', fmtWon(profit.purchase_total));
-    setText('stat_profit_total', fmtWon(profit.profit_total));
-    setText('stat_profit_rate', profit.profit_rate + '%');
+    var totalRevenue = profit.revenue_total + (profit.info_revenue_total || 0);
+    var totalPurchase = profit.purchase_total + (profit.info_purchase_total || 0);
+    var totalProfit = totalRevenue - totalPurchase;
+    var profitRate = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0.0';
+    setText('stat_profit_revenue', fmtWon(totalRevenue));
+    setText('stat_profit_purchase', fmtWon(totalPurchase));
+    setText('stat_profit_total', fmtWon(totalProfit));
+    setText('stat_profit_rate', profitRate + '%');
 }
 
 // ========== 이익 Top 5 회원사 (가로 바) ==========
@@ -346,17 +353,21 @@ function renderTopMembersChart(members) {
     });
 }
 
-// ========== ORD/MPR 매출 도넛 ==========
-function renderRevenueUsageChart(data) {
+// ========== ORD/MPR/MKD 매출 도넛 ==========
+function renderRevenueUsageChart(data, infoRev) {
     var el = document.getElementById('chartRevenueUsage');
     if (!el || !data || Object.keys(data).length === 0) { showNoData(el); return; }
     var chart = initChart(el, 'chartRevenueUsage');
-    var usageColors = { 'ORD': C.green, 'MPR': C.blue };
+    var usageColors = { 'ORD': C.green, 'MPR': C.blue, 'MKD': C.purple };
     var grandTotal = 0;
     var seriesData = Object.keys(data).map(function(k) {
         grandTotal += data[k];
         return { value: data[k], name: k, itemStyle: { color: usageColors[k] || '#ccc' } };
     });
+    if (infoRev && infoRev.mkd_total > 0) {
+        grandTotal += infoRev.mkd_total;
+        seriesData.push({ value: infoRev.mkd_total, name: 'MKD', itemStyle: { color: usageColors['MKD'] } });
+    }
 
     chart.setOption({
         tooltip: {

@@ -344,19 +344,23 @@
             <div class="dash-panel-title mb-0">월 매출 현황</div>
             <a href="/revenue_summary" class="ms-auto text-decoration-none" style="font-size: 0.68rem; color: #b0b0b0;">상세보기 ›</a>
           </div>
-          <div class="dash-panel-subtitle">Revenue overview</div>
-          <div class="row g-0 mb-3">
-            <div class="col-4 text-center dash-revenue-divider" style="border-right: 1px solid #f0f0f0;">
-              <div class="dash-panel-subtitle" style="margin-bottom: 2px;">총 매출</div>
-              <div id="stat_revenue_total" style="font-size: 1.2rem; font-weight: 700; color: #1a1a2e;">-</div>
+          <div class="dash-panel-subtitle">Revenue overview (회원사 + 정보이용사)</div>
+          <div class="row g-0 mb-2">
+            <div class="col-3 text-center dash-revenue-divider" style="border-right: 1px solid #f0f0f0;">
+              <div class="dash-panel-subtitle" style="margin-bottom: 2px;">회원사 ORD</div>
+              <div id="stat_revenue_ord" style="font-size: 1rem; font-weight: 700; color: #36b37e;">-</div>
             </div>
-            <div class="col-4 text-center dash-revenue-divider" style="border-right: 1px solid #f0f0f0;">
-              <div class="dash-panel-subtitle" style="margin-bottom: 2px;">ORD 매출</div>
-              <div id="stat_revenue_ord" style="font-size: 1.2rem; font-weight: 700; color: #36b37e;">-</div>
+            <div class="col-3 text-center dash-revenue-divider" style="border-right: 1px solid #f0f0f0;">
+              <div class="dash-panel-subtitle" style="margin-bottom: 2px;">회원사 MPR</div>
+              <div id="stat_revenue_mpr" style="font-size: 1rem; font-weight: 700; color: #4a7cff;">-</div>
             </div>
-            <div class="col-4 text-center">
-              <div class="dash-panel-subtitle" style="margin-bottom: 2px;">MPR 매출</div>
-              <div id="stat_revenue_mpr" style="font-size: 1.2rem; font-weight: 700; color: #4a7cff;">-</div>
+            <div class="col-3 text-center dash-revenue-divider" style="border-right: 1px solid #f0f0f0;">
+              <div class="dash-panel-subtitle" style="margin-bottom: 2px;">정보사 MKD</div>
+              <div id="stat_revenue_info_mkd" style="font-size: 1rem; font-weight: 700; color: #a855f7;">-</div>
+            </div>
+            <div class="col-3 text-center">
+              <div class="dash-panel-subtitle" style="margin-bottom: 2px;">전체 합계</div>
+              <div id="stat_revenue_total" style="font-size: 1rem; font-weight: 700; color: #1a1a2e;">-</div>
             </div>
           </div>
           <div id="chartTopRevenue" style="height: 160px;"></div>
@@ -379,7 +383,7 @@
       <!-- 중앙: ORD/MPR 도넛 + DC별 차트 -->
       <div class="col-lg-4 d-flex">
         <div class="dash-panel flex-grow-1">
-          <div class="dash-panel-title">ORD / MPR 매출 비율</div>
+          <div class="dash-panel-title">ORD / MPR / MKD 매출 비율</div>
           <div class="dash-panel-subtitle">Revenue by usage type</div>
           <div id="chartRevenueUsage" style="height: 220px;"></div>
         </div>
@@ -406,7 +410,7 @@
             <div class="dash-panel-title mb-0"><i class="fas fa-chart-line me-2" style="color: #f59e0b; font-size: 0.8rem;"></i>이익 현황</div>
             <a href="/profit_summary" class="ms-auto text-decoration-none" style="font-size: 0.68rem; color: #b0b0b0;">상세보기 ›</a>
           </div>
-          <div class="dash-panel-subtitle">Profit overview (Revenue - Purchase)</div>
+          <div class="dash-panel-subtitle">Profit overview (회원사 + 정보이용사)</div>
           <div class="row g-2 mt-1">
             <div class="col-6">
               <div style="padding: 10px 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02));">
