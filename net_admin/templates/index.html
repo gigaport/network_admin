@@ -380,12 +380,15 @@
           <div id="statGridUsage"></div>
         </div>
       </div>
-      <!-- 중앙: ORD/MPR 도넛 + DC별 차트 -->
+      <!-- 중앙: ORD/MPR/MKD 도넛 + 상세 -->
       <div class="col-lg-4 d-flex">
         <div class="dash-panel flex-grow-1">
           <div class="dash-panel-title">ORD / MPR / MKD 매출 비율</div>
           <div class="dash-panel-subtitle">Revenue by usage type</div>
-          <div id="chartRevenueUsage" style="height: 220px;"></div>
+          <div class="d-flex align-items-center" style="gap: 8px;">
+            <div id="chartRevenueUsage" style="width: 150px; height: 150px; flex-shrink: 0;"></div>
+            <div id="revenueUsageDetail" style="flex: 1; font-size: 0.72rem;"></div>
+          </div>
         </div>
       </div>
       <!-- 우측: 최근 12개월 월 매출 추이 -->
@@ -395,7 +398,7 @@
             <div class="dash-panel-title mb-0"><i class="fas fa-chart-area me-2" style="color: #36b37e; font-size: 0.8rem;"></i>최근 12개월 월 매출 현황</div>
             <a href="/revenue_summary" class="ms-auto text-decoration-none" style="font-size: 0.68rem; color: #b0b0b0;">상세보기 ›</a>
           </div>
-          <div class="dash-panel-subtitle">Monthly revenue trend (ORD / MPR)</div>
+          <div class="dash-panel-subtitle">Monthly revenue trend (ORD / MPR / MKD)</div>
           <div id="chartRevenueTrend" style="height: 220px;"></div>
         </div>
       </div>

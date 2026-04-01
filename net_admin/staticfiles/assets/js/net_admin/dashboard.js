@@ -356,40 +356,68 @@ function renderTopMembersChart(members) {
 // ========== ORD/MPR/MKD 매출 도넛 ==========
 function renderRevenueUsageChart(data, infoRev) {
     var el = document.getElementById('chartRevenueUsage');
+    var detailEl = document.getElementById('revenueUsageDetail');
     if (!el || !data || Object.keys(data).length === 0) { showNoData(el); return; }
     var chart = initChart(el, 'chartRevenueUsage');
     var usageColors = { 'ORD': C.green, 'MPR': C.blue, 'MKD': C.purple };
+    var usageLabels = { 'ORD': '회원사 ORD', 'MPR': '회원사 MPR', 'MKD': '정보사 MKD' };
     var grandTotal = 0;
-    var seriesData = Object.keys(data).map(function(k) {
+    var items = [];
+    Object.keys(data).forEach(function(k) {
         grandTotal += data[k];
-        return { value: data[k], name: k, itemStyle: { color: usageColors[k] || '#ccc' } };
+        items.push({ name: k, value: data[k], color: usageColors[k] || '#ccc' });
     });
     if (infoRev && infoRev.mkd_total > 0) {
         grandTotal += infoRev.mkd_total;
-        seriesData.push({ value: infoRev.mkd_total, name: 'MKD', itemStyle: { color: usageColors['MKD'] } });
+        items.push({ name: 'MKD', value: infoRev.mkd_total, color: usageColors['MKD'] });
     }
+    var seriesData = items.map(function(it) {
+        return { value: it.value, name: it.name, itemStyle: { color: it.color } };
+    });
 
     chart.setOption({
         tooltip: {
             trigger: 'item',
             formatter: function(p) { return p.name + ': ' + Number(p.value).toLocaleString() + '원 (' + p.percent + '%)'; }
         },
-        legend: { bottom: 0, textStyle: { fontSize: 11, color: T('#999', '#94a3b8') } },
         graphic: [{
-            type: 'group', left: 'center', top: '33%',
+            type: 'group', left: 'center', top: '30%',
             children: [
-                { type: 'text', left: 'center', style: { text: fmtWon(grandTotal), textAlign: 'center', fontSize: 20, fontWeight: 'bold', fill: T('#1a1a2e', '#e2e8f0') } },
-                { type: 'text', left: 'center', top: 28, style: { text: '월 매출', textAlign: 'center', fontSize: 11, fill: T('#b0b0b0', '#64748b') } }
+                { type: 'text', left: 'center', style: { text: fmtWon(grandTotal), textAlign: 'center', fontSize: 14, fontWeight: 'bold', fill: T('#1a1a2e', '#e2e8f0') } },
+                { type: 'text', left: 'center', top: 20, style: { text: '전체매출', textAlign: 'center', fontSize: 9, fill: T('#b0b0b0', '#64748b') } }
             ]
         }],
         series: [{
-            type: 'pie', radius: ['48%', '72%'], center: ['50%', '42%'],
-            itemStyle: { borderRadius: 6, borderColor: T('#fff', '#1e2a3a'), borderWidth: 3 },
+            type: 'pie', radius: ['50%', '78%'], center: ['50%', '45%'],
+            itemStyle: { borderRadius: 4, borderColor: T('#fff', '#1e2a3a'), borderWidth: 2 },
             label: { show: false },
             emphasis: { label: { show: false }, itemStyle: { shadowBlur: 8, shadowColor: 'rgba(0,0,0,0.08)' } },
             data: seriesData
         }]
     });
+
+    // 우측 상세 정보 렌더링
+    if (detailEl) {
+        var html = '';
+        items.forEach(function(it) {
+            var pct = grandTotal > 0 ? ((it.value / grandTotal) * 100).toFixed(1) : '0.0';
+            var label = usageLabels[it.name] || it.name;
+            html += '<div style="display:flex; align-items:center; padding:6px 0; border-bottom:1px solid ' + T('#f3f4f6','#2d3d50') + ';">' +
+                '<div style="width:8px;height:8px;border-radius:50%;background:' + it.color + ';flex-shrink:0;margin-right:8px;"></div>' +
+                '<div style="flex:1;min-width:0;">' +
+                '<div style="font-weight:600;color:' + T('#334155','#e2e8f0') + ';">' + label + '</div>' +
+                '<div style="color:' + T('#94a3b8','#64748b') + ';font-size:0.65rem;">' + pct + '%</div>' +
+                '</div>' +
+                '<div style="text-align:right;font-weight:700;color:' + it.color + ';white-space:nowrap;">' + fmtWon(it.value) + '</div>' +
+                '</div>';
+        });
+        // 합계
+        html += '<div style="display:flex;align-items:center;padding:8px 0;margin-top:2px;">' +
+            '<div style="flex:1;font-weight:700;color:' + T('#1e293b','#f1f5f9') + ';">합계</div>' +
+            '<div style="font-weight:800;color:' + T('#1e293b','#f1f5f9') + ';font-size:0.85rem;">' + fmtWon(grandTotal) + '</div>' +
+            '</div>';
+        detailEl.innerHTML = html;
+    }
 }
 
 // ========== 매출 Top 10 가로 스택 바 ==========
