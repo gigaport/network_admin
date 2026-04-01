@@ -396,26 +396,22 @@ function renderRevenueUsageChart(data, infoRev) {
         }]
     });
 
-    // 우측 상세 정보 렌더링
+    // 우측 상세 정보 렌더링 (세로 리스트)
     if (detailEl) {
         var html = '';
         items.forEach(function(it) {
             var pct = grandTotal > 0 ? ((it.value / grandTotal) * 100).toFixed(1) : '0.0';
             var label = usageLabels[it.name] || it.name;
-            html += '<div style="display:flex; align-items:center; padding:6px 0; border-bottom:1px solid ' + T('#f3f4f6','#2d3d50') + ';">' +
-                '<div style="width:8px;height:8px;border-radius:50%;background:' + it.color + ';flex-shrink:0;margin-right:8px;"></div>' +
-                '<div style="flex:1;min-width:0;">' +
-                '<div style="font-weight:600;color:' + T('#334155','#e2e8f0') + ';">' + label + '</div>' +
-                '<div style="color:' + T('#94a3b8','#64748b') + ';font-size:0.65rem;">' + pct + '%</div>' +
+            html += '<div style="padding:7px 0; border-bottom:1px solid ' + T('#f0f0f0','#2d3d50') + ';">' +
+                '<div style="display:flex; align-items:center; margin-bottom:2px;">' +
+                '<span style="width:7px;height:7px;border-radius:50%;background:' + it.color + ';display:inline-block;margin-right:6px;"></span>' +
+                '<span style="font-weight:600; color:' + T('#334155','#e2e8f0') + '; font-size:0.7rem;">' + label + '</span>' +
                 '</div>' +
-                '<div style="text-align:right;font-weight:700;color:' + it.color + ';white-space:nowrap;">' + fmtWon(it.value) + '</div>' +
+                '<div style="font-weight:700; color:' + it.color + '; font-size:0.82rem;">' + fmtWon(it.value) + '</div>' +
+                '<div style="font-size:0.6rem; color:' + T('#b0b0b0','#64748b') + ';">' + pct + '%</div>' +
                 '</div>';
         });
-        // 합계
-        html += '<div style="display:flex;align-items:center;padding:8px 0;margin-top:2px;">' +
-            '<div style="flex:1;font-weight:700;color:' + T('#1e293b','#f1f5f9') + ';">합계</div>' +
-            '<div style="font-weight:800;color:' + T('#1e293b','#f1f5f9') + ';font-size:0.85rem;">' + fmtWon(grandTotal) + '</div>' +
-            '</div>';
+        html += '<div style="padding:6px 0; font-weight:800; color:' + T('#1e293b','#f1f5f9') + '; font-size:0.8rem;">합계 ' + fmtWon(grandTotal) + '</div>';
         detailEl.innerHTML = html;
     }
 }
