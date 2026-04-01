@@ -51,6 +51,12 @@ gunicorn.sock
 .DS_Store
 Thumbs.db
 
+# PDCA / bkit
+docs/.pdca-status.json
+docs/.pdca-snapshots/
+docs/.bkit-memory.json
+.claude/agent-memory/
+
 # IDE
 .vscode/
 .idea/
