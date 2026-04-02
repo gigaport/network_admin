@@ -164,6 +164,7 @@
     }
 
     var allFeeData = [];
+    var allInfoFeeData = [];
 
     function loadFeeCodeOptions() {
         fetch('/fee_schedule/get_fee_schedule')
@@ -176,11 +177,20 @@
                 }
             })
             .catch(function(err) { console.error('요금코드 목록 로드 실패:', err); });
+        fetch('/info_fee_schedule/get_info_fee_schedule')
+            .then(function(res) { return res.json(); })
+            .then(function(result) {
+                if (result.success && result.data) {
+                    allInfoFeeData = result.data;
+                }
+            })
+            .catch(function(err) { console.error('정보이용사 요금코드 목록 로드 실패:', err); });
     }
 
     function filterFeeCodeByUsage(usage, selectId) {
         var html = '<option value="">선택</option>';
-        allFeeData.forEach(function(f) {
+        var source = (usage === 'MKD') ? allInfoFeeData : allFeeData;
+        source.forEach(function(f) {
             if (!usage || (f.fee_code && f.fee_code.indexOf(usage) === 0)) {
                 var label = f.fee_code + ' (' + f.description + ' / ' + Number(f.price).toLocaleString() + '원)';
                 html += '<option value="' + f.fee_code + '">' + label + '</option>';
@@ -201,6 +211,8 @@
             });
         } else if (usage === 'MGT') {
             options += '<option value="MGT">MGT</option>';
+        } else if (usage === 'MKD') {
+            options += '<option value="MKD">MKD</option>';
         } else if (usage === 'PB_ORD_PRD') {
             options = '<option value="50M" selected>50M</option>';
         } else if (usage === 'PB_ORD_DEV') {
@@ -222,6 +234,8 @@
             $(bwSelect).html('<option value="100M">100M</option>').val('100M');
         } else if (usage === 'MGT') {
             $(bwSelect).html('<option value="10M">10M</option>').val('10M');
+        } else if (usage === 'MKD') {
+            $(bwSelect).html('<option value="">선택</option><option value="1M">1M</option><option value="20M">20M</option><option value="100M">100M</option><option value="110M">110M</option>');
         } else if (usage === 'PB_ORD_PRD') {
             $(bwSelect).html('<option value="50M">50M</option>').val('50M');
         } else if (usage === 'PB_ORD_DEV') {
