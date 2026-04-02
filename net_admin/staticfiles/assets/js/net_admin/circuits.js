@@ -212,7 +212,7 @@
         } else if (usage === 'MGT') {
             options += '<option value="MGT">MGT</option>';
         } else if (usage === 'MKD') {
-            options += '<option value="MKD">MKD</option>';
+            options = mprProductOptions;
         } else if (usage === 'PB_ORD_PRD') {
             options = '<option value="50M" selected>50M</option>';
         } else if (usage === 'PB_ORD_DEV') {
