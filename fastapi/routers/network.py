@@ -3470,14 +3470,14 @@ async def CreatePurchaseContract(request: Request):
     logger.info("회원사 매입내역 추가 요청")
     try:
         data = await request.json()
-        member_code = data.get('member_code', '').strip()
-        datacenter_code = data.get('datacenter_code', '').strip()
-        provider = data.get('provider', '').strip()
+        member_code = (data.get('member_code') or '').strip()
+        datacenter_code = (data.get('datacenter_code') or '').strip()
+        provider = (data.get('provider') or '').strip()
         billing_start_date = data.get('billing_start_date') or None
         contract_end_date = data.get('contract_end_date') or None
-        service_id = data.get('service_id', '').strip() or None
-        nni_id = data.get('nni_id', '').strip() or None
-        cost_code = data.get('cost_code', '').strip() or None
+        service_id = (data.get('service_id') or '').strip() or None
+        nni_id = (data.get('nni_id') or '').strip() or None
+        cost_code = (data.get('cost_code') or '').strip() or None
 
         if not member_code:
             raise HTTPException(status_code=400, detail="회원사코드는 필수입니다.")
@@ -3506,14 +3506,14 @@ async def UpdatePurchaseContract(item_id: int, request: Request):
     logger.info(f"회원사 매입내역 수정 요청: ID={item_id}")
     try:
         data = await request.json()
-        member_code = data.get('member_code', '').strip()
-        datacenter_code = data.get('datacenter_code', '').strip()
-        provider = data.get('provider', '').strip()
+        member_code = (data.get('member_code') or '').strip()
+        datacenter_code = (data.get('datacenter_code') or '').strip()
+        provider = (data.get('provider') or '').strip()
         billing_start_date = data.get('billing_start_date') or None
         contract_end_date = data.get('contract_end_date') or None
-        service_id = data.get('service_id', '').strip() or None
-        nni_id = data.get('nni_id', '').strip() or None
-        cost_code = data.get('cost_code', '').strip() or None
+        service_id = (data.get('service_id') or '').strip() or None
+        nni_id = (data.get('nni_id') or '').strip() or None
+        cost_code = (data.get('cost_code') or '').strip() or None
 
         if not member_code:
             raise HTTPException(status_code=400, detail="회원사코드는 필수입니다.")
