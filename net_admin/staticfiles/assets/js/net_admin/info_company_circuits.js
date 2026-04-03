@@ -535,6 +535,221 @@
         }
     };
 
+    // ========== 회선 현황분석 ==========
+    window.showAnalysisModal = function() {
+        var data = infoCompanyCircuitsTable.rows().data().toArray();
+        if (!data.length) { showAlert('데이터가 없습니다.', 'warning'); return; }
+
+        function esc(s) { return $('<span>').text(s).html(); }
+        function cell(val, isTotal) {
+            if (!val) return '<td class="text-center py-2" style="color: #cbd5e1;">-</td>';
+            if (isTotal) return '<td class="text-center py-2" style="font-weight: 700; color: #1e293b; background: #f1f5f9;">' + val + '</td>';
+            return '<td class="text-center py-2" style="color: #334155;">' + val + '</td>';
+        }
+
+        // 정보이용사별 집계
+        var members = {};
+        var productSet = {};
+        data.forEach(function(r) {
+            var key = r.member_code || '-';
+            if (!members[key]) {
+                members[key] = { company_name: r.company_name || '-', dc: {}, product: {}, total: 0 };
+            }
+            var m = members[key];
+            m.total++;
+            var dc = r.datacenter_code || '-';
+            m.dc[dc] = (m.dc[dc] || 0) + 1;
+            var p = r.product || '-';
+            m.product[p] = (m.product[p] || 0) + 1;
+            productSet[p] = true;
+        });
+
+        var memberKeys = Object.keys(members).sort(function(a, b) {
+            return members[b].total - members[a].total;
+        });
+        var productOrder = ['NXTA-COM', 'NXTA-10', 'NXTA-5', 'NXTA-3', 'NXTB-10', 'NXTB-5', 'NXTB-3'];
+        var products = productOrder.filter(function(p) { return productSet[p]; });
+        Object.keys(productSet).forEach(function(p) {
+            if (p !== '-' && products.indexOf(p) === -1) products.push(p);
+        });
+
+        // DC코드별
+        var dcTotals = { DC1: 0, DC2: 0, DC3: 0, DR: 0, sum: 0 };
+        var dcHtml = '';
+        memberKeys.forEach(function(key) {
+            var m = members[key];
+            var dc1 = m.dc['DC1'] || 0, dc2 = m.dc['DC2'] || 0, dc3 = m.dc['DC3'] || 0, dr = m.dc['DR'] || 0;
+            dcTotals.DC1 += dc1; dcTotals.DC2 += dc2; dcTotals.DC3 += dc3; dcTotals.DR += dr; dcTotals.sum += m.total;
+            dcHtml += '<tr>';
+            dcHtml += '<td class="text-center py-2 fw-semibold" style="color: #6366f1;">' + esc(key) + '</td>';
+            dcHtml += '<td class="text-center py-2" style="color: #475569;">' + esc(m.company_name) + '</td>';
+            dcHtml += cell(dc1) + cell(dc2) + cell(dc3) + cell(dr) + cell(m.total, true);
+            dcHtml += '</tr>';
+        });
+        $('#analysisDcBody').html(dcHtml);
+        $('#analysisDcFooter').html(
+            '<td class="text-center py-2" colspan="2" style="color: #1e293b;">합계</td>' +
+            cell(dcTotals.DC1, true) + cell(dcTotals.DC2, true) + cell(dcTotals.DC3, true) + cell(dcTotals.DR, true) +
+            '<td class="text-center py-2" style="font-weight: 700; color: #fff; background: #475569;">' + dcTotals.sum + '</td>'
+        );
+
+        // 상품별
+        var prodColors = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+        var headerHtml = '<th class="text-center py-2" style="color: #475569; font-weight: 700;">정보이용사코드</th>';
+        headerHtml += '<th class="text-center py-2" style="color: #475569; font-weight: 700;">회사명</th>';
+        var prodTotals = {};
+        products.forEach(function(p, i) {
+            prodTotals[p] = 0;
+            headerHtml += '<th class="text-center py-2" style="color: ' + prodColors[i % prodColors.length] + '; font-weight: 700;">' + esc(p) + '</th>';
+        });
+        headerHtml += '<th class="text-center py-2" style="color: #1e293b; font-weight: 700; background: #e2e8f0;">합계</th>';
+        $('#analysisProductHeader').html(headerHtml);
+
+        var prodBodyHtml = '';
+        var prodSum = 0;
+        memberKeys.forEach(function(key) {
+            var m = members[key];
+            prodBodyHtml += '<tr>';
+            prodBodyHtml += '<td class="text-center py-2 fw-semibold" style="color: #6366f1;">' + esc(key) + '</td>';
+            prodBodyHtml += '<td class="text-center py-2" style="color: #475569;">' + esc(m.company_name) + '</td>';
+            products.forEach(function(p) {
+                var v = m.product[p] || 0;
+                prodTotals[p] += v;
+                prodBodyHtml += cell(v);
+            });
+            prodBodyHtml += cell(m.total, true);
+            prodSum += m.total;
+            prodBodyHtml += '</tr>';
+        });
+        $('#analysisProductBody').html(prodBodyHtml);
+        var prodFooterHtml = '<td class="text-center py-2" colspan="2" style="color: #1e293b;">합계</td>';
+        products.forEach(function(p) { prodFooterHtml += cell(prodTotals[p], true); });
+        prodFooterHtml += '<td class="text-center py-2" style="font-weight: 700; color: #fff; background: #475569;">' + prodSum + '</td>';
+        $('#analysisProductFooter').html(prodFooterHtml);
+
+        // 통합 현황 (정보이용사 × DC코드 × 상품 × 환경)
+        var dcCodes = ['DC1', 'DC2', 'DC3', 'DR'];
+        var subEnvs = ['PR', 'TS', 'DR'];
+        var envColors = { PR: '#4ade80', TS: '#60a5fa', DR: '#fb923c' };
+        var pColors = ['#93c5fd','#86efac','#fbbf24','#fcd34d','#c4b5fd','#f9a8d4','#5eead4'];
+
+        var detail = {};
+        data.forEach(function(r) {
+            var mk = r.member_code || '-';
+            var dc = r.datacenter_code || '-';
+            var key = mk + '|' + dc;
+            if (!detail[key]) {
+                detail[key] = { member_code: mk, company_name: r.company_name || '-', dc: dc, pe: {}, total: 0 };
+            }
+            var d = detail[key];
+            d.total++;
+            var p = r.product || '-';
+            var e = r.env || '-';
+            if (!d.pe[p]) d.pe[p] = {};
+            d.pe[p][e] = (d.pe[p][e] || 0) + 1;
+        });
+
+        // 헤더 (2행: 상품명 → 환경)
+        var detailHead = '<tr style="background: #1e293b;">';
+        detailHead += '<th class="text-center py-2 text-white" rowspan="2" style="vertical-align: middle; font-weight: 700; border-right: 2px solid #475569;">정보이용사코드</th>';
+        detailHead += '<th class="text-center py-2 text-white" rowspan="2" style="vertical-align: middle; font-weight: 700; border-right: 2px solid #475569;">회사명</th>';
+        detailHead += '<th class="text-center py-2 text-white" rowspan="2" style="vertical-align: middle; font-weight: 700; border-right: 2px solid #475569;">DC</th>';
+        products.forEach(function(p, i) {
+            detailHead += '<th class="text-center py-1" colspan="' + subEnvs.length + '" style="color: ' + pColors[i % pColors.length] + '; font-weight: 600; font-size: 0.7rem; border-bottom: 1px solid #475569; border-right: 2px solid #475569;">' + esc(p) + '</th>';
+        });
+        detailHead += '<th class="text-center py-2 text-white" rowspan="2" style="vertical-align: middle; font-weight: 700; background: #475569;">합계</th>';
+        detailHead += '</tr>';
+        detailHead += '<tr style="background: #475569;">';
+        products.forEach(function(p, pi) {
+            subEnvs.forEach(function(e, ei) {
+                var borderR = ei === subEnvs.length - 1 ? '2px solid #64748b' : '';
+                detailHead += '<th class="text-center py-1" style="color: ' + envColors[e] + '; font-weight: 600; font-size: 0.6rem;' + (borderR ? ' border-right: ' + borderR + ';' : '') + '">' + e + '</th>';
+            });
+        });
+        detailHead += '</tr>';
+        $('#analysisDetailHeader').html(detailHead);
+
+        // 본문
+        var dcSortOrder = { 'DC1': 1, 'DC2': 2, 'DC3': 3, 'DR': 4 };
+        var detailKeys = Object.keys(detail).sort(function(a, b) {
+            var da = detail[a], db = detail[b];
+            var totalA = members[da.member_code] ? members[da.member_code].total : 0;
+            var totalB = members[db.member_code] ? members[db.member_code].total : 0;
+            if (da.member_code !== db.member_code) {
+                if (totalB !== totalA) return totalB - totalA;
+                return da.member_code.localeCompare(db.member_code);
+            }
+            return (dcSortOrder[da.dc] || 99) - (dcSortOrder[db.dc] || 99);
+        });
+
+        var memberRowCount = {};
+        detailKeys.forEach(function(key) {
+            memberRowCount[detail[key].member_code] = (memberRowCount[detail[key].member_code] || 0) + 1;
+        });
+
+        var prevMember = '';
+        var detailTotals = {};
+        products.forEach(function(p) { detailTotals[p] = {}; subEnvs.forEach(function(e) { detailTotals[p][e] = 0; }); });
+        var grandSum = 0;
+        var detailBodyHtml = '';
+
+        detailKeys.forEach(function(key) {
+            var d = detail[key];
+            var isNewMember = d.member_code !== prevMember;
+            var rowColor = isNewMember ? '' : ' style="background: #fafbfc;"';
+            detailBodyHtml += '<tr' + rowColor + '>';
+            if (isNewMember) {
+                var rc = memberRowCount[d.member_code] || 1;
+                detailBodyHtml += '<td class="text-center py-2 fw-semibold" style="color: #6366f1; vertical-align: middle; border-right: 2px solid #e2e8f0;" rowspan="' + rc + '">' + esc(d.member_code) + '</td>';
+                detailBodyHtml += '<td class="text-center py-2" style="color: #475569; vertical-align: middle; border-right: 2px solid #e2e8f0;" rowspan="' + rc + '">' + esc(d.company_name) + '</td>';
+            }
+            detailBodyHtml += '<td class="text-center py-2 fw-semibold" style="border-right: 2px solid #e2e8f0;">' + esc(d.dc) + '</td>';
+            products.forEach(function(p, pi) {
+                subEnvs.forEach(function(e, ei) {
+                    var v = (d.pe[p] && d.pe[p][e]) || 0;
+                    detailTotals[p][e] += v;
+                    var borderR = ei === subEnvs.length - 1 ? ' border-right: 2px solid #e2e8f0;' : '';
+                    if (v) {
+                        detailBodyHtml += '<td class="text-center py-2" style="color: #334155;' + borderR + '">' + v + '</td>';
+                    } else {
+                        detailBodyHtml += '<td class="text-center py-2" style="color: #e2e8f0;' + borderR + '">-</td>';
+                    }
+                });
+            });
+            detailBodyHtml += cell(d.total, true);
+            grandSum += d.total;
+            prevMember = d.member_code;
+            detailBodyHtml += '</tr>';
+        });
+        $('#analysisDetailBody').html(detailBodyHtml);
+
+        var detailFooterHtml = '<td class="text-center py-2" colspan="3" style="color: #1e293b; border-right: 2px solid #e2e8f0;">합계</td>';
+        products.forEach(function(p, pi) {
+            subEnvs.forEach(function(e, ei) {
+                var v = detailTotals[p][e];
+                var borderR = ei === subEnvs.length - 1 ? ' border-right: 2px solid #e2e8f0;' : '';
+                detailFooterHtml += '<td class="text-center py-2" style="font-weight: 700;' + borderR + '">' + (v || '-') + '</td>';
+            });
+        });
+        detailFooterHtml += '<td class="text-center py-2" style="font-weight: 700; color: #fff; background: #475569;">' + grandSum + '</td>';
+        $('#analysisDetailFooter').html(detailFooterHtml);
+
+        // 검색 필터
+        $('#analysisSearch').off('input').on('input', function() {
+            var q = $(this).val().toLowerCase();
+            $('#analysisDcBody tr, #analysisProductBody tr').each(function() {
+                var txt = $(this).text().toLowerCase();
+                $(this).toggle(txt.indexOf(q) > -1);
+            });
+            $('#analysisDetailBody tr').each(function() {
+                var txt = $(this).text().toLowerCase();
+                $(this).toggle(txt.indexOf(q) > -1);
+            });
+        });
+
+        new bootstrap.Modal(document.getElementById('analysisModal')).show();
+    };
+
     window.refreshTable = function() {
         var spinner = $('<div class="position-fixed top-50 start-50 translate-middle" style="z-index: 10000;">' +
             '<div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">' +

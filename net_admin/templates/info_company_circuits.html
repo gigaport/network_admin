@@ -69,6 +69,9 @@
           <h2 id="contents_title" class="mb-0">정보이용사 회선내역</h2>
         </div>
         <div class="col-auto ms-auto d-flex gap-2">
+          <button class="btn btn-sm" onclick="showAnalysisModal()" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; border-radius:8px; font-weight:500; font-size:0.85rem; padding:6px 16px;">
+            <i class="fas fa-chart-bar me-1" style="font-size:0.7rem;"></i>회선 현황분석
+          </button>
           <button class="btn btn-sm" onclick="showCreateModal()" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; font-weight:500; font-size:0.85rem; padding:6px 16px;">
             <i class="fas fa-plus me-1" style="font-size:0.7rem;"></i>추가
           </button>
@@ -783,6 +786,87 @@
             <button type="button" class="btn btn-sm" onclick="editFromDetail()" style="background:#4f46e5; color:#fff; border:none; border-radius:8px; padding:7px 18px; font-size:0.82rem;">
               <i class="fas fa-edit me-1"></i>수정
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 회선 현황분석 모달 -->
+  <div class="modal fade" id="analysisModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable" style="max-width: 85vw;">
+      <div class="modal-content border-0" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header border-0" style="background: linear-gradient(135deg, #1e293b, #334155); padding: 20px 28px;">
+          <div>
+            <h5 class="modal-title fw-bold text-white mb-1" style="font-size: 1.1rem;">
+              <i class="fas fa-chart-bar me-2" style="opacity: 0.8;"></i>정보이용사별 회선 현황 분석
+            </h5>
+            <p class="mb-0" style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">DC코드 / 상품별 / 환경별 회선 수 요약</p>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="background: #f8fafc; padding: 24px;">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <ul class="nav nav-pills mb-0" id="analysisTab" role="tablist" style="gap: 6px;">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-detail" data-bs-toggle="pill" data-bs-target="#panel-detail" type="button" role="tab" style="font-size: 0.8rem; padding: 6px 16px; border-radius: 8px;">
+                  <i class="fas fa-th me-1"></i>통합 현황
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-dc" data-bs-toggle="pill" data-bs-target="#panel-dc" type="button" role="tab" style="font-size: 0.8rem; padding: 6px 16px; border-radius: 8px;">
+                  <i class="fas fa-server me-1"></i>DC코드별
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-product" data-bs-toggle="pill" data-bs-target="#panel-product" type="button" role="tab" style="font-size: 0.8rem; padding: 6px 16px; border-radius: 8px;">
+                  <i class="fas fa-box me-1"></i>상품별
+                </button>
+              </li>
+            </ul>
+            <div style="position: relative; width: 200px;">
+              <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.7rem;"></i>
+              <input type="text" id="analysisSearch" class="form-control form-control-sm" placeholder="정보이용사 검색" style="font-size: 0.75rem; padding-left: 28px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            </div>
+          </div>
+          <div class="tab-content" id="analysisTabContent">
+            <div class="tab-pane fade show active" id="panel-detail" role="tabpanel">
+              <div class="table-responsive" style="border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.7rem;" id="analysisDetailTable">
+                  <thead id="analysisDetailHeader"></thead>
+                  <tbody id="analysisDetailBody"></tbody>
+                  <tfoot style="background: #f1f5f9; font-weight: 700;"><tr id="analysisDetailFooter"></tr></tfoot>
+                </table>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="panel-dc" role="tabpanel">
+              <div class="table-responsive" style="border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.78rem;">
+                  <thead style="background: #f1f5f9;">
+                    <tr>
+                      <th class="text-center py-2" style="color: #475569; font-weight: 700;">정보이용사코드</th>
+                      <th class="text-center py-2" style="color: #475569; font-weight: 700;">회사명</th>
+                      <th class="text-center py-2" style="color: #6366f1; font-weight: 700;">DC1</th>
+                      <th class="text-center py-2" style="color: #0ea5e9; font-weight: 700;">DC2</th>
+                      <th class="text-center py-2" style="color: #10b981; font-weight: 700;">DC3</th>
+                      <th class="text-center py-2" style="color: #f59e0b; font-weight: 700;">DR</th>
+                      <th class="text-center py-2" style="color: #1e293b; font-weight: 700; background: #e2e8f0;">합계</th>
+                    </tr>
+                  </thead>
+                  <tbody id="analysisDcBody"></tbody>
+                  <tfoot style="background: #f1f5f9; font-weight: 700;"><tr id="analysisDcFooter"></tr></tfoot>
+                </table>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="panel-product" role="tabpanel">
+              <div class="table-responsive" style="border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+                <table class="table table-sm table-hover mb-0" style="font-size: 0.78rem;">
+                  <thead style="background: #f1f5f9;"><tr id="analysisProductHeader"></tr></thead>
+                  <tbody id="analysisProductBody"></tbody>
+                  <tfoot style="background: #f1f5f9; font-weight: 700;"><tr id="analysisProductFooter"></tr></tfoot>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
