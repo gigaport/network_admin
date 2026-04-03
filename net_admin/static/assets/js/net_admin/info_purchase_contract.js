@@ -322,6 +322,7 @@
                 }
             },
             columns: [
+                { data: 'member_number' },
                 { data: 'member_code' },
                 { data: 'company_name' },
                 { data: 'datacenter_code' },
@@ -336,7 +337,16 @@
             ],
             columnDefs: [
                 {
-                    targets: 0, // 회원사코드
+                    targets: 0, // 정보이용사번호
+                    width: '5%',
+                    className: 'text-center py-2 align-middle',
+                    render: function(data) {
+                        if (!data && data !== 0) return '-';
+                        return '<span class="badge badge-phoenix badge-phoenix-info">' + data + '</span>';
+                    }
+                },
+                {
+                    targets: 1, // 정보이용사코드
                     width: '6%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
@@ -345,7 +355,7 @@
                     }
                 },
                 {
-                    targets: 1, // 회사명
+                    targets: 2, // 회사명
                     width: '10%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
@@ -354,7 +364,7 @@
                     }
                 },
                 {
-                    targets: 2, // 데이터센터
+                    targets: 3, // 데이터센터
                     width: '6%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
@@ -363,7 +373,7 @@
                     }
                 },
                 {
-                    targets: 3, // 통신사
+                    targets: 4, // 통신사
                     width: '5%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
@@ -373,7 +383,7 @@
                     }
                 },
                 {
-                    targets: 4, // 과금시작일
+                    targets: 5, // 과금시작일
                     width: '8%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
@@ -382,7 +392,7 @@
                     }
                 },
                 {
-                    targets: 5, // 계약종료일
+                    targets: 6, // 계약종료일
                     width: '8%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
@@ -391,19 +401,19 @@
                     }
                 },
                 {
-                    targets: 6, // 서비스ID
+                    targets: 7, // 서비스ID
                     width: '10%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) { return data || '-'; }
                 },
                 {
-                    targets: 7, // NNI ID
+                    targets: 8, // NNI ID
                     width: '10%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) { return data || '-'; }
                 },
                 {
-                    targets: 8, // 원가코드
+                    targets: 9, // 원가코드
                     width: '8%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
@@ -412,13 +422,13 @@
                     }
                 },
                 {
-                    targets: 9, // 비용기준
+                    targets: 10, // 비용기준
                     width: '14%',
                     className: 'text-start py-2 align-middle',
                     render: function(data) { return data || '-'; }
                 },
                 {
-                    targets: 10, // 매입금액
+                    targets: 11, // 매입금액
                     width: '9%',
                     className: 'text-end py-2 align-middle',
                     render: function(data) {
@@ -466,9 +476,9 @@
                 for (var i = insertPoints.length - 1; i >= 0; i--) {
                     var p = insertPoints[i];
                     var subtotalRow = '<tr class="subtotal-row" style="background: #f0f4ff !important; border-top: 2px solid #c7d2fe; pointer-events: none;">' +
-                        '<td colspan="2" class="text-start py-2 align-middle" style="font-size: 0.85rem; font-weight: 700; color: #4338ca; padding-left: 14px !important;">' +
+                        '<td colspan="3" class="text-start py-2 align-middle" style="font-size: 0.85rem; font-weight: 700; color: #4338ca; padding-left: 14px !important;">' +
                         '<i class="fas fa-calculator me-1" style="font-size: 0.6rem; opacity: 0.7;"></i>' + p.code + ' 소계 (' + p.count + '건)</td>' +
-                        '<td colspan="8"></td>' +
+                        '<td colspan="9"></td>' +
                         '<td class="text-end py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #4338ca; padding-right: 12px !important;">' + Number(p.amount).toLocaleString() + '원</td>' +
                         '</tr>';
                     $(rows[p.afterIdx]).after(subtotalRow);
@@ -477,9 +487,9 @@
                 // 전체 합계 행 (테이블 맨 마지막)
                 if (grandCount > 0) {
                     var grandRow = '<tr class="subtotal-row" style="background: #1e293b !important; pointer-events: none;">' +
-                        '<td colspan="2" class="text-start py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #fff; padding-left: 14px !important;">' +
+                        '<td colspan="3" class="text-start py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #fff; padding-left: 14px !important;">' +
                         '<i class="fas fa-coins me-1" style="font-size: 0.7rem; opacity: 0.8;"></i>전체 합계 (' + grandCount + '건)</td>' +
-                        '<td colspan="8"></td>' +
+                        '<td colspan="9"></td>' +
                         '<td class="text-end py-2 align-middle" style="font-size: 0.95rem; font-weight: 800; color: #fbbf24; padding-right: 12px !important;">' + Number(grandTotal).toLocaleString() + '원</td>' +
                         '</tr>';
                     $('#purchaseTable tbody').append(grandRow);

@@ -3444,7 +3444,7 @@ async def GetPurchaseContract():
         with get_connection() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute("""
-                SELECT pc.id, pc.member_code, pc.datacenter_code, pc.provider,
+                SELECT pc.id, sc.member_number, pc.member_code, pc.datacenter_code, pc.provider,
                        TO_CHAR(pc.billing_start_date, 'YYYY-MM-DD') as billing_start_date,
                        TO_CHAR(pc.contract_end_date, 'YYYY-MM-DD') as contract_end_date,
                        pc.service_id, pc.nni_id, pc.cost_code,
@@ -3453,7 +3453,7 @@ async def GetPurchaseContract():
                 FROM purchase_contract pc
                 LEFT JOIN network_cost nc ON pc.cost_code = nc.code
                 LEFT JOIN subscriber_codes sc ON pc.member_code = sc.member_code
-                ORDER BY pc.member_code, pc.datacenter_code, pc.provider
+                ORDER BY sc.member_number ASC, pc.datacenter_code, pc.provider
             """)
             results = cur.fetchall()
             cur.close()
@@ -3574,7 +3574,7 @@ async def GetInfoPurchaseContract():
         with get_connection() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute("""
-                SELECT pc.id, pc.member_code, pc.datacenter_code, pc.provider,
+                SELECT pc.id, sc.member_number, pc.member_code, pc.datacenter_code, pc.provider,
                        TO_CHAR(pc.billing_start_date, 'YYYY-MM-DD') as billing_start_date,
                        TO_CHAR(pc.contract_end_date, 'YYYY-MM-DD') as contract_end_date,
                        pc.service_id, pc.nni_id, pc.cost_code,
@@ -3583,7 +3583,7 @@ async def GetInfoPurchaseContract():
                 FROM info_purchase_contract pc
                 LEFT JOIN network_cost nc ON pc.cost_code = nc.code
                 LEFT JOIN subscriber_codes sc ON pc.member_code = sc.member_code
-                ORDER BY pc.member_code, pc.datacenter_code, pc.provider
+                ORDER BY sc.member_number ASC, pc.datacenter_code, pc.provider
             """)
             results = cur.fetchall()
             cur.close()
