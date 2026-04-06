@@ -304,6 +304,7 @@ function renderPtpTable(data) {
     sorted.forEach(function(d) {
         var oW = d.offset !== undefined && Math.abs(d.offset) > 1000;
         var cW = d.packet_continuity !== undefined && d.packet_continuity < 100;
+        var cOk = d.packet_continuity !== undefined && d.packet_continuity === 100;
         var region = getPtpRegion(d.device_name);
         html += '<tr style="border-bottom:1px solid #f5f5f5;">' +
             '<td class="text-center py-2">' + esc(region) + '</td>' +
@@ -312,7 +313,7 @@ function renderPtpTable(data) {
             '<td class="text-center py-2" style="' + (oW ? 'color:#c62828;font-weight:700;' : '') + '">' + fmtPtp(d.offset) + '</td>' +
             '<td class="text-center py-2">' + fmtPtp(d.mean_path_delay) + '</td>' +
             '<td class="text-center py-2">' + fmtPtp(d.jitter) + '</td>' +
-            '<td class="text-center py-2" style="' + (cW ? 'color:#c62828;font-weight:700;' : '') + '">' + fmtCont(d.packet_continuity) + '</td></tr>';
+            '<td class="text-center py-2" style="' + (cW ? 'color:#c62828;font-weight:700;' : (cOk ? 'color:#10b981;font-weight:700;' : '')) + '">' + fmtCont(d.packet_continuity) + '</td></tr>';
     });
     tbody.innerHTML = html;
 }
