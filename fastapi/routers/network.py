@@ -2206,14 +2206,10 @@ async def get_dashboard():
 
 @router.get("/revenue_summary")
 async def GetRevenueSummary():
-    """회원사별 매출내역 조회 (ORD/MPR 회선 요금 집계) - 현재 활성 회선 전체"""
+    """회원사별 매출내역 조회 (ORD/MPR 회선 요금 집계) - 날짜 필터 없음"""
     logger.info("매출내역 조회 시작")
 
     try:
-        # 현재 날짜 기준으로 활성 회선만 조회 (만료되지 않은 회선)
-        today = datetime.now().date()
-        logger.info(f"조회 기준 날짜: {today} (현재 활성 회선)")
-
         with get_connection() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
@@ -2232,12 +2228,10 @@ async def GetRevenueSummary():
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
-                    AND (c.contract_date IS NULL OR c.contract_date <= %s)
-                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
                 GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
                 ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
             """
-            cur.execute(summary_query, (today, today))
+            cur.execute(summary_query)
             summary = cur.fetchall()
 
             # 회선별 상세 내역
@@ -2251,11 +2245,9 @@ async def GetRevenueSummary():
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
-                    AND (c.contract_date IS NULL OR c.contract_date <= %s)
-                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
                 ORDER BY sc.member_number, c.datacenter_code, c.usage
             """
-            cur.execute(detail_query, (today, today))
+            cur.execute(detail_query)
             details = cur.fetchall()
 
             cur.close()
@@ -2384,14 +2376,10 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
 
 @router.get("/info_revenue_summary")
 async def GetInfoRevenueSummary():
-    """정보이용사별 매출내역 조회 (MKD 회선 요금 집계) - 현재 활성 회선 전체"""
+    """정보이용사별 매출내역 조회 (MKD 회선 요금 집계) - 날짜 필터 없음"""
     logger.info("정보이용사 매출내역 조회 시작")
 
     try:
-        # 현재 날짜 기준으로 활성 회선만 조회 (만료되지 않은 회선)
-        today = datetime.now().date()
-        logger.info(f"조회 기준 날짜: {today} (현재 활성 회선)")
-
         with get_connection() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
@@ -2405,12 +2393,10 @@ async def GetInfoRevenueSummary():
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
                 WHERE c.usage = 'MKD'
-                    AND (c.contract_date IS NULL OR c.contract_date <= %s)
-                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
                 GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
                 ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
             """
-            cur.execute(summary_query, (today, today))
+            cur.execute(summary_query)
             summary = cur.fetchall()
 
             detail_query = """
@@ -2423,11 +2409,9 @@ async def GetInfoRevenueSummary():
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
                 WHERE c.usage = 'MKD'
-                    AND (c.contract_date IS NULL OR c.contract_date <= %s)
-                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
                 ORDER BY sc.member_number, c.datacenter_code
             """
-            cur.execute(detail_query, (today, today))
+            cur.execute(detail_query)
             details = cur.fetchall()
 
             cur.close()
