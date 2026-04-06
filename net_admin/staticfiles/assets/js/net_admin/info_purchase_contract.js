@@ -429,7 +429,7 @@
                 },
                 {
                     targets: 11, // 매입금액
-                    width: '9%',
+                    width: '12%',
                     className: 'text-end py-2 align-middle',
                     render: function(data) {
                         if (!data && data !== 0) return '-';
