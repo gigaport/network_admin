@@ -2206,10 +2206,18 @@ async def get_dashboard():
 
 @router.get("/revenue_summary")
 async def GetRevenueSummary():
-    """회원사별 매출내역 조회 (ORD/MPR 회선 요금 집계)"""
+    """회원사별 매출내역 조회 (ORD/MPR 회선 요금 집계) - 현재 월 기준"""
     logger.info("매출내역 조회 시작")
 
     try:
+        # 현재 월 계산
+        now = datetime.now().date()
+        month_start = now.replace(day=1)
+        next_month = month_start + relativedelta(months=1)
+        month_end = next_month - relativedelta(days=1)
+
+        logger.info(f"조회 기준 월: {month_start} ~ {month_end}")
+
         with get_connection() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
@@ -2228,10 +2236,12 @@ async def GetRevenueSummary():
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
+                    AND (c.contract_date IS NULL OR c.contract_date <= %s)
+                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
                 GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
                 ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
             """
-            cur.execute(summary_query)
+            cur.execute(summary_query, (month_end, month_start))
             summary = cur.fetchall()
 
             # 회선별 상세 내역
@@ -2245,9 +2255,11 @@ async def GetRevenueSummary():
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
+                    AND (c.contract_date IS NULL OR c.contract_date <= %s)
+                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
                 ORDER BY sc.member_number, c.datacenter_code, c.usage
             """
-            cur.execute(detail_query)
+            cur.execute(detail_query, (month_end, month_start))
             details = cur.fetchall()
 
             cur.close()
@@ -2376,10 +2388,18 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
 
 @router.get("/info_revenue_summary")
 async def GetInfoRevenueSummary():
-    """정보이용사별 매출내역 조회 (MKD 회선 요금 집계)"""
+    """정보이용사별 매출내역 조회 (MKD 회선 요금 집계) - 현재 월 기준"""
     logger.info("정보이용사 매출내역 조회 시작")
 
     try:
+        # 현재 월 계산
+        now = datetime.now().date()
+        month_start = now.replace(day=1)
+        next_month = month_start + relativedelta(months=1)
+        month_end = next_month - relativedelta(days=1)
+
+        logger.info(f"조회 기준 월: {month_start} ~ {month_end}")
+
         with get_connection() as conn:
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
@@ -2393,10 +2413,12 @@ async def GetInfoRevenueSummary():
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
                 WHERE c.usage = 'MKD'
+                    AND (c.contract_date IS NULL OR c.contract_date <= %s)
+                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
                 GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
                 ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
             """
-            cur.execute(summary_query)
+            cur.execute(summary_query, (month_end, month_start))
             summary = cur.fetchall()
 
             detail_query = """
@@ -2409,9 +2431,11 @@ async def GetInfoRevenueSummary():
                 JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
                 WHERE c.usage = 'MKD'
+                    AND (c.contract_date IS NULL OR c.contract_date <= %s)
+                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
                 ORDER BY sc.member_number, c.datacenter_code
             """
-            cur.execute(detail_query)
+            cur.execute(detail_query, (month_end, month_start))
             details = cur.fetchall()
 
             cur.close()
