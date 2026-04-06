@@ -434,12 +434,12 @@
             return;
         }
         var script = document.createElement('script');
-        script.src = '/static/assets/js/postcode.v2.proxy.js?v=' + Date.now();
+        script.src = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
         script.onload = function() {
             openPostcode(prefix);
         };
         script.onerror = function() {
-            showAlert('주소 검색 서비스를 불러올 수 없습니다.', 'danger');
+            showAlert('주소 검색 서비스를 불러올 수 없습니다. 인터넷 연결을 확인해주세요.', 'danger');
         };
         document.head.appendChild(script);
     };
