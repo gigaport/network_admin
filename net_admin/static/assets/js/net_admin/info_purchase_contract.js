@@ -479,7 +479,7 @@
                         '<td colspan="3" class="text-start py-2 align-middle" style="font-size: 0.85rem; font-weight: 700; color: #4338ca; padding-left: 14px !important;">' +
                         '<i class="fas fa-calculator me-1" style="font-size: 0.6rem; opacity: 0.7;"></i>' + p.code + ' 소계 (' + p.count + '건)</td>' +
                         '<td colspan="9"></td>' +
-                        '<td class="text-end py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #4338ca; padding-right: 12px !important;">' + Number(p.amount).toLocaleString() + '원</td>' +
+                        '<td class="text-end py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #4338ca; padding-right: 12px !important; white-space:nowrap; min-width:120px;">' + Number(p.amount).toLocaleString() + '원</td>' +
                         '</tr>';
                     $(rows[p.afterIdx]).after(subtotalRow);
                 }
@@ -490,7 +490,7 @@
                         '<td colspan="3" class="text-start py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #fff; padding-left: 14px !important;">' +
                         '<i class="fas fa-coins me-1" style="font-size: 0.7rem; opacity: 0.8;"></i>전체 합계 (' + grandCount + '건)</td>' +
                         '<td colspan="9"></td>' +
-                        '<td class="text-end py-2 align-middle" style="font-size: 0.95rem; font-weight: 800; color: #fbbf24; padding-right: 12px !important;">' + Number(grandTotal).toLocaleString() + '원</td>' +
+                        '<td class="text-end py-2 align-middle" style="font-size: 0.95rem; font-weight: 800; color: #fbbf24; padding-right: 12px !important; white-space:nowrap; min-width:120px;">' + Number(grandTotal).toLocaleString() + '원</td>' +
                         '</tr>';
                     $('#purchaseTable tbody').append(grandRow);
                 }
