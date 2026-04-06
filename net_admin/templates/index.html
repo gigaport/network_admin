@@ -175,147 +175,102 @@
     /* 이익 현황 카드 */
     [data-bs-theme="dark"] .dash-profit-stat { background: rgba(255,255,255,0.04) !important; }
 
-    /* ===== 회선분류 섹션 카드 (모던 & 컴팩트) ===== */
-    .dash-stat-section {
+    /* ===== 회선분류 테이블 (가로 레이아웃) ===== */
+    .dash-stat-table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+    .dash-stat-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
       border-radius: 10px;
-      padding: 12px 14px;
+      overflow: hidden;
       border: 1px solid #e5e7eb;
-      background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+      background: #ffffff;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      transition: all 0.2s ease;
     }
-    .dash-stat-section:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      transform: translateY(-1px);
+    .dash-stat-th {
+      padding: 10px 12px;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #ffffff;
+      border-right: 1px solid rgba(255,255,255,0.15);
     }
-    .dash-stat-section-header {
+    .dash-stat-th:last-child {
+      border-right: none;
+    }
+    .dash-stat-th.accent-blue {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+    .dash-stat-th.accent-green {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .dash-stat-th.accent-purple {
+      background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+    }
+    .dash-stat-td {
+      padding: 12px;
+      vertical-align: top;
+      border-right: 1px solid #f1f5f9;
+      background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    }
+    .dash-stat-td:last-child {
+      border-right: none;
+    }
+    .dash-stat-item {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      padding-bottom: 7px;
-      border-bottom: 2px solid #f1f5f9;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid #f1f5f9;
     }
-    .dash-stat-section-title {
-      font-size: 0.88rem;
-      font-weight: 700;
-      color: #1e293b;
-      letter-spacing: -0.02em;
+    .dash-stat-item:last-child {
+      border-bottom: none;
     }
-    .dash-stat-section-total {
-      font-size: 0.8rem;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-      color: #ffffff;
-      box-shadow: 0 2px 4px rgba(59,130,246,0.3);
-    }
-    .dash-stat-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 5px 11px;
-      border-radius: 18px;
-      background: #ffffff;
-      border: 1.5px solid #e2e8f0;
-      font-size: 0.82rem;
-      margin: 3px 5px 3px 0;
-      transition: all 0.2s ease;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-    }
-    .dash-stat-pill:hover {
-      border-color: #cbd5e1;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      transform: translateY(-1px);
-    }
-    .dash-stat-pill-dot {
+    .dash-stat-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
       flex-shrink: 0;
       box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
     }
-    .dash-stat-pill-label {
-      color: #475569;
+    .dash-stat-label {
+      flex: 1;
+      font-size: 0.8rem;
       font-weight: 600;
+      color: #475569;
     }
-    .dash-stat-pill-value {
+    .dash-stat-value {
+      font-size: 0.85rem;
       font-weight: 800;
       color: #0f172a;
-      margin-left: 3px;
-      font-size: 0.87rem;
-    }
-    /* 섹션 accent 색상 */
-    .dash-stat-section.accent-blue {
-      border-color: #bfdbfe;
-      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    }
-    .dash-stat-section.accent-blue .dash-stat-section-total {
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    }
-    .dash-stat-section.accent-green {
-      border-color: #bbf7d0;
-      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-    }
-    .dash-stat-section.accent-green .dash-stat-section-total {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    }
-    .dash-stat-section.accent-purple {
-      border-color: #e9d5ff;
-      background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-    }
-    .dash-stat-section.accent-purple .dash-stat-section-total {
-      background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+      margin-left: auto;
     }
 
     /* 다크 테마 */
-    [data-bs-theme="dark"] .dash-stat-section {
-      background: linear-gradient(135deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.4) 100%);
+    [data-bs-theme="dark"] .dash-stat-table {
+      background: rgba(30,41,59,0.6);
       border-color: #334155;
       box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
-    [data-bs-theme="dark"] .dash-stat-section:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    [data-bs-theme="dark"] .dash-stat-th {
+      border-right-color: rgba(255,255,255,0.1);
     }
-    [data-bs-theme="dark"] .dash-stat-section-header {
+    [data-bs-theme="dark"] .dash-stat-td {
+      background: linear-gradient(135deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.4) 100%);
+      border-right-color: #334155;
+    }
+    [data-bs-theme="dark"] .dash-stat-item {
       border-bottom-color: #334155;
     }
-    [data-bs-theme="dark"] .dash-stat-section.accent-blue {
-      border-color: #1e3a8a;
-      background: linear-gradient(135deg, rgba(30,58,138,0.3) 0%, rgba(30,64,175,0.15) 100%);
+    [data-bs-theme="dark"] .dash-stat-label {
+      color: #cbd5e1;
     }
-    [data-bs-theme="dark"] .dash-stat-section.accent-green {
-      border-color: #14532d;
-      background: linear-gradient(135deg, rgba(20,83,45,0.3) 0%, rgba(21,128,61,0.15) 100%);
+    [data-bs-theme="dark"] .dash-stat-value {
+      color: #f1f5f9;
     }
-    [data-bs-theme="dark"] .dash-stat-section.accent-purple {
-      border-color: #581c87;
-      background: linear-gradient(135deg, rgba(88,28,135,0.3) 0%, rgba(107,33,168,0.15) 100%);
-    }
-    [data-bs-theme="dark"] .dash-stat-section-title { color: #f1f5f9; }
-    [data-bs-theme="dark"] .dash-stat-section-total {
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-      color: #ffffff;
-      box-shadow: 0 2px 4px rgba(59,130,246,0.4);
-    }
-    [data-bs-theme="dark"] .dash-stat-section.accent-green .dash-stat-section-total {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    }
-    [data-bs-theme="dark"] .dash-stat-section.accent-purple .dash-stat-section-total {
-      background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
-    }
-    [data-bs-theme="dark"] .dash-stat-pill {
-      background: rgba(30,41,59,0.8);
-      border-color: #475569;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    }
-    [data-bs-theme="dark"] .dash-stat-pill:hover {
-      border-color: #64748b;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-    }
-    [data-bs-theme="dark"] .dash-stat-pill-label { color: #cbd5e1; }
-    [data-bs-theme="dark"] .dash-stat-pill-value { color: #f1f5f9; }
   </style>
 
   <!-- 로딩 오버레이 -->
@@ -438,14 +393,12 @@
 
     <!-- ============ 2행: 분류별 통계 + 도넛 + 모니터링 상태 ============ -->
     <div class="row g-3 mb-4">
-      <!-- 좌측: 회선 분류별 통계 (컬러 도트 그리드) -->
+      <!-- 좌측: 회선 분류별 통계 (가로 테이블) -->
       <div class="col-lg-3 d-flex">
         <div class="dash-panel flex-grow-1">
           <div class="dash-panel-title">회선 분류별 현황</div>
           <div class="dash-panel-subtitle">Circuits by category</div>
-          <div id="statGridProvider" style="margin-bottom: 10px;"></div>
-          <div id="statGridEnv" style="margin-bottom: 10px;"></div>
-          <div id="statGridUsage"></div>
+          <div id="statGridsContainer"></div>
         </div>
       </div>
       <!-- 중앙: ORD/MPR/MKD 도넛 + 상세 -->

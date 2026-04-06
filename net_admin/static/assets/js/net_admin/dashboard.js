@@ -172,36 +172,68 @@ function renderProfitMemberTable(members) {
     tbody.innerHTML = html;
 }
 
-// ========== 회선 분류별 통계 그리드 (Badge Pill + 섹션 구분) ==========
+// ========== 회선 분류별 통계 테이블 (가로 레이아웃) ==========
 function renderStatGrids(provider, env, usage) {
-    renderStatGrid('statGridProvider', '통신사별', provider, C.multi, 'blue');
-    renderStatGrid('statGridEnv', '환경별', env, [C.green, C.red, C.orange, C.blue], 'green');
-    renderStatGrid('statGridUsage', '용도별', usage, [C.orange, C.cyan, C.purple, C.green, C.red, C.blue], 'purple');
+    var container = document.getElementById('statGridsContainer');
+    if (!container) return;
+
+    var providerKeys = Object.keys(provider || {});
+    var envKeys = Object.keys(env || {});
+    var usageKeys = Object.keys(usage || {});
+
+    var providerColors = C.multi;
+    var envColors = [C.green, C.red, C.orange, C.blue];
+    var usageColors = [C.orange, C.cyan, C.purple, C.green, C.red, C.blue];
+
+    var html = '<div class="dash-stat-table-container">';
+    html += '<table class="dash-stat-table">';
+    html += '<thead><tr>';
+    html += '<th class="dash-stat-th accent-blue">통신사별</th>';
+    html += '<th class="dash-stat-th accent-green">환경별</th>';
+    html += '<th class="dash-stat-th accent-purple">용도별</th>';
+    html += '</tr></thead>';
+    html += '<tbody><tr>';
+
+    // 통신사별 셀
+    html += '<td class="dash-stat-td">';
+    providerKeys.forEach(function(k, i) {
+        html += '<div class="dash-stat-item">' +
+            '<span class="dash-stat-dot" style="background:' + providerColors[i % providerColors.length] + ';"></span>' +
+            '<span class="dash-stat-label">' + esc(k) + '</span>' +
+            '<span class="dash-stat-value">' + provider[k] + '</span>' +
+            '</div>';
+    });
+    html += '</td>';
+
+    // 환경별 셀
+    html += '<td class="dash-stat-td">';
+    envKeys.forEach(function(k, i) {
+        html += '<div class="dash-stat-item">' +
+            '<span class="dash-stat-dot" style="background:' + envColors[i % envColors.length] + ';"></span>' +
+            '<span class="dash-stat-label">' + esc(k) + '</span>' +
+            '<span class="dash-stat-value">' + env[k] + '</span>' +
+            '</div>';
+    });
+    html += '</td>';
+
+    // 용도별 셀
+    html += '<td class="dash-stat-td">';
+    usageKeys.forEach(function(k, i) {
+        html += '<div class="dash-stat-item">' +
+            '<span class="dash-stat-dot" style="background:' + usageColors[i % usageColors.length] + ';"></span>' +
+            '<span class="dash-stat-label">' + esc(k) + '</span>' +
+            '<span class="dash-stat-value">' + usage[k] + '</span>' +
+            '</div>';
+    });
+    html += '</td>';
+
+    html += '</tr></tbody></table></div>';
+    container.innerHTML = html;
 }
 
+// 레거시 함수 (사용하지 않음)
 function renderStatGrid(containerId, title, data, colors, accent) {
-    var el = document.getElementById(containerId);
-    if (!el || !data) return;
-
-    var keys = Object.keys(data);
-    var total = 0;
-    keys.forEach(function(k) { total += (Number(data[k]) || 0); });
-
-    var html = '<div class="dash-stat-section accent-' + accent + '">';
-    html += '<div class="dash-stat-section-header">';
-    html += '<span class="dash-stat-section-title">' + esc(title) + '</span>';
-    html += '<span class="dash-stat-section-total">' + total + '</span>';
-    html += '</div>';
-    html += '<div style="display:flex;flex-wrap:wrap;">';
-    keys.forEach(function(k, i) {
-        html += '<span class="dash-stat-pill">' +
-            '<span class="dash-stat-pill-dot" style="background:' + colors[i % colors.length] + ';"></span>' +
-            '<span class="dash-stat-pill-label">' + esc(k) + '</span>' +
-            '<span class="dash-stat-pill-value">' + data[k] + '</span>' +
-            '</span>';
-    });
-    html += '</div></div>';
-    el.innerHTML = html;
+    // 더 이상 사용하지 않음 - renderStatGrids가 직접 처리
 }
 
 // ========== 멀티캐스트 상태 ==========
