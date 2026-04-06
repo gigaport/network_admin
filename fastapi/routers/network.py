@@ -3327,6 +3327,16 @@ async def CreateNetworkCost(request: Request):
                 new_seq = 1
             new_code = f"{p_code}-{ct_code}-{new_seq:03d}"
 
+            # 동일 코드 중복 체크
+            cur.execute("SELECT id FROM network_cost WHERE code = %s", (new_code,))
+            if cur.fetchone():
+                raise HTTPException(status_code=400, detail=f"이미 존재하는 원가코드입니다: {new_code}")
+
+            # 동일 비용기준 중복 체크 (같은 통신사+회선종류)
+            cur.execute("SELECT id FROM network_cost WHERE provider = %s AND circuit_type = %s AND cost_standart = %s", (provider, circuit_type, cost_standart))
+            if cur.fetchone():
+                raise HTTPException(status_code=400, detail=f"동일한 통신사/회선종류/비용기준이 이미 존재합니다.")
+
             cur.execute("""
                 INSERT INTO network_cost (code, provider, circuit_type, cost_standart, cost_price, description)
                 VALUES (%s, %s, %s, %s, %s, %s)
@@ -3363,6 +3373,11 @@ async def UpdateNetworkCost(cost_id: int, request: Request):
 
         with get_connection() as conn:
             cur = conn.cursor()
+
+            # 동일 비용기준 중복 체크 (자기 자신 제외)
+            cur.execute("SELECT id FROM network_cost WHERE provider = %s AND circuit_type = %s AND cost_standart = %s AND id != %s", (provider, circuit_type, cost_standart, cost_id))
+            if cur.fetchone():
+                raise HTTPException(status_code=400, detail=f"동일한 통신사/회선종류/비용기준이 이미 존재합니다.")
 
             cur.execute("""
                 UPDATE network_cost SET
