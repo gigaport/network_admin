@@ -5231,6 +5231,89 @@ async def unified_search(q: str = Query("", min_length=0)):
             purchase_total = cur.fetchone()["count"]
             results["purchases"] = {"total": purchase_total, "items": purchase_items}
 
+            # 10. info_company_circuit (정보이용사 회선내역)
+            cur.execute("""
+                SELECT sc.company_name AS title,
+                       sc.member_code || ' / 회선 ' || count(*)::text || '건' AS subtitle,
+                       sc.member_code, count(*) AS circuit_count
+                FROM info_company_circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                WHERE sc.company_name ILIKE %s OR sc.member_code ILIKE %s
+                GROUP BY sc.company_name, sc.member_code
+                ORDER BY count(*) DESC LIMIT 5
+            """, (pattern, pattern))
+            info_circuit_items = [dict(r) for r in cur.fetchall()]
+
+            cur.execute("""
+                SELECT count(DISTINCT sc.member_code)
+                FROM info_company_circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                WHERE sc.company_name ILIKE %s OR sc.member_code ILIKE %s
+            """, (pattern, pattern))
+            info_circuit_total = cur.fetchone()["count"]
+            results["info_circuits"] = {"total": info_circuit_total, "items": info_circuit_items}
+
+            # 11. 정보이용사 매출내역
+            cur.execute("""
+                SELECT sc.company_name AS title,
+                       sc.member_code || ' / ' ||
+                       COALESCE(sum(ifs.price)::text, '0') || '원 (' ||
+                       count(*)::text || '회선)' AS subtitle,
+                       sc.member_code, count(*) AS circuit_count,
+                       COALESCE(sum(ifs.price), 0) AS total_revenue
+                FROM info_company_circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
+                WHERE (sc.company_name ILIKE %s OR sc.member_code ILIKE %s)
+                    AND c.usage = 'MKD'
+                GROUP BY sc.company_name, sc.member_code
+                ORDER BY COALESCE(sum(ifs.price), 0) DESC LIMIT 5
+            """, (pattern, pattern))
+            info_revenue_items = [dict(r) for r in cur.fetchall()]
+            for item in info_revenue_items:
+                rev = item.get("total_revenue", 0)
+                if rev and rev > 0:
+                    item["subtitle"] = f"{item['member_code']} / 월 {rev:,.0f}원 ({item['circuit_count']}회선)"
+
+            cur.execute("""
+                SELECT count(DISTINCT sc.member_code)
+                FROM info_company_circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                WHERE (sc.company_name ILIKE %s OR sc.member_code ILIKE %s)
+                    AND c.usage = 'MKD'
+            """, (pattern, pattern))
+            info_revenue_total = cur.fetchone()["count"]
+            results["info_revenue"] = {"total": info_revenue_total, "items": info_revenue_items}
+
+            # 12. info_purchase_contract (정보이용사 매입내역)
+            info_purchase_where = """
+                pc.member_code ILIKE %s OR pc.datacenter_code ILIKE %s
+                OR pc.provider ILIKE %s OR pc.service_id ILIKE %s
+                OR pc.nni_id ILIKE %s OR pc.cost_code ILIKE %s
+                OR sc.company_name ILIKE %s
+            """
+            info_purchase_params = (pattern, pattern, pattern, pattern, pattern, pattern, pattern)
+
+            cur.execute(f"""
+                SELECT pc.id, COALESCE(sc.company_name, pc.member_code) AS title,
+                       COALESCE(pc.provider, '') || ' / ' || COALESCE(pc.nni_id, '') || ' / ' || COALESCE(nc.cost_standart, '') AS subtitle,
+                       pc.member_code
+                FROM info_purchase_contract pc
+                LEFT JOIN subscriber_codes sc ON pc.member_code = sc.member_code
+                LEFT JOIN network_cost nc ON pc.cost_code = nc.code
+                WHERE {info_purchase_where}
+                ORDER BY pc.id LIMIT 5
+            """, info_purchase_params)
+            info_purchase_items = [dict(r) for r in cur.fetchall()]
+
+            cur.execute(f"""
+                SELECT count(*) FROM info_purchase_contract pc
+                LEFT JOIN subscriber_codes sc ON pc.member_code = sc.member_code
+                WHERE {info_purchase_where}
+            """, info_purchase_params)
+            info_purchase_total = cur.fetchone()["count"]
+            results["info_purchases"] = {"total": info_purchase_total, "items": info_purchase_items}
+
             cur.close()
 
             total_count = sum(cat["total"] for cat in results.values())

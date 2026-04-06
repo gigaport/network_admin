@@ -11,9 +11,12 @@
     var isSearchOpen = false;
 
     var categoryConfig = {
-        purchases:       { icon: 'fa-file-invoice',   label: '매입내역',   color: '#0d9488', url: '/purchase_contract' },
-        revenue:         { icon: 'fa-chart-line',     label: '매출내역',   color: '#ef4444', url: '/revenue_summary' },
-        member_circuits: { icon: 'fa-sitemap',        label: '회선내역',   color: '#f97316', url: '/circuits' },
+        purchases:       { icon: 'fa-file-invoice',   label: '회원사 매입',     color: '#0d9488', url: '/purchase_contract' },
+        info_purchases:  { icon: 'fa-file-invoice',   label: '정보사 매입',     color: '#14b8a6', url: '/info_purchase_contract' },
+        revenue:         { icon: 'fa-chart-line',     label: '회원사 매출',     color: '#ef4444', url: '/revenue_summary' },
+        info_revenue:    { icon: 'fa-chart-line',     label: '정보사 매출',     color: '#f87171', url: '/info_revenue_summary' },
+        member_circuits: { icon: 'fa-sitemap',        label: '회원사 회선',     color: '#f97316', url: '/circuits' },
+        info_circuits:   { icon: 'fa-sitemap',        label: '정보사 회선',     color: '#fb923c', url: '/info_company_circuits' },
         circuits:        { icon: 'fa-network-wired',  label: '회선',       color: '#6366f1', url: '/circuits' },
         subscribers:     { icon: 'fa-building',       label: '회원사',     color: '#0ea5e9', url: '/subscriber_codes' },
         contracts:       { icon: 'fa-file-contract',  label: '계약',       color: '#10b981', url: '/network_contracts' },
@@ -120,7 +123,7 @@
         html += '  <strong style="color: #1e293b;">' + data.total_count + '</strong>건 검색됨';
         html += '</div>';
 
-        var categories = ['purchases', 'revenue', 'member_circuits', 'circuits', 'subscribers', 'contracts', 'addresses', 'products', 'fees'];
+        var categories = ['purchases', 'info_purchases', 'revenue', 'info_revenue', 'member_circuits', 'info_circuits', 'circuits', 'subscribers', 'contracts', 'addresses', 'products', 'fees'];
 
         categories.forEach(function(cat) {
             var catData = data.results[cat];
