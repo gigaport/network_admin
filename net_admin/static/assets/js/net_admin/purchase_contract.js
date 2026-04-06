@@ -439,6 +439,7 @@
                 if (!data.length) return;
 
                 var lastGroup = '';
+                var lastCompany = '';
                 var groupAmount = 0;
                 var groupCount = 0;
                 var insertPoints = [];
@@ -447,17 +448,18 @@
                 data.each(function(row, i) {
                     var group = row.member_code || '?';
                     if (lastGroup && group !== lastGroup) {
-                        insertPoints.push({ afterIdx: i - 1, code: lastGroup, amount: groupAmount, count: groupCount });
+                        insertPoints.push({ afterIdx: i - 1, code: lastGroup, name: lastCompany, amount: groupAmount, count: groupCount });
                         groupAmount = 0;
                         groupCount = 0;
                     }
                     groupAmount += (row.cost_price || 0);
                     groupCount++;
                     lastGroup = group;
+                    lastCompany = row.company_name || group;
                 });
                 // 마지막 그룹
                 if (lastGroup) {
-                    insertPoints.push({ afterIdx: data.length - 1, code: lastGroup, amount: groupAmount, count: groupCount });
+                    insertPoints.push({ afterIdx: data.length - 1, code: lastGroup, name: lastCompany, amount: groupAmount, count: groupCount });
                 }
 
                 // 전체 합계 계산
@@ -470,7 +472,7 @@
                     var p = insertPoints[i];
                     var subtotalRow = '<tr class="subtotal-row" style="background: #f0f4ff !important; border-top: 2px solid #c7d2fe; pointer-events: none;">' +
                         '<td colspan="3" class="text-start py-2 align-middle" style="font-size: 0.85rem; font-weight: 700; color: #4338ca; padding-left: 14px !important;">' +
-                        '<i class="fas fa-calculator me-1" style="font-size: 0.6rem; opacity: 0.7;"></i>' + p.code + ' 소계 (' + p.count + '건)</td>' +
+                        '<i class="fas fa-calculator me-1" style="font-size: 0.6rem; opacity: 0.7;"></i>' + p.name + ' 소계 (' + p.count + '건)</td>' +
                         '<td colspan="9"></td>' +
                         '<td class="text-end py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #4338ca; padding-right: 12px !important;">' + Number(p.amount).toLocaleString() + '원</td>' +
                         '</tr>';
