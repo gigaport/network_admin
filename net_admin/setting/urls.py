@@ -60,4 +60,6 @@ urlpatterns = [
     path('get_profit_summary', views.get_profit_summary, name='get_profit_summary'),
     path('get_profit_monthly', views.get_profit_monthly, name='get_profit_monthly'),
     path('download_profit_pdf', views.download_profit_pdf, name='download_profit_pdf'),
+    path('get_info_profit_summary', views.get_info_profit_summary, name='get_info_profit_summary'),
+    path('get_info_profit_monthly', views.get_info_profit_monthly, name='get_info_profit_monthly'),
 ]

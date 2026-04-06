@@ -16,7 +16,7 @@ def index(request):
     path = f"{org_path}.html"
 
     # circuits, revenue_summary, purchase_contract는 회선계약 관리 메뉴 하위
-    if org_path in ("circuits", "revenue_summary", "info_revenue_summary", "purchase_contract", "info_purchase_contract", "profit_summary", "info_company_circuits"):
+    if org_path in ("circuits", "revenue_summary", "info_revenue_summary", "purchase_contract", "info_purchase_contract", "profit_summary", "info_profit_summary", "info_company_circuits"):
         parent_menu = "network_contracts"
     elif org_path == "network_cost":
         parent_menu = "subscriber_management"
@@ -1357,4 +1357,36 @@ def download_profit_pdf(request):
 
     except Exception as e:
         logger.error(f"이익내역 보고서 PDF 다운로드 실패: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ==================== 정보이용사 이익내역 (Info Profit Summary) ====================
+
+def get_info_profit_summary(request):
+    """정보이용사 이익내역 조회 (FastAPI 호출)"""
+    try:
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_profit_summary"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        else:
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"정보이용사 이익내역 조회 실패: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def get_info_profit_monthly(request):
+    """정보이용사 월별 이익 추이 조회 (FastAPI 호출)"""
+    try:
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/info_profit_monthly"
+        logger.info(f"[CALL_API] ==> {api_url}")
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        else:
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"정보이용사 월별 이익 추이 조회 실패: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)

@@ -48,6 +48,7 @@ urlpatterns = [
     path('info_purchase_contract/', include('setting.urls')),
     path('info_revenue_summary/', include('setting.urls')),
     path('profit_summary/', include('setting.urls')),
+    path('info_profit_summary/', include('setting.urls')),
     path('equipment_cost/', include('setting.urls')),
     path('index', include('app.urls')),
     path('netbox_devices/', include('app.urls')),

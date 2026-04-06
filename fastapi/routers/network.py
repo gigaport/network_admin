@@ -3874,6 +3874,148 @@ async def GetProfitMonthly():
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
+# ==================== 정보이용사 이익내역 (Info Profit Summary) ====================
+
+@router.get("/info_profit_summary")
+async def GetInfoProfitSummary():
+    """정보이용사별 이익내역 조회 (MKD 매출 - 매입)"""
+    logger.info("정보이용사 이익내역 조회 시작")
+
+    try:
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            revenue_query = """
+                SELECT
+                    sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
+                    sc.is_pb, c.phase,
+                    COUNT(*) AS mkd_count,
+                    COALESCE(SUM(ifs.price), 0) AS revenue_total
+                FROM info_company_circuit c
+                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
+                WHERE c.usage = 'MKD'
+                GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
+                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
+            """
+            cur.execute(revenue_query)
+            revenue_rows = cur.fetchall()
+
+            purchase_query = """
+                SELECT
+                    pc.member_code,
+                    COUNT(*) AS purchase_count,
+                    COALESCE(SUM(nc.cost_price), 0) AS purchase_total
+                FROM info_purchase_contract pc
+                LEFT JOIN network_cost nc ON pc.cost_code = nc.code
+                GROUP BY pc.member_code
+            """
+            cur.execute(purchase_query)
+            purchase_rows = cur.fetchall()
+            cur.close()
+
+        purchase_map = {}
+        for p in purchase_rows:
+            purchase_map[p['member_code']] = {
+                'purchase_count': int(p['purchase_count'] or 0),
+                'purchase_total': float(p['purchase_total'] or 0)
+            }
+
+        result = []
+        for r in revenue_rows:
+            member_code = r['member_code']
+            purchase_info = purchase_map.get(member_code, {'purchase_count': 0, 'purchase_total': 0})
+            revenue_total = float(r['revenue_total'] or 0)
+            purchase_total = float(purchase_info['purchase_total'])
+            profit = revenue_total - purchase_total
+            profit_rate = round((profit / revenue_total) * 100, 1) if revenue_total > 0 else 0.0
+
+            result.append({
+                'member_code': r['member_code'],
+                'member_number': r['member_number'],
+                'company_name': r['company_name'],
+                'subscription_type': r['subscription_type'],
+                'is_pb': r['is_pb'],
+                'phase': r['phase'],
+                'mkd_count': int(r['mkd_count'] or 0),
+                'revenue_total': revenue_total,
+                'purchase_count': purchase_info['purchase_count'],
+                'purchase_total': purchase_total,
+                'profit': profit,
+                'profit_rate': profit_rate
+            })
+
+        logger.info(f"정보이용사 이익내역 조회 완료: {len(result)}건")
+        return {"success": True, "data": result}
+
+    except Exception as e:
+        logger.error(f"정보이용사 이익내역 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.get("/info_profit_monthly")
+async def GetInfoProfitMonthly():
+    """정보이용사 월별 이익 추이 조회 (최근 12개월)"""
+    logger.info("정보이용사 월별 이익 추이 조회 시작")
+
+    try:
+        today = datetime.now().date()
+        current_month_start = today.replace(day=1)
+        trend_start = current_month_start - relativedelta(months=11)
+
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            trend_query = """
+                WITH months AS (
+                    SELECT generate_series(%s::date, %s::date, '1 month'::interval)::date AS m_start
+                ),
+                month_ranges AS (
+                    SELECT m_start, (m_start + interval '1 month' - interval '1 day')::date AS m_end
+                    FROM months
+                )
+                SELECT
+                    to_char(mr.m_start, 'YYYY-MM') AS month,
+                    COUNT(*) AS mkd_count,
+                    COALESCE(SUM(ifs.price), 0) AS revenue_total
+                FROM month_ranges mr
+                LEFT JOIN info_company_circuit c ON c.usage = 'MKD'
+                    AND (c.contract_date IS NULL OR c.contract_date <= mr.m_end)
+                    AND (c.expiry_date IS NULL OR c.expiry_date >= mr.m_start)
+                LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
+                GROUP BY mr.m_start
+                ORDER BY mr.m_start
+            """
+            cur.execute(trend_query, (trend_start, current_month_start))
+            revenue_trend = cur.fetchall()
+
+            purchase_query = """
+                SELECT COALESCE(SUM(nc.cost_price), 0) AS purchase_total
+                FROM info_purchase_contract pc
+                LEFT JOIN network_cost nc ON pc.cost_code = nc.code
+            """
+            cur.execute(purchase_query)
+            purchase_total = float(cur.fetchone()['purchase_total'] or 0)
+            cur.close()
+
+        trend = []
+        for r in revenue_trend:
+            rev = float(r['revenue_total'] or 0)
+            trend.append({
+                'month': r['month'],
+                'revenue_total': rev,
+                'purchase_total': purchase_total,
+                'profit': rev - purchase_total
+            })
+
+        logger.info(f"정보이용사 월별 이익 추이 조회 완료: {len(trend)}개월")
+        return {"success": True, "data": trend}
+
+    except Exception as e:
+        logger.error(f"정보이용사 월별 이익 추이 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
 @router.get("/profit_report_pdf")
 async def GetProfitReportPdf():
     """회원사 이익내역 보고서 PDF 다운로드"""
