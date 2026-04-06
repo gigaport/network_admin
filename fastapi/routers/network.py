@@ -2304,7 +2304,6 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
                 FROM month_ranges mr
                 LEFT JOIN circuit c ON c.usage IN ('ORD', 'MPR')
                     AND (c.contract_date IS NULL OR c.contract_date <= mr.m_end)
-                    AND (c.expiry_date IS NULL OR c.expiry_date >= mr.m_start)
                 LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 GROUP BY mr.m_start
                 ORDER BY mr.m_start
@@ -2454,7 +2453,6 @@ async def GetInfoRevenueMonthly(year_month: str = Query(..., description="조회
                 FROM month_ranges mr
                 LEFT JOIN info_company_circuit c ON c.usage = 'MKD'
                     AND (c.contract_date IS NULL OR c.contract_date <= mr.m_end)
-                    AND (c.expiry_date IS NULL OR c.expiry_date >= mr.m_start)
                 LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
                 GROUP BY mr.m_start
                 ORDER BY mr.m_start
