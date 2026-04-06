@@ -3722,7 +3722,8 @@ async def GetProfitSummary():
             # 1) 매출 집계 (member_code + phase 기준)
             revenue_query = """
                 SELECT
-                    sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
+                    COALESCE(sc.member_code, c.member_code) as member_code,
+                    sc.member_number, sc.company_name, sc.subscription_type,
                     sc.is_pb, c.phase,
                     COUNT(*) FILTER (WHERE c.usage = 'ORD') AS ord_count,
                     COUNT(*) FILTER (WHERE c.usage = 'MPR') AS mpr_count,
@@ -3731,11 +3732,11 @@ async def GetProfitSummary():
                     COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
                     COALESCE(SUM(mfs.price), 0) AS revenue_total
                 FROM circuit c
-                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
-                GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
-                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
+                GROUP BY COALESCE(sc.member_code, c.member_code), sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
+                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC NULLS LAST, c.phase ASC
             """
             cur.execute(revenue_query)
             revenue_rows = cur.fetchall()
@@ -3886,16 +3887,17 @@ async def GetInfoProfitSummary():
 
             revenue_query = """
                 SELECT
-                    sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
+                    COALESCE(sc.member_code, c.member_code) as member_code,
+                    sc.member_number, sc.company_name, sc.subscription_type,
                     sc.is_pb, c.phase,
                     COUNT(*) AS mkd_count,
                     COALESCE(SUM(ifs.price), 0) AS revenue_total
                 FROM info_company_circuit c
-                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN info_fee_schedule ifs ON c.fee_code = ifs.fee_code
                 WHERE c.usage = 'MKD'
-                GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
-                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
+                GROUP BY COALESCE(sc.member_code, c.member_code), sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
+                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC NULLS LAST, c.phase ASC
             """
             cur.execute(revenue_query)
             revenue_rows = cur.fetchall()
@@ -4040,17 +4042,18 @@ async def GetProfitReportPdf():
             cur = conn.cursor(cursor_factory=RealDictCursor)
             revenue_query = """
                 SELECT
-                    sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
+                    COALESCE(sc.member_code, c.member_code) as member_code,
+                    sc.member_number, sc.company_name, sc.subscription_type,
                     sc.is_pb, c.phase,
                     COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'ORD'), 0) AS ord_total,
                     COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
                     COALESCE(SUM(mfs.price), 0) AS revenue_total
                 FROM circuit c
-                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
-                GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
-                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
+                GROUP BY COALESCE(sc.member_code, c.member_code), sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
+                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC NULLS LAST, c.phase ASC
             """
             cur.execute(revenue_query)
             revenue_rows = cur.fetchall()
