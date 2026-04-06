@@ -434,12 +434,16 @@
             return;
         }
         var script = document.createElement('script');
-        script.src = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+        script.src = '/proxy/cdn-daum/mapjsapi/bundle/postcode/prod/postcode.v2.js';
         script.onload = function() {
-            openPostcode(prefix);
+            if (typeof daum !== 'undefined' && daum.Postcode) {
+                openPostcode(prefix);
+            } else {
+                showAlert('주소 검색 라이브러리 로드에 실패했습니다.', 'danger');
+            }
         };
         script.onerror = function() {
-            showAlert('주소 검색 서비스를 불러올 수 없습니다. 인터넷 연결을 확인해주세요.', 'danger');
+            showAlert('주소 검색 서비스를 불러올 수 없습니다.', 'danger');
         };
         document.head.appendChild(script);
     };
