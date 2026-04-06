@@ -357,6 +357,8 @@
           "product"
         ],
         "join_products": [
+          "A-COM",
+          "A-10",
           "B-COM",
           "B-10"
         ]

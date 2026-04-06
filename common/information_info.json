@@ -124,7 +124,7 @@
     "member_name": "TNS",
     "member_gubn": "info",
     "member_acc_db": "",
-    "member_products": ["NXTB-10", "NXTB-COM"],
+    "member_products": ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"],
     "switch_hostname": ["tn_1_px_ydkt_a_mkd_01"],
     "alarm": true,
     "member_note":""
