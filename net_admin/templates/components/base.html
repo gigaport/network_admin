@@ -89,7 +89,7 @@
                     </div>
                   </a>
                   <div class="parent-wrapper label-1">
-                    <ul class="nav collapse parent show" data-bs-parent="#navbarVerticalCollapse" id="nv-home">
+                    <ul class="nav collapse parent show" data-bs-parent="" id="nv-home">
                       <li class="collapsed-nav-item-title d-none">Home
                       </li>
                       <li class="nav-item"><a class="nav-link active" href="index.html">
@@ -117,13 +117,13 @@
                 <p class="navbar-vertical-label">네트워크 회선계약
                 </p>
                 <hr class="navbar-vertical-line" />
-                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-SUBSCRIBER" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-SUBSCRIBER">
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-SUBSCRIBER" role="button" data-bs-toggle="collapse" aria-expanded="true" aria-controls="nv-SUBSCRIBER">
                     <div class="d-flex align-items-center">
                       <div class="dropdown-indicator-icon-wrapper"><span class="fas fa-caret-right dropdown-indicator-icon"></span></div><span class="nav-link-icon"><span data-feather="sliders"></span></span><span class="nav-link-text">기준설정</span>
                     </div>
                   </a>
                   <div class="parent-wrapper label-1">
-                    <ul class="nav collapse parent {% if parent_menu == "subscriber_management" %}show{% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-SUBSCRIBER">
+                    <ul class="nav collapse parent show" data-bs-parent="" id="nv-SUBSCRIBER">
                       <li class="collapsed-nav-item-title d-none">기준설정</li>
                       <li class="nav-item"><a class="nav-link {% if sub_menu == "subscriber_codes" %}active{% endif %}" href="/subscriber_codes">
                           <div class="d-flex align-items-center"><span class="nav-link-text">회원사 코드</span>
@@ -168,13 +168,13 @@
                     </ul>
                   </div>
                 </div>
-                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-CONTRACTS" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-CONTRACTS">
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-CONTRACTS" role="button" data-bs-toggle="collapse" aria-expanded="true" aria-controls="nv-CONTRACTS">
                     <div class="d-flex align-items-center">
                       <div class="dropdown-indicator-icon-wrapper"><span class="fas fa-caret-right dropdown-indicator-icon"></span></div><span class="nav-link-icon"><span data-feather="file-text"></span></span><span class="nav-link-text">회선계약 관리</span>
                     </div>
                   </a>
                   <div class="parent-wrapper label-1">
-                    <ul class="nav collapse parent {% if parent_menu == "network_contracts" %}show{% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-CONTRACTS">
+                    <ul class="nav collapse parent show" data-bs-parent="" id="nv-CONTRACTS">
                       <li class="collapsed-nav-item-title d-none">회선계약 관리</li>
                       <li class="nav-item"><a class="nav-link {% if sub_menu == "purchase_contract" %}active{% endif %}" href="/purchase_contract">
                           <div class="d-flex align-items-center"><span class="nav-link-text">회원사 매입내역</span>
@@ -232,13 +232,13 @@
                 <p class="navbar-vertical-label">네트워크 모니터링
                 </p>
                 <hr class="navbar-vertical-line" />
-                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-CRM" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-CRM">
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-CRM" role="button" data-bs-toggle="collapse" aria-expanded="true" aria-controls="nv-CRM">
                     <div class="d-flex align-items-center">
                       <div class="dropdown-indicator-icon-wrapper"><span class="fas fa-caret-right dropdown-indicator-icon"></span></div><span class="nav-link-icon"><span data-feather="activity"></span></span><span class="nav-link-text">멀티캐스트 시세수신체크</span>
                     </div>
                   </a>
                   <div class="parent-wrapper label-1">
-                    <ul class="nav collapse parent {%  if parent_menu == "network_status_check" %} show {% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-CRM">
+                    <ul class="nav collapse parent show" data-bs-parent="" id="nv-CRM">
                       <li class="collapsed-nav-item-title d-none">멀티캐스트 시세수신체크</li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "pr_multicast" %} active {% endif %}" href="/pr_multicast">
                           <div class="d-flex align-items-center"><span class="nav-link-text">회원사-운영시세</span>
@@ -264,13 +264,13 @@
                 <p class="navbar-vertical-label">네트워크 정보메뉴
                 </p>
                 <hr class="navbar-vertical-line" />
-                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-SWINFO" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-SWINFO">
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-SWINFO" role="button" data-bs-toggle="collapse" aria-expanded="true" aria-controls="nv-SWINFO">
                     <div class="d-flex align-items-center">
                       <div class="dropdown-indicator-icon-wrapper"><span class="fas fa-caret-right dropdown-indicator-icon"></span></div><span class="nav-link-icon"><span data-feather="database"></span></span><span class="nav-link-text">스위치 정보제공</span>
                     </div>
                   </a>
                   <div class="parent-wrapper label-1">
-                    <ul class="nav collapse parent {%  if parent_menu == "network_information" %} show {% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-SWINFO">
+                    <ul class="nav collapse parent show" data-bs-parent="" id="nv-SWINFO">
                       <li class="collapsed-nav-item-title d-none">스위치정보</li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "info_lldp" %} active {% endif %}" href="/info_lldp">
                         <div class="d-flex align-items-center"><span class="nav-link-text">인터페이스 LLDP정보</span>
@@ -327,13 +327,13 @@
                 <p class="navbar-vertical-label">관리자 메뉴
                 </p>
                 <hr class="navbar-vertical-line" />
-                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-ADMIN" role="button" data-bs-toggle="collapse" aria-expanded="false" aria-controls="nv-ADMIN">
+                <div class="nav-item-wrapper"><a class="nav-link dropdown-indicator label-1" href="#nv-ADMIN" role="button" data-bs-toggle="collapse" aria-expanded="true" aria-controls="nv-ADMIN">
                     <div class="d-flex align-items-center">
                       <div class="dropdown-indicator-icon-wrapper"><span class="fas fa-caret-right dropdown-indicator-icon"></span></div><span class="nav-link-icon"><span data-feather="settings"></span></span><span class="nav-link-text">관리자 메뉴</span>
                     </div>
                   </a>
                   <div class="parent-wrapper label-1">
-                    <ul class="nav collapse parent {%  if parent_menu == "network_status_check" %} show {% endif %}" data-bs-parent="#navbarVerticalCollapse" id="nv-ADMIN">
+                    <ul class="nav collapse parent show" data-bs-parent="" id="nv-ADMIN">
                       <li class="collapsed-nav-item-title d-none">스위치정보</li>
                       <li class="nav-item"><a class="nav-link {%  if sub_menu == "switch" %} active {% endif %}" href="/switch">
                           <div class="d-flex align-items-center"><span class="nav-link-text">스위치 정보관리</span>
