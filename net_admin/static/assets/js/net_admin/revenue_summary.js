@@ -428,11 +428,11 @@
                 }
 
                 var api = this.api();
-                var data = api.rows({ page: 'current' }).data();
-                if (!data.length) return;
+                var allData = api.rows({ search: 'applied' }).data();
+                if (!allData.length) return;
 
                 var totalOrdCount = 0, totalOrdAmount = 0, totalMprCount = 0, totalMprAmount = 0, totalCount = 0, grandTotal = 0;
-                data.each(function(row) {
+                allData.each(function(row) {
                     totalOrdCount += Number(row.ord_count) || 0;
                     totalOrdAmount += Number(row.ord_total) || 0;
                     totalMprCount += Number(row.mpr_count) || 0;
@@ -445,7 +445,7 @@
                 $('#revenueTable tbody tr.grand-total-row').remove();
                 var grandRow = '<tr class="grand-total-row" style="background: #1e293b !important; pointer-events: none;">' +
                     '<td colspan="6" class="text-start py-2 align-middle" style="font-size: 0.85rem; font-weight: 800; color: #fff; padding-left: 14px !important;">' +
-                    '<i class="fas fa-coins me-1" style="font-size: 0.7rem; opacity: 0.8;"></i>전체 합계 (' + data.length + '개 회원사)</td>' +
+                    '<i class="fas fa-coins me-1" style="font-size: 0.7rem; opacity: 0.8;"></i>전체 합계 (' + allData.length + '개 회원사)</td>' +
                     '<td class="text-center py-2 align-middle" style="font-weight: 700; color: #93c5fd;">' + totalOrdCount.toLocaleString() + '</td>' +
                     '<td class="text-end py-2 align-middle" style="font-weight: 700; color: #93c5fd;">' + totalOrdAmount.toLocaleString() + '원</td>' +
                     '<td class="text-center py-2 align-middle" style="font-weight: 700; color: #fcd34d;">' + totalMprCount.toLocaleString() + '</td>' +

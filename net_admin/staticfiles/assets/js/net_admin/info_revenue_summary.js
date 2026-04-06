@@ -324,11 +324,12 @@
                 }
 
                 var api = this.api();
-                var data = api.rows({ page: 'current' }).data();
-                if (!data.length) return;
+                // 전체 데이터 기준으로 합계 계산 (필터링된 데이터 포함)
+                var allData = api.rows({ search: 'applied' }).data();
+                if (!allData.length) return;
 
                 var totalCount = 0, grandTotal = 0;
-                data.each(function(row) {
+                allData.each(function(row) {
                     totalCount += Number(row.mkd_count) || 0;
                     grandTotal += Number(row.mkd_total) || 0;
                 });
@@ -336,7 +337,7 @@
                 $('#revenueTable tbody tr.grand-total-row').remove();
                 var grandRow = '<tr class="grand-total-row" style="background: #1e293b !important; pointer-events: none;">' +
                     '<td colspan="6" class="text-start py-2 align-middle" style="font-size: 0.85rem; font-weight: 800; color: #fff; padding-left: 14px !important;">' +
-                    '<i class="fas fa-coins me-1" style="font-size: 0.7rem; opacity: 0.8;"></i>전체 합계 (' + data.length + '개 정보이용사)</td>' +
+                    '<i class="fas fa-coins me-1" style="font-size: 0.7rem; opacity: 0.8;"></i>전체 합계 (' + allData.length + '개 정보이용사)</td>' +
                     '<td class="text-center py-2 align-middle" style="font-weight: 700; color: #93c5fd;">' + totalCount.toLocaleString() + '</td>' +
                     '<td class="text-end py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #fbbf24; padding-right: 12px !important;">' + grandTotal.toLocaleString() + '원</td>' +
                     '</tr>';
