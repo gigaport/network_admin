@@ -2216,7 +2216,8 @@ async def GetRevenueSummary():
             # 회원사별 요약 집계
             summary_query = """
                 SELECT
-                    sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
+                    COALESCE(sc.member_code, c.member_code) as member_code,
+                    sc.member_number, sc.company_name, sc.subscription_type,
                     sc.is_pb, c.phase,
                     COUNT(*) FILTER (WHERE c.usage = 'ORD') AS ord_count,
                     COUNT(*) FILTER (WHERE c.usage = 'MPR') AS mpr_count,
@@ -2225,11 +2226,11 @@ async def GetRevenueSummary():
                     COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
                     COALESCE(SUM(mfs.price), 0) AS grand_total
                 FROM circuit c
-                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
-                GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
-                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
+                GROUP BY COALESCE(sc.member_code, c.member_code), sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
+                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC NULLS LAST, c.phase ASC
             """
             cur.execute(summary_query)
             summary = cur.fetchall()
@@ -2242,10 +2243,10 @@ async def GetRevenueSummary():
                     c.additional_circuit, c.phase, c.provider, c.circuit_id,
                     mfs.price AS fee_price, mfs.description AS fee_description
                 FROM circuit c
-                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
-                ORDER BY sc.member_number, c.datacenter_code, c.usage
+                ORDER BY sc.member_number ASC NULLS LAST, c.datacenter_code, c.usage
             """
             cur.execute(detail_query)
             details = cur.fetchall()
@@ -2311,10 +2312,11 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
             cur.execute(trend_query, (trend_start, month_start))
             trend = cur.fetchall()
 
-            # 2) 해당 월 회원사별 요약
+            # 2) 해당 월 회원사별 요약 (cumulative: only contract_date filter)
             summary_query = """
                 SELECT
-                    sc.member_code, sc.member_number, sc.company_name, sc.subscription_type,
+                    COALESCE(sc.member_code, c.member_code) as member_code,
+                    sc.member_number, sc.company_name, sc.subscription_type,
                     sc.is_pb, c.phase,
                     COUNT(*) FILTER (WHERE c.usage = 'ORD') AS ord_count,
                     COUNT(*) FILTER (WHERE c.usage = 'MPR') AS mpr_count,
@@ -2323,18 +2325,17 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
                     COALESCE(SUM(mfs.price) FILTER (WHERE c.usage = 'MPR'), 0) AS mpr_total,
                     COALESCE(SUM(mfs.price), 0) AS grand_total
                 FROM circuit c
-                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
                     AND (c.contract_date IS NULL OR c.contract_date <= %s)
-                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
-                GROUP BY sc.member_code, sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
-                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC, c.phase ASC
+                GROUP BY COALESCE(sc.member_code, c.member_code), sc.member_number, sc.company_name, sc.subscription_type, sc.is_pb, c.phase
+                ORDER BY sc.is_pb ASC NULLS FIRST, sc.member_number ASC NULLS LAST, c.phase ASC
             """
-            cur.execute(summary_query, (month_end, month_start))
+            cur.execute(summary_query, (month_end,))
             summary = cur.fetchall()
 
-            # 3) 해당 월 회선별 상세
+            # 3) 해당 월 회선별 상세 (cumulative: only contract_date filter)
             detail_query = """
                 SELECT
                     c.id, c.member_code, sc.member_number, sc.company_name,
@@ -2343,14 +2344,13 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
                     c.contract_date, c.expiry_date,
                     mfs.price AS fee_price, mfs.description AS fee_description
                 FROM circuit c
-                JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN subscriber_codes sc ON c.member_code = sc.member_code
                 LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                 WHERE c.usage IN ('ORD', 'MPR')
                     AND (c.contract_date IS NULL OR c.contract_date <= %s)
-                    AND (c.expiry_date IS NULL OR c.expiry_date >= %s)
-                ORDER BY sc.member_number, c.datacenter_code, c.usage
+                ORDER BY sc.member_number ASC NULLS LAST, c.datacenter_code, c.usage
             """
-            cur.execute(detail_query, (month_end, month_start))
+            cur.execute(detail_query, (month_end,))
             details = cur.fetchall()
 
             cur.close()
