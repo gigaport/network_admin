@@ -1301,7 +1301,7 @@ async def GetCircuits():
                 SELECT
                     c.id, c.member_code,
                     sc.member_number, sc.company_name,
-                    c.datacenter_code,
+                    c.datacenter_code, c.gubn,
                     ca.summary_address,
                     c.side_a, c.provider, c.circuit_id, c.nni_id,
                     c.type, c.state, c.env, c.usage, c.product, c.bandwidth,
@@ -1368,13 +1368,13 @@ async def CreateCircuit(request: Request):
 
             insert_query = """
                 INSERT INTO circuit (
-                    member_code, datacenter_code, side_a, provider, circuit_id, nni_id,
+                    member_code, datacenter_code, gubn, side_a, provider, circuit_id, nni_id,
                     type, state, env, usage, product, bandwidth, additional_circuit,
                     cot_device, rt_device, lldp_cot_device, lldp_port, lldp_rt_device, lldp_rt_port,
                     join_type, contract_date, expiry_date, contract_period,
                     report_number, comments, phase, fee_code
                 ) VALUES (
-                    %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s,
@@ -1384,6 +1384,7 @@ async def CreateCircuit(request: Request):
 
             cur.execute(insert_query, (
                 data.get('member_code'), data.get('datacenter_code'),
+                data.get('gubn') or None,
                 data.get('side_a') or '', data.get('provider') or '',
                 data.get('circuit_id') or '', data.get('nni_id') or None,
                 data.get('type') or '', data.get('state') or '',
@@ -1425,18 +1426,18 @@ async def UpdateCircuit(circuit_id: int, request: Request):
 
         # 업데이트 가능한 컬럼 목록
         allowed_columns = {
-            'member_code', 'datacenter_code', 'side_a', 'provider',
+            'member_code', 'datacenter_code', 'gubn', 'side_a', 'provider',
             'circuit_id', 'nni_id', 'type', 'state', 'env', 'usage',
             'product', 'bandwidth', 'additional_circuit',
             'cot_device', 'rt_device',
             'lldp_cot_device', 'lldp_port', 'lldp_rt_device', 'lldp_rt_port',
             'join_type', 'contract_date', 'expiry_date', 'contract_period',
-            'report_number', 'comments', 'phase', 'side_a', 'fee_code'
+            'report_number', 'comments', 'phase', 'fee_code'
         }
 
         # 요청 데이터에 포함된 필드만 SET 절 구성
         # 빈 문자열/None 허용 컬럼 (nullable 필드)
-        nullable_columns = {'comments', 'report_number',
+        nullable_columns = {'comments', 'report_number', 'gubn',
                             'lldp_cot_device', 'lldp_port', 'lldp_rt_device', 'lldp_rt_port'}
         set_parts = []
         values = []

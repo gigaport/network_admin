@@ -612,6 +612,7 @@
         var data = {
             member_code: $('#create_member_code').val().trim(),
             datacenter_code: $('input[name="create_datacenter_code"]:checked').val() || null,
+            gubn: $('#create_gubn').val() || null,
             provider: $('input[name="create_provider"]:checked').val() || null,
             circuit_id: $('#create_circuit_id').val().trim() || null,
             nni_id: $('#create_nni_id').val().trim() || null,
@@ -725,6 +726,7 @@
         $('#edit_member_code').val(circuit.member_code);
         $('input[name="edit_datacenter_code"]').prop('checked', false);
         if (circuit.datacenter_code) $('input[name="edit_datacenter_code"][value="' + circuit.datacenter_code + '"]').prop('checked', true);
+        $('#edit_gubn').val(circuit.gubn || '');
         $('input[name="edit_provider"]').prop('checked', false);
         if (circuit.provider) $('input[name="edit_provider"][value="' + circuit.provider + '"]').prop('checked', true);
         $('#edit_circuit_id').val(circuit.circuit_id);
@@ -794,6 +796,7 @@
             id: parseInt($('#edit_id').val()),
             member_code: $('#edit_member_code').val().trim(),
             datacenter_code: $('input[name="edit_datacenter_code"]:checked').val() || null,
+            gubn: $('#edit_gubn').val() || null,
             provider: $('input[name="edit_provider"]:checked').val() || null,
             circuit_id: $('#edit_circuit_id').val().trim() || null,
             nni_id: $('#edit_nni_id').val().trim() || null,
