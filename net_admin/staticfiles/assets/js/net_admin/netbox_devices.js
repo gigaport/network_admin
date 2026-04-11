@@ -3,7 +3,7 @@
 
     var devicesTable = null;
     var NETBOX_BASE = 'http://172.25.32.221';
-    var DEFAULT_MANUFACTURERS = ['arista', 'CISCO', 'JUNIPER', 'F5'];
+    var DEFAULT_MANUFACTURERS = ['ARISTA', 'CISCO', 'JUNIPER', 'F5'];
     var _formMode = 'create'; // 'create' or 'edit'
     var _cachedFilters = null; // roles, manufacturers, sites
 
@@ -356,18 +356,24 @@
         var sorted = Object.keys(roleCounts).map(function(k) { return { name: k, count: roleCounts[k] }; })
             .sort(function(a, b) { return b.count - a.count; });
         if (sorted.length === 0) { el.innerHTML = '<div class="text-center py-2" style="color:#ccc;">데이터 없음</div>'; return; }
+        var maxCount = sorted[0].count;
 
-        var html = '<div class="row g-2">';
+        var html = '';
         sorted.forEach(function(r, i) {
             var c = roleColors[r.name] || defaultColors[i % defaultColors.length];
             var pct = total > 0 ? (r.count / total * 100).toFixed(1) : '0.0';
-            html += '<div class="col-6">' +
-                '<div style="padding:8px 10px; border-radius:10px; background:linear-gradient(135deg, ' + c + '0f, ' + c + '05); border-left:3px solid ' + c + ';">' +
-                '<div style="font-size:0.62rem; color:#94a3b8; font-weight:500;">' + esc(r.name) + '</div>' +
-                '<div style="font-size:1rem; font-weight:700; color:' + c + '; margin-top:1px;">' + r.count + '<span style="font-size:0.6rem; font-weight:400; color:#94a3b8; margin-left:3px;">(' + pct + '%)</span></div>' +
-                '</div></div>';
+            var barW = maxCount > 0 ? Math.round(r.count / maxCount * 100) : 0;
+            html += '<div class="d-flex align-items-center mb-2">' +
+                '<span style="width:8px;height:8px;min-width:8px;border-radius:50%;background:' + c + ';margin-right:6px;"></span>' +
+                '<span style="min-width:36px;font-weight:600;font-size:0.72rem;color:#334155;">' + esc(r.name) + '</span>' +
+                '<div class="flex-grow-1 mx-1" style="height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden;position:relative;">' +
+                '<div style="position:absolute;top:0;left:0;height:100%;width:' + barW + '%;background:linear-gradient(90deg,' + c + ',' + c + 'aa);border-radius:7px;transition:width 0.5s;"></div>' +
+                '</div>' +
+                '<span style="min-width:50px;text-align:right;font-size:0.7rem;white-space:nowrap;">' +
+                '<b style="color:' + c + ';">' + r.count + '</b>' +
+                '<span style="color:#94a3b8;font-size:0.6rem;margin-left:2px;">(' + pct + '%)</span>' +
+                '</span></div>';
         });
-        html += '</div>';
         el.innerHTML = html;
     }
 

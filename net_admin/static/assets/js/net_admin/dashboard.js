@@ -238,7 +238,7 @@ function renderStatGrid(containerId, title, data, colors, accent) {
 
 // ========== 멀티캐스트 상태 ==========
 function loadMulticastStatus() {
-    fetch('/multicast/init?sub_menu=pr_info_multicast', { signal: AbortSignal.timeout(10000) })
+    fetch('/multicast/init?sub_menu=pr_info_multicast', { signal: AbortSignal.timeout(30000) })
         .then(function(res) { return res.json(); })
         .then(function(resp) {
             var items = Array.isArray(resp) ? resp : (resp.data || []);
@@ -261,7 +261,7 @@ function loadMulticastStatus() {
 }
 
 function loadPtpStatus() {
-    fetch('/information/init?sub_menu=info_ptp', { signal: AbortSignal.timeout(10000) })
+    fetch('/information/init?sub_menu=info_ptp', { signal: AbortSignal.timeout(30000) })
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (!Array.isArray(data) || data.length === 0) {
@@ -520,7 +520,7 @@ function renderDcChart(data) {
 }
 
 // ========== NetBox 디바이스 요약 ==========
-var NB_MANUFACTURERS = ['arista', 'CISCO', 'JUNIPER', 'F5'];
+var NB_MANUFACTURERS = ['arista', 'cisco', 'juniper', 'f5'];
 
 function nbMfrParams() {
     return NB_MANUFACTURERS.map(function(m) { return 'manufacturer=' + encodeURIComponent(m); }).join('&');
@@ -529,7 +529,7 @@ function nbMfrParams() {
 function loadNetboxSummary() {
     var allResults = [];
     function fetchPage(offset) {
-        var url = '/netbox_devices/get_netbox_devices?limit=1000&offset=' + offset + '&' + nbMfrParams();
+        var url = '/netbox_devices/get_netbox_devices?limit=1000&offset=' + offset;
         return fetch(url, { signal: AbortSignal.timeout(20000) })
             .then(function(res) { return res.json(); })
             .then(function(resp) {
@@ -538,7 +538,12 @@ function loadNetboxSummary() {
                 if (resp.data.next && allResults.length < resp.data.count) {
                     return fetchPage(allResults.length);
                 }
-                renderNetboxSummary({ count: resp.data.count, results: allResults });
+                // 제조사 필터링 (CISCO, ARISTA, JUNIPER, F5만)
+                var filtered = allResults.filter(function(d) {
+                    var mfr = (d.device_type && d.device_type.manufacturer && d.device_type.manufacturer.name || '').toLowerCase();
+                    return NB_MANUFACTURERS.indexOf(mfr) >= 0;
+                });
+                renderNetboxSummary({ count: filtered.length, results: filtered });
             });
     }
     fetchPage(0).catch(function(err) { console.error('NetBox summary load error:', err); });
@@ -939,3 +944,87 @@ var _themeObserver = new MutationObserver(function(mutations) {
     });
 });
 _themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
+
+// ========== 시스템 모니터링 ==========
+function loadSystemMetrics() {
+    fetch('/get_system_metrics', { signal: AbortSignal.timeout(30000) })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (!data.success) return;
+            var h = data.host;
+
+            // CPU
+            var cpuPct = h.cpu ? h.cpu.percent : 0;
+            document.getElementById('hostCpuBar').style.width = cpuPct + '%';
+            document.getElementById('hostCpuText').textContent = cpuPct + '%';
+
+            // RAM
+            var ramPct = h.ram ? h.ram.percent : 0;
+            document.getElementById('hostRamBar').style.width = ramPct + '%';
+            document.getElementById('hostRamText').textContent = ramPct + '% (' + (h.ram.used_gb || 0) + ' / ' + (h.ram.total_gb || 0) + ' GB)';
+
+            // Disk
+            var diskPct = h.disk ? h.disk.percent : 0;
+            document.getElementById('hostDiskBar').style.width = diskPct + '%';
+            document.getElementById('hostDiskText').textContent = diskPct + '% (' + (h.disk.used_gb || 0) + ' / ' + (h.disk.total_gb || 0) + ' GB)';
+
+            // Network
+            if (h.network) {
+                document.getElementById('hostNetText').innerHTML =
+                    '<i class="fas fa-arrow-down" style="color:#059669;font-size:0.7rem;"></i> ' + h.network.rx_gb + ' GB &nbsp;&nbsp;' +
+                    '<i class="fas fa-arrow-up" style="color:#dc2626;font-size:0.7rem;"></i> ' + h.network.tx_gb + ' GB';
+            }
+
+            // Uptime
+            document.getElementById('sysUptime').textContent = 'Uptime: ' + (h.uptime || '-');
+
+            // 바 색상 (80% 이상 경고)
+            if (cpuPct >= 80) document.getElementById('hostCpuBar').style.background = 'linear-gradient(90deg,#dc2626,#f87171)';
+            if (ramPct >= 80) document.getElementById('hostRamBar').style.background = 'linear-gradient(90deg,#dc2626,#f87171)';
+            if (diskPct >= 80) document.getElementById('hostDiskBar').style.background = 'linear-gradient(90deg,#dc2626,#f87171)';
+
+            // 컨테이너 테이블
+            var tbody = document.getElementById('containerTableBody');
+            if (!data.containers || data.containers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center" style="color:#94a3b8;">컨테이너 정보 없음</td></tr>';
+                return;
+            }
+            var html = '';
+            data.containers.forEach(function(c) {
+                var isUp = c.running || (c.status && c.status.toLowerCase().indexOf('up') >= 0);
+                var statusBadge = isUp
+                    ? '<span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:600;">Running</span>'
+                    : '<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:600;">Stopped</span>';
+                html += '<tr>';
+                html += '<td class="fw-semibold">' + c.name + '</td>';
+                html += '<td class="text-center">' + statusBadge + '</td>';
+                html += '<td class="text-center" style="font-size:0.78rem;color:#475569;">' + (c.status || '-') + '</td>';
+                html += '<td class="text-center" style="font-size:0.78rem;color:#64748b;">' + (c.size || '-') + '</td>';
+                html += '</tr>';
+            });
+            tbody.innerHTML = html;
+
+            // 백업 현황
+            var btbody = document.getElementById('backupTableBody');
+            if (!data.backups || data.backups.length === 0) {
+                btbody.innerHTML = '<tr><td colspan="3" class="text-center" style="color:#94a3b8;">백업 없음</td></tr>';
+            } else {
+                var bhtml = '';
+                data.backups.forEach(function(b) {
+                    bhtml += '<tr>';
+                    bhtml += '<td style="font-size:0.75rem;word-break:break-all;">' + b.filename + '</td>';
+                    bhtml += '<td class="text-center">' + b.date + '</td>';
+                    bhtml += '<td class="text-center">' + b.size + '</td>';
+                    bhtml += '</tr>';
+                });
+                btbody.innerHTML = bhtml;
+            }
+        })
+        .catch(function(e) {
+            console.error('시스템 메트릭 로드 실패:', e);
+        });
+}
+
+// 시스템 메트릭 초기 로드 + 30초 주기 갱신
+loadSystemMetrics();
+setInterval(loadSystemMetrics, 30000);

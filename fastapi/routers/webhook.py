@@ -484,12 +484,9 @@ async def send_syslog_webhook_to_slack(request: Request):
         facility = data.get("facility", "")
         mnemonic = data.get("mnemonic", "")
         
-        if (any(keyword in message for keyword in SYSLOG_NORMAL_KEYWORDS) or 
+        if (any(keyword in message for keyword in SYSLOG_NORMAL_KEYWORDS) or
             any(keyword in facility for keyword in SYSLOG_NORMAL_FACILITIES)):
             channel = "#network-alert-normal"
-        
-        if any(keyword in mnemonic for keyword in SYSLOG_ENDPOINT_MNEMONICS):
-            channel = "#network-alert-endpoint"
 
         
         

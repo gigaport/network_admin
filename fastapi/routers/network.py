@@ -10,6 +10,9 @@ from typing import List, Dict, Tuple, Union, Optional
 
 ## 장비관리 라이브러리
 from genie.testbed import load
+from utils.nxapi_client import query_interfaces as nxapi_query_interfaces, query_config_checks as nxapi_query_config_checks, query_pim_sparse_check as nxapi_query_pim_check
+from utils.arista_eapi_client import query_config_checks as arista_query_config_checks
+# system_monitor는 호스트 cron에서 JSON 파일로 저장
 ## 장비정보 파싱 라이브러리
 from utils.cisco_interface import Execute_GenieParser
 from utils.arista_multicast import GetAristaMulticastInfo
@@ -5331,3 +5334,438 @@ async def unified_search(q: str = Query("", min_length=0)):
     except Exception as e:
         logger.error(f"통합검색 실패: {e}")
         raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")
+
+
+# ── 재해복구훈련 ──
+
+DR_TRAINING_TARGETS = [
+    {
+        "procedure": "51.01",
+        "device_name": "RBD_ASN_L3_01",
+        "ip": "172.30.172.13",
+        "label": "DR 주문망 인터페이스 활성화 (RBD_COM_FW_01 방화벽 작업)",
+        "interfaces": ["Ethernet1/48"],
+        "config_checks": []
+    },
+    {
+        "procedure": "51.01",
+        "device_name": "RBD_SVC_L3_01",
+        "ip": "172.30.172.12",
+        "label": "DR 주문망 인터페이스 활성화 (RBD_COM_FW_01 방화벽 작업)",
+        "interfaces": ["Ethernet1/41"],
+        "config_checks": []
+    },
+    {
+        "procedure": "51.02",
+        "device_name": "PYD_DFP_BB_01",
+        "ip": "172.28.172.34",
+        "label": "주센터 RP인터페이스 셧다운 처리",
+        "interfaces": ["loopback100"],
+        "config_checks": []
+    },
+    {
+        "procedure": "51.02",
+        "device_name": "PYD_DFP_BB_02",
+        "ip": "172.28.172.35",
+        "label": "주센터 RP인터페이스 셧다운 처리",
+        "interfaces": ["loopback100"],
+        "config_checks": []
+    },
+    {
+        "procedure": "51.02",
+        "device_name": "PYD_MPR_L3_01",
+        "ip": "172.28.172.40",
+        "label": "RP라우팅 및 BGP Redip Route-Map RP 제거",
+        "interfaces": [],
+        "config_checks": [
+            {
+                "type": "route",
+                "command": "show ip route 192.23.180.1/32",
+                "description": "ip route 192.23.180.1/32 172.16.66.1",
+                "expected": "172.16.66.1"
+            },
+            {
+                "type": "prefix_list",
+                "command": "show ip prefix-list Static_to_BGP",
+                "description": "ip prefix-list Static_to_BGP seq 70 permit 192.23.180.1/32",
+                "expected": "192.23.180.1/32"
+            }
+        ]
+    },
+    {
+        "procedure": "51.02",
+        "device_name": "PHQ_MPR_L3_01",
+        "ip": "192.168.254.43",
+        "label": "RP라우팅 및 BGP Redip Route-Map RP 제거",
+        "interfaces": [],
+        "config_checks": [
+            {
+                "type": "route",
+                "command": "show ip route 192.23.180.1/32",
+                "description": "ip route 192.23.180.1/32 172.16.67.1",
+                "expected": "172.16.67.1"
+            },
+            {
+                "type": "prefix_list",
+                "command": "show ip prefix-list Static_to_BGP",
+                "description": "ip prefix-list Static_to_BGP seq 70 permit 192.23.180.1/32",
+                "expected": "192.23.180.1/32"
+            }
+        ]
+    },
+    {
+        "procedure": "51.02",
+        "device_name": "PYD_MKD_L3_01",
+        "ip": "172.28.172.41",
+        "vendor": "arista",
+        "label": "RP라우팅 및 BGP Redip Route-Map RP 제거",
+        "interfaces": [],
+        "config_checks": [
+            {
+                "type": "route",
+                "command": "show ip route 192.23.180.1/32",
+                "description": "ip route 192.23.180.1/32 172.16.68.1",
+                "expected": "172.16.68.1"
+            },
+            {
+                "type": "prefix_list",
+                "command": "show ip prefix-list Static_Redip",
+                "description": "ip prefix-list Static_Redip seq 130 permit 192.23.180.1/32",
+                "expected": "192.23.180.1/32"
+            }
+        ]
+    },
+    {
+        "procedure": "51.02",
+        "device_name": "PHQ_MKD_L3_01",
+        "ip": "192.168.254.44",
+        "vendor": "arista",
+        "label": "RP라우팅 및 BGP Redip Route-Map RP 제거",
+        "interfaces": [],
+        "config_checks": [
+            {
+                "type": "route",
+                "command": "show ip route 192.23.180.1/32",
+                "description": "ip route 192.23.180.1/32 172.16.69.1",
+                "expected": "172.16.69.1"
+            },
+            {
+                "type": "prefix_list",
+                "command": "show ip prefix-list Static_Redip",
+                "description": "ip prefix-list Static_Redip seq 130 permit 192.23.180.1/32",
+                "expected": "192.23.180.1/32"
+            }
+        ]
+    },
+    {
+        "procedure": "51.02",
+        "device_name": "RBD_SVC_L3_01",
+        "ip": "172.30.172.12",
+        "label": "DR 시세망 인터페이스 활성화",
+        "interfaces": ["Ethernet1/42"],
+        "config_checks": []
+    },
+    {
+        "procedure": "51.02",
+        "device_name": "RBD_MPR_L3_01",
+        "ip": "172.30.172.14",
+        "label": "DR 시세망 인터페이스 활성화 및 ip pim sparse-mode 활성화",
+        "interfaces": ["Ethernet1/48"],
+        "config_checks": [],
+        "pim_checks": [
+            {"description": "Ethernet1/41", "interfaces": ["Ethernet1/41"]},
+            {"description": "Ethernet1/45", "interfaces": ["Ethernet1/45"]},
+            {"description": "Ethernet1/45.3801~3825",
+             "interfaces": [f"Ethernet1/45.{i}" for i in range(3801, 3826)]},
+            {"description": "Ethernet1/46", "interfaces": ["Ethernet1/46"]},
+            {"description": "Ethernet1/46.3601~3632",
+             "interfaces": [f"Ethernet1/46.{i}" for i in range(3601, 3633)]},
+            {"description": "Ethernet1/47", "interfaces": ["Ethernet1/47"]},
+            {"description": "Ethernet1/47.3701~3732",
+             "interfaces": [f"Ethernet1/47.{i}" for i in range(3701, 3733)]}
+        ]
+    },
+    {
+        "procedure": "51.04",
+        "device_name": "PYD_ASN_L3_01",
+        "ip": "172.28.172.29",
+        "label": "KRX 전용회선 인터페이스 셧다운 처리",
+        "interfaces": ["Ethernet1/42"],
+        "config_checks": []
+    },
+    {
+        "procedure": "51.05",
+        "device_name": "PYD_ASN_L3_01",
+        "ip": "172.28.172.29",
+        "label": "코스콤 전용회선 인터페이스 셧다운 처리",
+        "interfaces": ["Ethernet1/41"],
+        "config_checks": []
+    },
+    {
+        "procedure": "51.05",
+        "device_name": "PHQ_ASN_L3_01",
+        "ip": "192.168.254.40",
+        "label": "코스콤 전용회선 인터페이스 셧다운 처리",
+        "interfaces": ["Ethernet1/47"],
+        "config_checks": []
+    }
+]
+
+
+def _judge_main_dr(target, item_type, oper_state=None, found=None):
+    """가동상태/DR상태 판정 로직"""
+    proc = target["procedure"]
+    name = target["device_name"]
+    is_down = oper_state != "up" if oper_state else None
+
+    if item_type == "interface":
+        # 51.01, 51.02 RBD_MPR/RBD_SVC: 평상 시 down=OK
+        if proc == "51.01" or (proc == "51.02" and name in ("RBD_MPR_L3_01", "RBD_SVC_L3_01")):
+            return (is_down, not is_down)
+        # 51.02 BB, 51.04, 51.05: 평상 시 up=OK
+        else:
+            return (not is_down, is_down)
+    else:
+        # config/pim: RBD_MPR 미설정=평상시OK, 나머지 설정됨=평상시OK
+        if name == "RBD_MPR_L3_01":
+            return (not found, found)
+        else:
+            return (found, not found)
+
+
+@router.post("/dr-training/collect")
+async def collect_dr_training_status():
+    """재해복구훈련 상태 수집 (1분 주기 배치 호출용) - 스위치 API 호출 후 DB 저장"""
+    try:
+        intf_futures = {}
+        config_futures = {}
+        pim_futures = {}
+        now = datetime.now()
+
+        for idx, target in enumerate(DR_TRAINING_TARGETS):
+            key = f"{idx}_{target['device_name']}"
+            if target.get("interfaces"):
+                intf_futures[key] = (target, executor.submit(nxapi_query_interfaces, target["ip"], target["interfaces"]))
+            if target.get("config_checks"):
+                check_fn = arista_query_config_checks if target.get("vendor") == "arista" else nxapi_query_config_checks
+                config_futures[key] = (target, executor.submit(check_fn, target["ip"], target["config_checks"]))
+            if target.get("pim_checks"):
+                pim_futures[key] = (target, executor.submit(nxapi_query_pim_check, target["ip"], target["pim_checks"]))
+
+        rows = []
+        for idx, target in enumerate(DR_TRAINING_TARGETS):
+            key = f"{idx}_{target['device_name']}"
+            reachable = True
+            error_msg = None
+            item_no = 0
+
+            # 인터페이스 결과
+            if key in intf_futures:
+                try:
+                    result = intf_futures[key][1].result(timeout=30)
+                except Exception as e:
+                    result = {"success": False, "interfaces": [], "error": str(e)}
+                if not result["success"]:
+                    reachable = False
+                    error_msg = result.get("error")
+                for intf in result.get("interfaces", []):
+                    item_no += 1
+                    main_ok, dr_ok = _judge_main_dr(target, "interface", oper_state=intf.get("oper_state"))
+                    rows.append((
+                        target["procedure"], target["device_name"], target["ip"],
+                        target.get("label", ""), reachable, error_msg,
+                        item_no, "interface", intf.get("name", ""),
+                        intf.get("admin_state"), intf.get("oper_state"),
+                        intf.get("speed"), intf.get("mtu"),
+                        intf.get("description"), intf.get("last_link_flapped"),
+                        None, None, main_ok, dr_ok, now
+                    ))
+
+            # 설정 확인 결과
+            if key in config_futures:
+                try:
+                    result = config_futures[key][1].result(timeout=30)
+                except Exception as e:
+                    result = {"success": False, "checks": [], "error": str(e)}
+                if not result["success"]:
+                    reachable = False
+                    error_msg = result.get("error")
+                for chk in result.get("checks", []):
+                    item_no += 1
+                    main_ok, dr_ok = _judge_main_dr(target, "config", found=chk.get("found"))
+                    rows.append((
+                        target["procedure"], target["device_name"], target["ip"],
+                        target.get("label", ""), reachable, error_msg,
+                        item_no, chk.get("type", "config"), chk.get("description", ""),
+                        None, None, None, None, None, None,
+                        chk.get("found"), chk.get("detail"), main_ok, dr_ok, now
+                    ))
+
+            # PIM 결과
+            if key in pim_futures:
+                try:
+                    result = pim_futures[key][1].result(timeout=30)
+                except Exception as e:
+                    result = {"success": False, "checks": [], "error": str(e)}
+                if not result["success"]:
+                    reachable = False
+                    error_msg = result.get("error")
+                for chk in result.get("checks", []):
+                    item_no += 1
+                    main_ok, dr_ok = _judge_main_dr(target, "config", found=chk.get("found"))
+                    rows.append((
+                        target["procedure"], target["device_name"], target["ip"],
+                        target.get("label", ""), reachable, error_msg,
+                        item_no, chk.get("type", "pim_sparse"), chk.get("description", ""),
+                        None, None, None, None, None, None,
+                        chk.get("found"), chk.get("detail"), main_ok, dr_ok, now
+                    ))
+
+            # 인터페이스/설정 모두 없는 장비가 접속 불가인 경우
+            if item_no == 0 and not reachable:
+                rows.append((
+                    target["procedure"], target["device_name"], target["ip"],
+                    target.get("label", ""), False, error_msg,
+                    1, "error", "접속불가",
+                    None, None, None, None, None, None,
+                    None, error_msg, False, False, now
+                ))
+
+        # DB 저장 (신규 INSERT + 1일 이전 데이터 정리)
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM dr_training_result WHERE checked_at < NOW() - INTERVAL '1 day'")
+                if rows:
+                    from psycopg2.extras import execute_values
+                    execute_values(cur, """
+                        INSERT INTO dr_training_result
+                            (procedure_code, device_name, ip, label, reachable, error_message,
+                             item_no, item_type, item_name,
+                             admin_state, oper_state, speed, mtu, intf_description, last_link_flapped,
+                             config_found, config_detail, main_ok, dr_ok, checked_at)
+                        VALUES %s
+                    """, rows)
+            conn.commit()
+
+        logger.info(f"DR 훈련 상태 수집 완료: {len(rows)}건 저장")
+        return {"success": True, "count": len(rows), "timestamp": now.strftime("%Y-%m-%d %H:%M:%S")}
+
+    except Exception as e:
+        logger.error(f"DR 훈련 상태 수집 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/dr-training/status")
+async def get_dr_training_status():
+    """재해복구훈련 상태 조회 (DB에서 읽기)"""
+    try:
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT procedure_code, device_name, ip, label, reachable, error_message,
+                           item_no, item_type, item_name,
+                           admin_state, oper_state, speed, mtu, intf_description, last_link_flapped,
+                           config_found, config_detail, main_ok, dr_ok, checked_at
+                    FROM dr_training_result
+                    WHERE checked_at = (SELECT MAX(checked_at) FROM dr_training_result)
+                    ORDER BY id
+                """)
+                rows = cur.fetchall()
+
+        if not rows:
+            return {"success": True, "timestamp": "-", "devices": [], "summary": {
+                "total_interfaces": 0, "up_count": 0, "down_count": 0,
+                "total_config_checks": 0, "config_ok": 0, "config_fail": 0, "all_ok": True
+            }}
+
+        timestamp = rows[0]["checked_at"].strftime("%Y-%m-%d %H:%M:%S") if rows else "-"
+
+        # 장비별로 그룹핑
+        devices = []
+        current_key = None
+        device_data = None
+        up_count = down_count = check_ok = check_fail = 0
+
+        for row in rows:
+            key = f"{row['procedure_code']}_{row['device_name']}_{row['ip']}"
+            if key != current_key:
+                if device_data:
+                    devices.append(device_data)
+                device_data = {
+                    "procedure": row["procedure_code"],
+                    "device_name": row["device_name"],
+                    "ip": row["ip"],
+                    "label": row["label"] or "",
+                    "reachable": row["reachable"],
+                    "interfaces": [],
+                    "config_checks": [],
+                    "error": row["error_message"]
+                }
+                current_key = key
+
+            if row["item_type"] == "interface":
+                device_data["interfaces"].append({
+                    "name": row["item_name"],
+                    "admin_state": row["admin_state"] or "-",
+                    "oper_state": row["oper_state"] or "unknown",
+                    "speed": row["speed"] or "-",
+                    "mtu": row["mtu"] or "-",
+                    "description": row["intf_description"] or "",
+                    "last_link_flapped": row["last_link_flapped"] or "-"
+                })
+                if row["oper_state"] == "up":
+                    up_count += 1
+                else:
+                    down_count += 1
+            elif row["item_type"] != "error":
+                device_data["config_checks"].append({
+                    "type": row["item_type"],
+                    "description": row["item_name"],
+                    "found": row["config_found"],
+                    "detail": row["config_detail"] or ""
+                })
+                if row["config_found"]:
+                    check_ok += 1
+                else:
+                    check_fail += 1
+
+        if device_data:
+            devices.append(device_data)
+
+        total_intf = up_count + down_count
+        total_checks = check_ok + check_fail
+
+        return {
+            "success": True,
+            "timestamp": timestamp,
+            "devices": devices,
+            "summary": {
+                "total_interfaces": total_intf,
+                "up_count": up_count,
+                "down_count": down_count,
+                "total_config_checks": total_checks,
+                "config_ok": check_ok,
+                "config_fail": check_fail,
+                "all_ok": down_count == 0 and check_fail == 0
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"DR 훈련 상태 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── 시스템 모니터링 ──
+
+@router.get("/system/metrics")
+async def get_system_metrics():
+    """호스트 시스템 및 컨테이너 메트릭 조회 (호스트 cron이 생성한 JSON 파일 읽기)"""
+    try:
+        metrics_path = "/app/data/system_metrics.json"
+        if not os.path.exists(metrics_path):
+            return {"success": False, "error": "메트릭 파일 없음"}
+        with open(metrics_path, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"시스템 메트릭 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

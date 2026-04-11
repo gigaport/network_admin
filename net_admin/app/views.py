@@ -17,6 +17,25 @@ def index(request):
 def netbox_devices(request):
     return render(request, 'netbox_devices.html', {'parent_menu': 'network_asset', 'sub_menu': 'netbox_devices'})
 
+def dr_training(request):
+    return render(request, 'dr_training.html', {'parent_menu': 'network_monitoring', 'sub_menu': 'dr_training'})
+
+def get_dr_training_status(request):
+    try:
+        response = requests.get(f"{FASTAPI_BASE_URL}/api/v1/network/dr-training/status", timeout=60)
+        return JsonResponse(response.json())
+    except Exception as e:
+        logger.error(f"DR 훈련 상태 조회 실패: {e}")
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+def get_system_metrics(request):
+    try:
+        response = requests.get(f"{FASTAPI_BASE_URL}/api/v1/network/system/metrics", timeout=30)
+        return JsonResponse(response.json())
+    except Exception as e:
+        logger.error(f"시스템 메트릭 조회 실패: {e}")
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
 def get_netbox_devices(request):
     try:
         qs = request.GET.urlencode()

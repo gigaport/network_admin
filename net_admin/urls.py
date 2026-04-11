@@ -49,4 +49,5 @@ urlpatterns = [
     path('equipment_cost/', include('setting.urls')),
     path('index', include('app.urls')),
     path('netbox_devices/', include('app.urls')),
+    path('dr_training/', include('app.urls')),
 ]
