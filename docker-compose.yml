@@ -85,6 +85,11 @@ services:
       - ./logs:/app/logs:Z
       - ./common:/app/common:ro,Z
       - ~/.ssh:/root/.ssh:ro
+      # 컨테이너 재생성 시 호스트 최신 코드가 반영되도록 hot-mount
+      - ./net_admin/batch.py:/app/batch.py:Z
+      - ./fastapi/utils:/app/utils:Z
+      - ./scripts/dr_collect.py:/app/dr_collect.py:Z
+      - ./scripts/arista_multicast_collect.py:/app/arista_multicast_collect.py:Z
     depends_on:
       - fastapi
       - postgres-db

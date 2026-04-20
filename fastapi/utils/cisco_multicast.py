@@ -121,19 +121,21 @@ def ProcessMulticastInfo(data:dict, market_gubn:str):
                 print("[SHOW IP PIM RP]\n")
                 rp_addresses.append(list(data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['rp']['static_rp'].keys())[0])
 
-            elif data['cmd'] == 'show_interface_status':
-                print("[SHOW INTERFACE STATUS]\n")
-                # print(f"{data['parsed_output']}")
+            elif data['cmd'] in ('show_interface_status', 'show_interfaces_status'):
+                # nxos: show_interface_status / iosxe: show_interfaces_status
+                # 두 OS 모두 parsed_output 구조: {interfaces: {<name>: {vlan, status, ...}}}
+                # VLAN 1100 + connected 인터페이스 = 회원사 연결서버 수
+                print("[SHOW INTERFACE(S) STATUS]\n")
 
-                for interface, details in data['parsed_output']['interfaces'].items():
-                    # access_vlan 값과 인터페이스 상태 확인
-                    access_vlan = details.get('vlan')
-                    oper_status = details.get('status')
+                for interface, details in (data.get('parsed_output', {}).get('interfaces', {}) or {}).items():
+                    if not isinstance(details, dict):
+                        continue
+                    access_vlan = str(details.get('vlan', '')).strip()
+                    oper_status = str(details.get('status', '')).strip().lower()
 
-                    if access_vlan == '1100' and oper_status == 'connected':
+                    # access_vlan 이 '1100' 이고 상태가 connected/up 이면 연결서버로 카운트
+                    if access_vlan == '1100' and oper_status in ('connected', 'up'):
                         connected_server_count += 1
-                        # print(f"Matched interfaces: {interface} Deivice: {device_name}\n\n")
-                # print(f"[VLAN1100 UP interfaces total COUNT] : {device_name}{device_os} ==> {connected_server_count}")
 
         # print(f"device_info_join_products >> {device_join_products}")
 

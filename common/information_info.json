@@ -104,7 +104,7 @@
     "member_name": "ICE",
     "member_gubn": "info",
     "member_acc_db": "",
-    "member_products": ["NXTA-COM"],
+    "member_products": ["NXTB-COM", "NXTB-10"],
     "switch_hostname": ["ie_1_px_scte_a_mkd_01", "ie_1_px_scte_a_mkd_02", "ie_2_px_sas1_a_mkd_01", "ie_2_px_sas1_a_mkd_02"],
     "alarm": true,
     "member_note":""
@@ -114,7 +114,7 @@
     "member_name": "JP모건",
     "member_gubn": "info",
     "member_acc_db": "",
-    "member_products": ["NXTA-10", "NXTA-COM"],
+    "member_products": ["NXTB-10", "NXTB-COM"],
     "switch_hostname": ["jp_1_px_scjp_a_mkd_01"],
     "alarm": true,
     "member_note":""

@@ -105,7 +105,7 @@ devices:
         ip: 50.12.1.51
     custom:
       groups: ["test"]
-      join_products: ["NXTA-10", "NXTA-COM"]
+      join_products: ["NXTA-3", "NXTA-5", "NXTA-10", "NXTA-COM", "NXTB-3", "NXTB-5", "NXTB-10", "NXTB-COM"]
   nh_2_tx_ydnh_c_mpr_01:
     os: iosxe
     type: switch
@@ -165,7 +165,7 @@ devices:
         ip: 50.24.9.51
     custom:
       groups: ["test"]
-      join_products: ["NXTA-10", "NXTA-COM"]
+      join_products: ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"]
   sk_1_tx_ydsk_c_com_01:
     os: iosxe
     type: switch
@@ -235,7 +235,7 @@ devices:
         ip: 50.63.1.23
     custom:
       groups: ["test"]
-      join_products: ["NXTA-10", "NXTA-COM"]
+      join_products: ["NXTA-3", "NXTA-5", "NXTA-10", "NXTA-COM", "NXTB-3", "NXTB-5", "NXTB-10", "NXTB-COM"]
   ka_r_tr_pkka_n_com_01:
     os: nxos
     type: switch
