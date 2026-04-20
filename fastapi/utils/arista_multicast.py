@@ -296,23 +296,35 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
                 product_cnt += pr_mpr_info.get('multicast_group_count', 0)
                 logger.debug(f" PRODUCT_CNT >> {product_cnt}")
 
+    # 수신_시세상품 산출: sise_products(operation_ip1/ip2) × sise_channels(multicast_group_ip) AND 매칭
+    received_products = _compute_arista_received_products(multicast_info.get('valid_sg_pairs') or set())
+    applied_products = member_info.get('member_products', []) or []
+    missing_products = [p for p in applied_products if p not in received_products]
+
     ## 멀티캐스트 시세 정상 확인
-    ## 시세상품 멀티캐스트 그룹 카운트 == 장비 mroute 카운트 == vlan 1100 OIF 카운트 비교
-    if product_cnt == multicast_info.get('valid_group_sources_count', 0) == multicast_info.get('oif_count', 0):
-        check_result = '정상확인'
-        type = "success"
-        icon = "fas fa-check"
+    ## 우선순위: 누락상품 있음(확인필요) > 연결서버 없음 > 카운트초과 > 카운트 일치(정상확인)
+    mroute_c = multicast_info.get('valid_group_sources_count', 0)
+    oif_c = multicast_info.get('oif_count', 0)
+    if missing_products:
+        check_result = '확인필요'
+        type = "danger"
+        icon = "fas fa-x-square"
     elif multicast_info.get('connected_server_cnt', 0) == 0:
         check_result = '회원사연결서버없음'
         type = "primary"
+        icon = "fas fa-check"
+    elif mroute_c > product_cnt:
+        check_result = '정상그룹개수초과'
+        type = "warning"
+        icon = "fas fa-exclamation-triangle"
+    elif product_cnt == mroute_c == oif_c:
+        check_result = '정상확인'
+        type = "success"
         icon = "fas fa-check"
     else:
         check_result = '확인필요'
         type = "danger"
         icon = "fas fa-x-square"
-
-    # 수신_시세상품 산출: sise_products(operation_ip1/ip2) × sise_channels(multicast_group_ip) AND 매칭
-    received_products = _compute_arista_received_products(multicast_info.get('valid_sg_pairs') or set())
 
     temp = {
         "updated_time": NOW_DATETIME,

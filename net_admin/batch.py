@@ -316,12 +316,17 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
             member_code = members_info[second_octet]['member_code']
             member_name = members_info[second_octet]['member_name']
 
+        # 실제 수신중인 시세상품 및 누락 시세상품 산출 (check_result 판정 전 선행)
+        valid_pairs = _extract_valid_sg_pairs(device)
+        received_products = _compute_received_products(products, valid_pairs, sise_mapping)
+        missing_products = [p for p in (products or []) if p not in received_products]
+
         ## 멀티캐스트 시세 정상 확인
-        ## 시세상품 멀티캐스트 그룹 카운트 == 장비 mroute 카운트 == vlan 1100 OIF 카운트 비교
-        if product_cnt == mroute_cnt == oif_cnt:
-            check_result = '정상확인'
-            type = "success"
-            icon = "fas fa-check"
+        ## 우선순위: 누락상품 있음(확인필요) > 연결서버 없음 > 카운트초과 > 카운트 일치(정상확인) > 기타(확인필요)
+        if missing_products:
+            check_result = '확인필요'
+            type = "danger"
+            icon = "fas fa-x-square"
         elif connected_server_cnt == 0:
             check_result = '회원사연결서버없음'
             type = "primary"
@@ -330,15 +335,14 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
             check_result = '정상그룹개수초과'
             type = "warning"
             icon = "fas fa-exclamation-triangle"
+        elif product_cnt == mroute_cnt == oif_cnt:
+            check_result = '정상확인'
+            type = "success"
+            icon = "fas fa-check"
         else:
             check_result = '확인필요'
             type = "danger"
             icon = "fas fa-x-square"
-
-        # 실제 수신중인 시세상품 및 누락 시세상품 산출
-        valid_pairs = _extract_valid_sg_pairs(device)
-        received_products = _compute_received_products(products, valid_pairs, sise_mapping)
-        missing_products = [p for p in (products or []) if p not in received_products]
 
         temp = {
             "id" : idx+1,
@@ -525,16 +529,6 @@ def save_multicast_to_db(market_gubn, cisco_multicast_info, members_mroute_data=
             oif_cnt = device.get("valid_oif_count", 0)
             connected_server_cnt = device.get("connected_server_count", 0)
 
-            # check_result 판정
-            if product_cnt == mroute_cnt == oif_cnt:
-                check_result = "정상확인"
-            elif connected_server_cnt == 0:
-                check_result = "회원사연결서버없음"
-            elif mroute_cnt > product_cnt:
-                check_result = "정상그룹개수초과"
-            else:
-                check_result = "확인필요"
-
             # 회원사 정보 매핑
             member_code = ""
             member_name = ""
@@ -549,11 +543,24 @@ def save_multicast_to_db(market_gubn, cisco_multicast_info, members_mroute_data=
                     member_no = second_octet
                     alarm = members_info[second_octet].get("alarm", True)
 
-            # 실제 수신중인 시세상품 산출
+            # 실제 수신중인 시세상품 산출 (check_result 판정 전 선행)
+            applied_products = device.get("products", []) or []
             valid_pairs = _extract_valid_sg_pairs(device)
-            received_products = _compute_received_products(
-                device.get("products", []), valid_pairs, sise_mapping
-            )
+            received_products = _compute_received_products(applied_products, valid_pairs, sise_mapping)
+            missing_products = [p for p in applied_products if p not in received_products]
+
+            # check_result 판정
+            # 우선순위: 누락상품 있음(확인필요) > 연결서버 없음 > 카운트초과 > 카운트 일치(정상확인) > 기타(확인필요)
+            if missing_products:
+                check_result = "확인필요"
+            elif connected_server_cnt == 0:
+                check_result = "회원사연결서버없음"
+            elif mroute_cnt > product_cnt:
+                check_result = "정상그룹개수초과"
+            elif product_cnt == mroute_cnt == oif_cnt:
+                check_result = "정상확인"
+            else:
+                check_result = "확인필요"
 
             result_data.append({
                 "member_code": member_code,
