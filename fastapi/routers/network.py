@@ -5896,17 +5896,37 @@ async def collect_dr_training_status():
                 ))
 
         # 이전 값 조회 → 변경 감지 → Slack 알림
+        # 오탐 방지: NX-API 일시적 응답 오류를 걸러내기 위해
+        # "가장 최근 2개 배치에서 연속으로 동일한 이상 상태"일 때만 알림 발송 (confirmation)
         with get_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # 최근 2개 배치 타임스탬프
                 cur.execute("""
-                    SELECT procedure_code, device_name, item_no, item_name, main_ok, dr_ok
-                    FROM dr_training_result
-                    WHERE checked_at = (SELECT MAX(checked_at) FROM dr_training_result)
+                    SELECT DISTINCT checked_at FROM dr_training_result
+                    ORDER BY checked_at DESC LIMIT 2
                 """)
-                prev_map = {}
-                for r in cur.fetchall():
-                    key = f"{r['procedure_code']}_{r['device_name']}_{r['item_no']}"
-                    prev_map[key] = (r['main_ok'], r['dr_ok'], r['item_name'])
+                recent_times = [r['checked_at'] for r in cur.fetchall()]
+
+                prev_map = {}   # 직전 배치 (가장 최근) 상태
+                prev2_map = {}  # 그 이전 배치 상태 (연속 확인용)
+                if recent_times:
+                    cur.execute("""
+                        SELECT procedure_code, device_name, item_no, item_name, main_ok, dr_ok
+                        FROM dr_training_result
+                        WHERE checked_at = %s
+                    """, (recent_times[0],))
+                    for r in cur.fetchall():
+                        key = f"{r['procedure_code']}_{r['device_name']}_{r['item_no']}"
+                        prev_map[key] = (r['main_ok'], r['dr_ok'], r['item_name'])
+                if len(recent_times) >= 2:
+                    cur.execute("""
+                        SELECT procedure_code, device_name, item_no, main_ok, dr_ok, reachable
+                        FROM dr_training_result
+                        WHERE checked_at = %s
+                    """, (recent_times[1],))
+                    for r in cur.fetchall():
+                        key = f"{r['procedure_code']}_{r['device_name']}_{r['item_no']}"
+                        prev2_map[key] = (r['main_ok'], r['dr_ok'], r['reachable'])
 
         # 변경된 항목 Slack 전송
         if prev_map and rows:
@@ -5915,18 +5935,28 @@ async def collect_dr_training_status():
             changed = []
             unreachable_alerted = set()
 
-            # 이전에 접속 가능했던 장비 목록
+            # 직전 배치에서 접속 가능했던 장비 목록
             prev_reachable = set()
+            # 이전 2개 배치(prev2) 에서도 접속 가능했던 장비 목록 (confirmation 용)
+            prev2_reachable_map = {}
             with get_connection() as conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                    cur.execute("""
-                        SELECT DISTINCT procedure_code, device_name, ip
-                        FROM dr_training_result
-                        WHERE checked_at = (SELECT MAX(checked_at) FROM dr_training_result)
-                          AND reachable = true
-                    """)
-                    for r in cur.fetchall():
-                        prev_reachable.add(f"{r['procedure_code']}_{r['device_name']}")
+                    if recent_times:
+                        cur.execute("""
+                            SELECT DISTINCT procedure_code, device_name, ip
+                            FROM dr_training_result
+                            WHERE checked_at = %s AND reachable = true
+                        """, (recent_times[0],))
+                        for r in cur.fetchall():
+                            prev_reachable.add(f"{r['procedure_code']}_{r['device_name']}")
+                    if len(recent_times) >= 2:
+                        cur.execute("""
+                            SELECT DISTINCT procedure_code, device_name, reachable
+                            FROM dr_training_result
+                            WHERE checked_at = %s
+                        """, (recent_times[1],))
+                        for r in cur.fetchall():
+                            prev2_reachable_map[f"{r['procedure_code']}_{r['device_name']}"] = r['reachable']
 
             for row in rows:
                 # row: (procedure, device_name, ip, label, reachable, error, item_no, item_type, item_name, ...)
@@ -5936,9 +5966,14 @@ async def collect_dr_training_status():
                 new_main, new_dr = row[17], row[18]
                 dev_key = f"{proc}_{dev}"
 
-                # 접속 불가: 이전에 접속 가능했으면 통신불가 알림 (장비당 1회)
+                # 접속 불가: 직전 배치 + 그 이전 배치 모두 reachable=false 여야 알림 (2회 연속 확인)
+                # 현재 1회는 새 데이터이므로, 직전 배치가 이미 unreachable 이어야 confirmed
                 if not reachable or item_type == "error":
-                    if dev_key in prev_reachable and dev_key not in unreachable_alerted:
+                    prev_was_reachable = dev_key in prev_reachable
+                    prev_was_unreachable = dev_key in prev2_reachable_map and not prev2_reachable_map[dev_key]
+                    # 이전 배치가 unreachable 이었고(연속 2회 확인), 이번에도 unreachable → 알림
+                    # 또는 첫 발생인데 이전 배치가 없는 경우엔 skip (다음 배치에서 confirm 되면 알림)
+                    if not prev_was_reachable and prev_was_unreachable and dev_key not in unreachable_alerted:
                         unreachable_alerted.add(dev_key)
                         changed.append({
                             "proc": proc, "dev": dev, "ip": ip, "label": label,
@@ -5952,13 +5987,17 @@ async def collect_dr_training_status():
                 key = f"{proc}_{dev}_{item_no}"
                 if key in prev_map:
                     old_main, old_dr, _ = prev_map[key]
-                    if old_main != new_main or old_dr != new_dr:
-                        changed.append({
-                            "proc": proc, "dev": dev, "ip": ip, "label": label,
-                            "item_no": item_no, "item_name": item_name, "item_type": item_type,
-                            "old_main": old_main, "new_main": new_main,
-                            "old_dr": old_dr, "new_dr": new_dr
-                        })
+                    # 상태 변경 감지: 이전 배치와 현재 배치가 동일한 신규 상태 (연속 2회 확인)
+                    # AND 2개 이전 배치(prev2)의 상태와는 달라야 "상태 변경"으로 판정
+                    if old_main == new_main and old_dr == new_dr and key in prev2_map:
+                        prev2_main, prev2_dr, _ = prev2_map[key]
+                        if prev2_main != new_main or prev2_dr != new_dr:
+                            changed.append({
+                                "proc": proc, "dev": dev, "ip": ip, "label": label,
+                                "item_no": item_no, "item_name": item_name, "item_type": item_type,
+                                "old_main": prev2_main, "new_main": new_main,
+                                "old_dr": prev2_dr, "new_dr": new_dr
+                            })
 
             if changed:
                 # 전체 전환율 계산

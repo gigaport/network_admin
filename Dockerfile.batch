@@ -28,10 +28,12 @@ RUN mkdir -p /app/logs
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# crontab 설정 파일 복사 및 설정
-COPY batch-cron /etc/cron.d/batch-cron
-RUN chmod 0644 /etc/cron.d/batch-cron
-RUN crontab /etc/cron.d/batch-cron
+# crontab 설정 파일 복사 및 설정 (단일 소스 /etc/cron.d/netview 만 사용, 중복 실행 방지)
+# /etc/cron.d/* 는 시스템 crontab 으로 별도 사용자(root) 필드 필요
+COPY batch-cron /tmp/batch-cron.src
+RUN awk 'BEGIN{FS=OFS=" "} /^[*0-9]/ && !/root/ {$1=$1; printf "%s %s %s %s %s root", $1,$2,$3,$4,$5; for(i=6;i<=NF;i++) printf " %s", $i; print ""; next} {print}' /tmp/batch-cron.src > /etc/cron.d/netview \
+    && chmod 0644 /etc/cron.d/netview \
+    && rm -f /tmp/batch-cron.src
 
 # Python 심볼릭 링크 생성 (존재하면 무시)
 RUN ln -sf /usr/local/bin/python3 /usr/local/bin/python || true

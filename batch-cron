@@ -1,5 +1,7 @@
-# 네트워크 배치 작업 crontab
-# 매분마다 batch.py 실행
+# 네트워크 배치 작업 crontab (system cron 용 - /etc/cron.d/netview 로 배포됨)
+# Dockerfile.batch 에서 각 라인에 root 사용자 필드를 자동 삽입함
+
+# 매분마다 batch.py 실행 (Cisco 회원사 pr/ts 멀티캐스트 수집)
 * * * * * cd /app && /usr/local/bin/python3 batch.py >> /app/logs/batch.log 2>&1
 
 # DR 훈련 모니터링 상태 수집 (1분 주기)
