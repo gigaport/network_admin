@@ -183,6 +183,8 @@ async def CollectAristaMulticast(target: str):
             for item in valid_results:
                 products = item.get("products", [])
                 products_str = ",".join(products) if isinstance(products, list) else str(products or "")
+                received = item.get("received_products", [])
+                received_str = ",".join(received) if isinstance(received, list) else str(received or "")
                 pim_rp = item.get("pim_rp", "")
                 rows.append((
                     "pr_information",
@@ -200,6 +202,7 @@ async def CollectAristaMulticast(target: str):
                     str(item.get("min_update", "") or ""),
                     item.get("check_result", ""),
                     item.get("alarm", False),
+                    received_str,
                     now
                 ))
             with get_connection() as conn:
@@ -210,7 +213,7 @@ async def CollectAristaMulticast(target: str):
                         INSERT INTO multicast_status
                             (market_type, member_code, member_name, member_no, device_name, device_os,
                              products, pim_rp, product_cnt, mroute_cnt, oif_cnt, connected_server_cnt,
-                             min_update, check_result, alarm, checked_at)
+                             min_update, check_result, alarm, received_products, checked_at)
                         VALUES %s
                     """, rows)
                 conn.commit()
@@ -6284,31 +6287,38 @@ async def get_multicast_status(market_type: str = Query(...)):
 
 
 @router.get("/multicast/sise_mapping")
-async def get_sise_mapping():
+async def get_sise_mapping(market_type: str = Query("pr_members")):
     """수신_시세상품 판정용 product → {source_ips, group_ips} 매핑 반환.
-    sise_products.operation_ip1/ip2 를 소스 IP, sise_channels.multicast_group_ip 를 그룹 IP로 사용."""
+    - pr_members / pr_information: sise_products.operation_ip1/ip2 소스 IP
+    - ts_members: sise_products.test_ip 소스 IP (테스트 환경)
+    - group IP는 sise_channels.multicast_group_ip 공통 사용
+    """
     try:
         with get_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute("""
-                    SELECT p.product_name, p.operation_ip1, p.operation_ip2,
+                    SELECT p.product_name, p.operation_ip1, p.operation_ip2, p.test_ip,
                            array_remove(array_agg(DISTINCT c.multicast_group_ip), NULL) AS group_ips
                     FROM sise_products p
                     LEFT JOIN sise_channels c ON c.product_id = p.id
-                    GROUP BY p.id, p.product_name, p.operation_ip1, p.operation_ip2
+                    GROUP BY p.id, p.product_name, p.operation_ip1, p.operation_ip2, p.test_ip
                     ORDER BY p.product_name
                 """)
                 rows = cur.fetchall()
 
+        is_test = market_type in ("ts_members", "ts")
         mapping = {}
         for r in rows:
-            sources = [ip for ip in [r.get("operation_ip1"), r.get("operation_ip2")] if ip]
+            if is_test:
+                sources = [ip for ip in [r.get("test_ip")] if ip]
+            else:
+                sources = [ip for ip in [r.get("operation_ip1"), r.get("operation_ip2")] if ip]
             groups = [g for g in (r.get("group_ips") or []) if g]
             mapping[r["product_name"]] = {
                 "source_ips": sources,
                 "group_ips": groups
             }
-        return {"success": True, "data": mapping}
+        return {"success": True, "market_type": market_type, "data": mapping}
 
     except Exception as e:
         logger.error(f"시세상품 매핑 조회 실패: {e}")

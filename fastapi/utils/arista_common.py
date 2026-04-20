@@ -19,7 +19,7 @@ NETWORK_PASSWD = os.getenv('NETWORK_PASSWD')
 NOW_DATETIME    = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
-def CallAristaAPI(ip, cmds, params=None, auth=None):
+def CallAristaAPI(ip, cmds, params=None, auth=None, format='json'):
     # eAPI 엔드포인트 URL
     url = f"http://{ip}/command-api"
 
@@ -35,7 +35,7 @@ def CallAristaAPI(ip, cmds, params=None, auth=None):
         'params': {
             'version': 1,
             'cmds': cmds,
-            'format': 'json'
+            'format': format
         },
         'id': 1
     }

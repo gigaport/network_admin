@@ -2,9 +2,14 @@
 # 매분마다 batch.py 실행
 * * * * * cd /app && /usr/local/bin/python3 batch.py >> /app/logs/batch.log 2>&1
 
+# DR 훈련 모니터링 상태 수집 (1분 주기)
+* * * * * cd /app && /usr/local/bin/python3 dr_collect.py >> /app/logs/dr_collect.log 2>&1
+
+# 정보사 Arista 멀티캐스트 수집 (1분 주기)
+* * * * * cd /app && /usr/local/bin/python3 arista_multicast_collect.py >> /app/logs/arista_collect.log 2>&1
+
 # 매일 자정에 로그 파일 정리 (30일 이상 된 로그 파일 삭제)
 0 0 * * * find /app/logs -name "*.log" -type f -mtime +30 -delete
 
 # 매주 일요일 새벽 3시에 data 디렉터리 정리 (30일 이상 된 JSON 파일 삭제)
 0 3 * * 0 find /app/data -name "*.json" -type f -mtime +30 -delete
-

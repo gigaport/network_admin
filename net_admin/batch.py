@@ -265,7 +265,8 @@ def merge_multicast_group_count(members_mroute:list, mpr_multicast_info:Dict):
 def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:str):
     logger.info(f"[DEBUG] rws_create_member_sise_info")
 
-    sise_mapping = _fetch_sise_mapping()
+    mapping_market = "ts_members" if market_gubn in ("ts", "ts_members") else "pr_members"
+    sise_mapping = _fetch_sise_mapping(mapping_market)
     result = []
     member_no = 0
     member_code = ""
@@ -467,10 +468,15 @@ def _compute_received_products(device_products, valid_pairs, sise_mapping):
     return sorted(received)
 
 
-def _fetch_sise_mapping():
-    """FastAPI 에서 product → {source_ips, group_ips} 매핑 조회. 실패 시 빈 dict."""
+def _fetch_sise_mapping(market_type: str = "pr_members"):
+    """FastAPI 에서 product → {source_ips, group_ips} 매핑 조회. 실패 시 빈 dict.
+    market_type=ts_members 이면 test_ip 기반, 아니면 operation_ip1/ip2 기반."""
     try:
-        resp = requests.get(f"{FASTAPI_API_URL}/multicast/sise_mapping", timeout=10)
+        resp = requests.get(
+            f"{FASTAPI_API_URL}/multicast/sise_mapping",
+            params={"market_type": market_type},
+            timeout=10
+        )
         if resp.status_code == 200:
             return resp.json().get("data") or {}
     except Exception as e:
@@ -499,7 +505,7 @@ def save_multicast_to_db(market_gubn, cisco_multicast_info, members_mroute_data=
         with open(mpr_path, 'rt', encoding='UTF8') as f:
             mpr_multicast_info = json.load(f)
 
-        sise_mapping = _fetch_sise_mapping()
+        sise_mapping = _fetch_sise_mapping(market_gubn)
 
         # multicast_group_count 병합
         for device in cisco_multicast_info:

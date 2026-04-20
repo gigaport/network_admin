@@ -44,6 +44,7 @@ services:
     volumes:
       - ./fastapi:/app:Z
       - ./common:/app/common:Z
+      - ./data:/app/data:Z
       - ~/.ssh:/root/.ssh:ro
     command: uvicorn app:app --host 0.0.0.0 --port 8000 --log-level info --workers 2
     healthcheck:

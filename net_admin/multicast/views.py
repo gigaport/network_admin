@@ -110,6 +110,25 @@ def mroute_output(request):
     if not device_name:
         return JsonResponse({"success": False, "error": "device_name required", "output": ""}, status=400)
 
+    # 정보사-운영시세 (Arista): 수집 시 생성된 per-device txt 파일 반환
+    if market_type in ("pr_information", "pr_info"):
+        safe_name = device_name.replace('/', '_')
+        txt_path = f"/app/data/arista_mroute/{safe_name}.txt"
+        try:
+            with open(txt_path, 'rt', encoding='UTF8') as f:
+                output = f.read()
+            return JsonResponse({
+                "success": True,
+                "device_name": device_name,
+                "cmd": "show ip mroute",
+                "output": output
+            })
+        except FileNotFoundError:
+            return JsonResponse({"success": False, "error": "mroute 데이터 없음 (정보사 수집 이후 제공됨)", "output": ""})
+        except Exception as e:
+            logger.error(f"arista mroute_output 조회 실패: {e}")
+            return JsonResponse({"success": False, "error": str(e), "output": ""}, status=500)
+
     if market_type in ("pr_members", "pr"):
         path = "/app/data/pr_members_mroute.json"
     elif market_type in ("ts_members", "ts"):

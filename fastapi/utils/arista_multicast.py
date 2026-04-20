@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from utils.arista_common import CallAristaAPI
 from utils.slack_message_proxy import SendMulticastNotificationToSlack
+from utils.database import get_connection
+from psycopg2.extras import RealDictCursor
 
 # .env 파일에서 환경 변수 로드
 load_dotenv()
@@ -21,6 +23,51 @@ def main ():
 
 # pr_information_mkd.json 파일에 등록된 스위치 정보를 가져와서
 # Arista API를 통해 정보를 가져오는 함수
+
+_SISE_MAPPING_CACHE = {"ts": 0, "data": {}}
+
+
+def _load_sise_mapping(ttl_seconds: int = 60):
+    """sise_products(operation_ip1/ip2) × sise_channels(multicast_group_ip) 매핑 조회 (간단 캐시)."""
+    import time as _time
+    now = _time.time()
+    if _SISE_MAPPING_CACHE["data"] and (now - _SISE_MAPPING_CACHE["ts"] < ttl_seconds):
+        return _SISE_MAPPING_CACHE["data"]
+    mapping = {}
+    try:
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT p.product_name, p.operation_ip1, p.operation_ip2,
+                           array_remove(array_agg(DISTINCT c.multicast_group_ip), NULL) AS group_ips
+                    FROM sise_products p
+                    LEFT JOIN sise_channels c ON c.product_id = p.id
+                    GROUP BY p.id, p.product_name, p.operation_ip1, p.operation_ip2
+                """)
+                for r in cur.fetchall():
+                    sources = [ip for ip in [r.get("operation_ip1"), r.get("operation_ip2")] if ip]
+                    groups = [g for g in (r.get("group_ips") or []) if g]
+                    mapping[r["product_name"]] = {"source_ips": sources, "group_ips": groups}
+        _SISE_MAPPING_CACHE.update(ts=now, data=mapping)
+    except Exception as e:
+        logger.warning(f"sise_mapping 조회 실패: {e}")
+    return mapping
+
+
+def _compute_arista_received_products(valid_pairs: set):
+    """전체 sise_mapping 순회, (source × group) 조합이 모두 valid_pairs에 있으면 수신중으로 판정."""
+    mapping = _load_sise_mapping()
+    received = []
+    for product, info in mapping.items():
+        sources = info.get("source_ips") or []
+        groups = info.get("group_ips") or []
+        if not sources or not groups:
+            continue
+        expected = {(s, g) for s in sources for g in groups}
+        if expected.issubset(valid_pairs):
+            received.append(product)
+    return sorted(received)
+
 
 def GetAristaMulticastInfo(device_info):
     """    Arista 멀티캐스트 정보를 수집하는 함수
@@ -43,6 +90,15 @@ def GetAristaMulticastInfo(device_info):
         'show interfaces status'
     ], auth=device_auth)
 
+    # mroute raw text 출력 (명령어결과 모달용) - 실패해도 수집은 계속
+    mroute_text = ""
+    try:
+        text_data = CallAristaAPI(device_ip, ['show ip mroute'], auth=device_auth, format='text')
+        if text_data and isinstance(text_data, list) and text_data:
+            mroute_text = text_data[0].get('output', '') if isinstance(text_data[0], dict) else ''
+    except Exception as e:
+        logger.warning(f"[{device_name}] mroute text 수집 실패: {e}")
+
     elapsed_time = time.time() - start_time
 
     # logger.debug(f" arista_response_json >> {json.dumps(data, indent=4, ensure_ascii=False)}")
@@ -64,6 +120,7 @@ def GetAristaMulticastInfo(device_info):
     
     logger.debug(f" ARISTA_DATA >> {data}")
 
+    valid_sg_pairs = set()
     for idx, value in enumerate(data):
         # show ip mroute 명령어의 결과 처리
         if idx == 0:
@@ -80,6 +137,7 @@ def GetAristaMulticastInfo(device_info):
                     if src_key != "0.0.0.0":
                         logger.debug(f" ARISTA_VALID_GROUP_SOURCE >> {src_key}")
                         valid_group_sources_count += 1
+                        valid_sg_pairs.add((src_key, group))
                         if any(x == 'Vlan1100' or x.startswith('Ethernet') for x in src_value.get('oifList', [])):
                             logger.debug(f" ARISTA_VLAN1100_IN_OIFLIST >> {src_key}")
                             oif_count += 1
@@ -148,10 +206,23 @@ def GetAristaMulticastInfo(device_info):
         'creation_time': creation_time,
         'rp_address': rp_address,
         'rpf_neighbor': rpf_neighbor,
-        'connected_server_cnt': connected_server_cnt
+        'connected_server_cnt': connected_server_cnt,
+        'valid_sg_pairs': valid_sg_pairs,
+        'mroute_text': mroute_text
     }
 
     result = AddMemberInfoToAristaMulticastInfo(device_info, response_json)
+
+    # mroute 원본 출력은 per-device 파일로 저장 (mroute_output 엔드포인트용)
+    if mroute_text and result:
+        try:
+            data_dir = Path('/app/data/arista_mroute')
+            data_dir.mkdir(parents=True, exist_ok=True)
+            safe_name = result.get('device_name', device_name).replace('/', '_')
+            with open(data_dir / f"{safe_name}.txt", 'w', encoding='utf-8') as f:
+                f.write(mroute_text)
+        except Exception as e:
+            logger.warning(f"[{device_name}] mroute text 저장 실패: {e}")
 
     return result
 
@@ -240,6 +311,9 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
         type = "danger"
         icon = "fas fa-x-square"
 
+    # 수신_시세상품 산출: sise_products(operation_ip1/ip2) × sise_channels(multicast_group_ip) AND 매칭
+    received_products = _compute_arista_received_products(multicast_info.get('valid_sg_pairs') or set())
+
     temp = {
         "updated_time": NOW_DATETIME,
         "member_no": member_no,
@@ -248,6 +322,7 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
         "device_name": device_hostname,
         "device_os": device_info[1]['os'],
         "products": member_info.get('member_products', []),
+        "received_products": received_products,
         "pim_rp": multicast_info.get('rp_address', "N/A"),
         "product_cnt": product_cnt,
         "mroute_cnt": mroute_cnt,

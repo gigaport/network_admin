@@ -17,6 +17,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 배치 작업 관련 파일들 복사
 COPY net_admin/batch.py /app/
 COPY fastapi/utils /app/utils/
+# DR 훈련 / Arista 멀티캐스트 주기 수집 스크립트
+COPY scripts/dr_collect.py /app/
+COPY scripts/arista_multicast_collect.py /app/
 
 # 로그 디렉터리 생성
 RUN mkdir -p /app/logs
