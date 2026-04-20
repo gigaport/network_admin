@@ -321,9 +321,16 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
         received_products = _compute_received_products(products, valid_pairs, sise_mapping)
         missing_products = [p for p in (products or []) if p not in received_products]
 
+        # 수집 실패 감지: product는 있는데 mroute/oif 모두 0이면 SSH/연결 이슈로 간주 (알람 판정 제외)
+        collection_failed = (product_cnt > 0 and mroute_cnt == 0 and oif_cnt == 0)
+
         ## 멀티캐스트 시세 정상 확인
-        ## 우선순위: 누락상품 있음(확인필요) > 연결서버 없음 > 카운트초과 > 카운트 일치(정상확인) > 기타(확인필요)
-        if missing_products:
+        ## 우선순위: 수집실패 > 누락상품 있음 > 연결서버 없음 > 카운트초과 > 카운트 일치 > 기타(확인필요)
+        if collection_failed:
+            check_result = '수집실패'
+            type = "secondary"
+            icon = "fas fa-plug"
+        elif missing_products:
             check_result = '확인필요'
             type = "danger"
             icon = "fas fa-x-square"
@@ -549,9 +556,14 @@ def save_multicast_to_db(market_gubn, cisco_multicast_info, members_mroute_data=
             received_products = _compute_received_products(applied_products, valid_pairs, sise_mapping)
             missing_products = [p for p in applied_products if p not in received_products]
 
+            # 수집 실패 감지: product는 있는데 mroute/oif 모두 0이면 SSH/연결 이슈로 간주
+            collection_failed = (product_cnt > 0 and mroute_cnt == 0 and oif_cnt == 0)
+
             # check_result 판정
-            # 우선순위: 누락상품 있음(확인필요) > 연결서버 없음 > 카운트초과 > 카운트 일치(정상확인) > 기타(확인필요)
-            if missing_products:
+            # 우선순위: 수집실패 > 누락상품 있음 > 연결서버 없음 > 카운트초과 > 카운트 일치 > 기타(확인필요)
+            if collection_failed:
+                check_result = "수집실패"
+            elif missing_products:
                 check_result = "확인필요"
             elif connected_server_cnt == 0:
                 check_result = "회원사연결서버없음"

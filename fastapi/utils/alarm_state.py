@@ -24,6 +24,8 @@ STATE_FILE = Path("/app/data/multicast_alarm_state.json")
 # 알람 대상 check_result 값
 ALERT_RESULTS = {"확인필요"}
 NORMAL_RESULTS = {"정상확인", "회원사연결서버없음", "정상그룹개수초과"}
+# 수집실패는 알람/복구 전환에서 제외 (일시적 수집 오류로 오탐 방지)
+SKIP_RESULTS = {"수집실패"}
 
 
 def _read_state() -> dict:
@@ -83,6 +85,15 @@ def check_transition(market_gubn: str, device_name: str, check_result: str, deta
             state = _read_state()
             prev = state.get(key)
             prev_status = prev["status"] if prev else "normal"
+
+            # 수집실패는 상태 전환에서 제외 (일시적 오류로 오탐 방지)
+            # 직전 상태와 마지막 체크 시각만 유지 업데이트
+            if check_result in SKIP_RESULTS:
+                if key in state:
+                    state[key]["last_checked_at"] = now
+                    _write_state(state)
+                logger.debug(f"[ALARM] 수집실패 - 상태 전환 제외: {key}")
+                return {"action": "skip"}
 
             if is_alert and prev_status == "normal":
                 # 정상 → 확인필요: 장애 알람 발송

@@ -6251,8 +6251,24 @@ async def get_multicast_status(market_type: str = Query(...)):
             products = r["products"].split(",") if r["products"] else []
             received_products = r["received_products"].split(",") if r.get("received_products") else []
             check_result = r["check_result"] or ""
-            badge_type = "success" if check_result == "정상확인" else ("primary" if check_result == "회원사연결서버없음" else ("warning" if check_result == "정상그룹개수초과" else "danger"))
-            badge_icon = "fas fa-check" if badge_type == "success" else ("fas fa-info-circle" if badge_type == "primary" else "fas fa-exclamation-triangle")
+            if check_result == "정상확인":
+                badge_type = "success"
+            elif check_result == "회원사연결서버없음":
+                badge_type = "primary"
+            elif check_result == "정상그룹개수초과":
+                badge_type = "warning"
+            elif check_result == "수집실패":
+                badge_type = "secondary"
+            else:
+                badge_type = "danger"
+            if badge_type == "success":
+                badge_icon = "fas fa-check"
+            elif badge_type == "primary":
+                badge_icon = "fas fa-info-circle"
+            elif badge_type == "secondary":
+                badge_icon = "fas fa-plug"
+            else:
+                badge_icon = "fas fa-exclamation-triangle"
 
             data.append({
                 "updated_time": timestamp,
