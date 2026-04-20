@@ -31,83 +31,60 @@
         </div>
       </div>
 
-      <!-- 요약 통계 - 1행 -->
-      <div class="row g-3 mb-3" id="summaryCards">
-        <!-- 총 인터페이스 -->
-        <div class="col-6 col-md">
-          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #6366f1, #818cf8); box-shadow: 0 4px 15px rgba(99,102,241,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center gap-3">
-              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-ethernet" style="color: #fff; font-size: 0.9rem;"></i>
-              </div>
-              <div>
-                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">총 LLDP 항목</div>
-                <div class="fw-bold" id="stat_total" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
-              </div>
-            </div>
-          </div>
+      <!-- 요약 통계 -->
+      <div class="mb-3" id="summaryCards" style="display:flex; align-items:center; gap:28px; padding:16px 24px; background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(99,102,241,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">총 LLDP 항목</span>
+          <span id="stat_total" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
         </div>
-        <!-- 장비 수 -->
-        <div class="col-6 col-md">
-          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #0EA5E9, #38BDF8); box-shadow: 0 4px 15px rgba(14,165,233,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center gap-3">
-              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-server" style="color: #fff; font-size: 0.9rem;"></i>
-              </div>
-              <div>
-                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">장비 수</div>
-                <div class="fw-bold" id="stat_devices" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
-              </div>
-            </div>
-          </div>
+        <div style="width:1px; height:24px; background:var(--phoenix-border-color, #e2e8f0);"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(14,165,233,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">장비 수</span>
+          <span id="stat_devices" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
         </div>
-        <!-- 원격 장비 수 -->
-        <div class="col-6 col-md">
-          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #7C3AED, #A78BFA); box-shadow: 0 4px 15px rgba(124,58,237,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center gap-3">
-              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-project-diagram" style="color: #fff; font-size: 0.9rem;"></i>
-              </div>
-              <div>
-                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">원격 장비</div>
-                <div class="fw-bold" id="stat_remote_devices" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
-              </div>
-            </div>
-          </div>
+        <div style="width:1px; height:24px; background:var(--phoenix-border-color, #e2e8f0);"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(124,58,237,0.5); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">원격 장비</span>
+          <span id="stat_remote_devices" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
         </div>
-        <!-- 평균 인터페이스/장비 -->
-        <div class="col-6 col-md">
-          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #059669, #10B981); box-shadow: 0 4px 15px rgba(16,185,129,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center gap-3">
-              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-chart-bar" style="color: #fff; font-size: 0.9rem;"></i>
-              </div>
-              <div>
-                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">평균 IF/장비</div>
-                <div class="fw-bold" id="stat_avg_if" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
-              </div>
-            </div>
-          </div>
+        <div style="width:1px; height:24px; background:var(--phoenix-border-color, #e2e8f0);"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(16,185,129,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">평균 IF/장비</span>
+          <span id="stat_avg_if" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
         </div>
       </div>
 
-      <!-- 장비별 LLDP 수 요약 -->
+      <!-- 장비별 / 원격장비별 LLDP 현황 -->
       <div class="row g-3 mb-4">
-        <div class="col-12">
-          <div class="h-100 position-relative" style="border-radius: 14px; padding: 20px; background: linear-gradient(135deg, #1e293b, #334155); box-shadow: 0 4px 15px rgba(30,41,59,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.05);"></div>
-            <div class="d-flex align-items-center mb-3">
-              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-network-wired" style="color: #93c5fd; font-size: 0.8rem;"></i>
-              </div>
-              <span style="font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.9); margin-left: 10px;">장비별 LLDP 현황</span>
-              <span id="stat_device_label" class="badge ms-2" style="background: rgba(99,102,241,0.3); color: #a5b4fc; font-size: 0.6rem; padding: 2px 8px; border-radius: 6px;">TOP 10</span>
+        <!-- 로컬 장비별 LLDP -->
+        <div class="col-md-6">
+          <div style="background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0); overflow:hidden; height:100%;">
+            <div style="padding:12px 22px; border-bottom:1px solid var(--phoenix-border-color, #e2e8f0); display:flex; align-items:center; gap:8px;">
+              <span style="width:8px; height:8px; border-radius:50%; background:rgba(99,102,241,0.6); display:inline-block;"></span>
+              <span style="font-size:0.92rem; font-weight:600; color:var(--phoenix-body-color, #1e293b);">로컬 장비별 LLDP</span>
+              <span id="stat_device_label" style="font-size:0.65rem; color:#94a3b8;">TOP 10</span>
             </div>
-            <div id="deviceBarChart" class="d-flex align-items-end" style="height: 80px; gap: 2px;"></div>
+            <div style="padding:14px 22px; max-height:320px; overflow-y:auto;">
+              <div id="deviceBarChart" style="display:flex; flex-direction:column; gap:4px;"></div>
+            </div>
+          </div>
+        </div>
+        <!-- 원격 장비별 연결 현황 -->
+        <div class="col-md-6">
+          <div style="background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0); overflow:hidden; height:100%;">
+            <div style="padding:12px 22px; border-bottom:1px solid var(--phoenix-border-color, #e2e8f0); display:flex; align-items:center; gap:8px;">
+              <span style="width:8px; height:8px; border-radius:50%; background:rgba(124,58,237,0.5); display:inline-block;"></span>
+              <span style="font-size:0.92rem; font-weight:600; color:var(--phoenix-body-color, #1e293b);">원격장비별 연결 현황</span>
+              <span id="stat_remote_label" style="font-size:0.65rem; color:#94a3b8;">-</span>
+              <span style="font-size:0.6rem; color:#94a3b8; margin-left:auto;">클릭 시 상세보기</span>
+            </div>
+            <div style="padding:14px 22px; max-height:320px; overflow-y:auto;">
+              <div id="remoteDeviceList" style="display:flex; flex-direction:column; gap:4px;"></div>
+            </div>
           </div>
         </div>
       </div>

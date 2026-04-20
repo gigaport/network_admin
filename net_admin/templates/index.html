@@ -19,10 +19,10 @@
       width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; flex-shrink: 0;
     }
     .dash-stat-label {
-      font-size: 0.85rem; color: #8c8c8c; font-weight: 500;
+      font-size: 1.1rem; color: #8c8c8c; font-weight: 600;
     }
     .dash-stat-value {
-      font-size: 1.7rem; font-weight: 700; color: #1a1a2e; line-height: 1.1; margin-top: 8px;
+      font-size: 3.6rem; font-weight: 800; color: #1a1a2e; line-height: 1.1; margin-top: 8px;
     }
     .dash-stat-sub {
       font-size: 0.68rem; color: #b0b0b0; margin-top: 4px;
@@ -178,7 +178,7 @@
     [data-bs-theme="dark"] .dash-section-title { color: #94a3b8; }
     [data-bs-theme="dark"] .dash-section-line { background: linear-gradient(to right, #334155, transparent); }
     /* NetBox 통계 배경 */
-    [data-bs-theme="dark"] .dash-nb-stats { background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(129,140,248,0.06)) !important; }
+    [data-bs-theme="dark"] .dash-nb-stats { background: linear-gradient(135deg, rgba(5,150,105,0.12), rgba(16,185,129,0.04)) !important; }
     [data-bs-theme="dark"] .dash-nb-stats div[style*="background: #e5e7eb"] { background: #2d3d50 !important; }
     /* 이익 현황 카드 */
     [data-bs-theme="dark"] .dash-profit-stat { background: rgba(255,255,255,0.04) !important; }
@@ -210,13 +210,13 @@
       border-right: none;
     }
     .dash-stat-th.accent-blue {
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     }
     .dash-stat-th.accent-green {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     }
     .dash-stat-th.accent-purple {
-      background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+      background: linear-gradient(135deg, #047857 0%, #065f46 100%);
     }
     .dash-stat-td {
       padding: 12px;
@@ -246,12 +246,12 @@
     }
     .dash-stat-label {
       flex: 1;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 600;
       color: #475569;
     }
     .dash-stat-value {
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       font-weight: 800;
       color: #0f172a;
       margin-left: auto;
@@ -284,7 +284,7 @@
   <!-- 로딩 오버레이 -->
   <div id="pageLoadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9998; display: flex; align-items: center; justify-content: center; background: var(--phoenix-dash-overlay, rgba(255,255,255,0.5)); backdrop-filter: blur(4px); transition: opacity 0.4s ease;">
     <div class="text-center">
-      <div class="spinner-border mb-3" role="status" style="width: 2.5rem; height: 2.5rem; color: #4a7cff;">
+      <div class="spinner-border mb-3" role="status" style="width: 2.5rem; height: 2.5rem; color: #10b981;">
         <span class="visually-hidden">Loading...</span>
       </div>
       <div style="font-size: 0.8rem; color: #8c8c8c;">데이터를 불러오는 중...</div>
@@ -298,6 +298,18 @@
         <h2 class="mb-0 dash-title" style="font-weight: 800; font-size: 1.4rem; letter-spacing: -0.3px;">NETWORK Dashboard</h2>
         <p class="mb-0" style="font-size: 0.75rem; color: #b0b0b0;">Check your network status in one place</p>
       </div>
+      <a href="/dr_training" id="drRateBadge" class="ms-3 d-inline-flex align-items-center gap-2 text-decoration-none" style="padding: 6px 12px; border-radius: 8px; background: rgba(5,150,105,0.06); border: 1px solid rgba(5,150,105,0.15); font-size: 0.72rem; cursor: pointer; transition: all 0.2s;" title="재해복구훈련 모니터링 바로가기">
+        <span style="font-weight: 600; color: #059669;"><i class="fas fa-shield-alt me-1" style="font-size: 0.65rem;"></i>DR훈련</span>
+        <span class="d-flex align-items-center gap-1">
+          <span style="color: #64748b;">가동</span>
+          <span id="drMainRate" style="font-weight: 700; color: #059669;">-</span>
+        </span>
+        <span style="color: #cbd5e1;">|</span>
+        <span class="d-flex align-items-center gap-1">
+          <span style="color: #64748b;">DR</span>
+          <span id="drDrRate" style="font-weight: 700; color: #dc2626;">-</span>
+        </span>
+      </a>
       <button class="btn btn-sm ms-auto dash-refresh-btn" onclick="loadDashboard()">
         <i class="fas fa-sync-alt me-1" style="font-size: 0.65rem;"></i>새로고침
       </button>
@@ -306,12 +318,12 @@
     <!-- ============ Quick Links (최상단) ============ -->
     <div class="row g-3 mb-4">
       <div class="col-12">
-        <div style="font-size: 1.6rem; font-weight: 800; color: #1e293b; letter-spacing: -0.3px; margin-bottom: 12px;"><i class="fas fa-link" style="color: #4a7cff; font-size: 1.4rem; margin-right: 10px;"></i>Quick Links</div>
+        <div style="font-size: 1.6rem; font-weight: 800; color: #1e293b; letter-spacing: -0.3px; margin-bottom: 12px;"><i class="fas fa-link" style="color: #059669; font-size: 1.4rem; margin-right: 10px;"></i>Quick Links</div>
       </div>
       <div class="col-6 col-md">
         <a href="/circuits" class="text-decoration-none">
           <div class="dash-quick-link">
-            <i class="fas fa-network-wired mb-1" style="font-size: 1.1rem; color: #4a7cff;"></i>
+            <i class="fas fa-network-wired mb-1" style="font-size: 1.1rem; color: #059669;"></i>
             <div style="font-size: 0.72rem; font-weight: 600; color: #444;">회선내역</div>
           </div>
         </a>
@@ -319,7 +331,7 @@
       <div class="col-6 col-md">
         <a href="/fee_schedule" class="text-decoration-none">
           <div class="dash-quick-link">
-            <i class="fas fa-won-sign mb-1" style="font-size: 1.1rem; color: #ff9f43;"></i>
+            <i class="fas fa-won-sign mb-1" style="font-size: 1.1rem; color: #0d9488;"></i>
             <div style="font-size: 0.72rem; font-weight: 600; color: #444;">요금기준</div>
           </div>
         </a>
@@ -327,7 +339,7 @@
       <div class="col-6 col-md">
         <a href="/sise_products" class="text-decoration-none">
           <div class="dash-quick-link">
-            <i class="fas fa-box mb-1" style="font-size: 1.1rem; color: #36b37e;"></i>
+            <i class="fas fa-box mb-1" style="font-size: 1.1rem; color: #10b981;"></i>
             <div style="font-size: 0.72rem; font-weight: 600; color: #444;">시세상품</div>
           </div>
         </a>
@@ -335,7 +347,7 @@
       <div class="col-6 col-md">
         <a href="/subscriber_codes" class="text-decoration-none">
           <div class="dash-quick-link">
-            <i class="fas fa-users mb-1" style="font-size: 1.1rem; color: #4a7cff;"></i>
+            <i class="fas fa-users mb-1" style="font-size: 1.1rem; color: #047857;"></i>
             <div style="font-size: 0.72rem; font-weight: 600; color: #444;">회원사코드</div>
           </div>
         </a>
@@ -343,7 +355,7 @@
       <div class="col-6 col-md">
         <a href="/pr_multicast" class="text-decoration-none">
           <div class="dash-quick-link">
-            <i class="fas fa-satellite-dish mb-1" style="font-size: 1.1rem; color: #ff6b6b;"></i>
+            <i class="fas fa-satellite-dish mb-1" style="font-size: 1.1rem; color: #34d399;"></i>
             <div style="font-size: 0.72rem; font-weight: 600; color: #444;">멀티캐스트</div>
           </div>
         </a>
@@ -351,7 +363,7 @@
       <div class="col-6 col-md">
         <a href="/revenue_summary" class="text-decoration-none">
           <div class="dash-quick-link">
-            <i class="fas fa-chart-line mb-1" style="font-size: 1.1rem; color: #36b37e;"></i>
+            <i class="fas fa-chart-line mb-1" style="font-size: 1.1rem; color: #059669;"></i>
             <div style="font-size: 0.72rem; font-weight: 600; color: #444;">매출내역</div>
           </div>
         </a>
@@ -359,7 +371,7 @@
       <div class="col-6 col-md">
         <a href="/profit_summary" class="text-decoration-none">
           <div class="dash-quick-link">
-            <i class="fas fa-coins mb-1" style="font-size: 1.1rem; color: #f59e0b;"></i>
+            <i class="fas fa-coins mb-1" style="font-size: 1.1rem; color: #0d9488;"></i>
             <div style="font-size: 0.72rem; font-weight: 600; color: #444;">이익내역</div>
           </div>
         </a>
@@ -367,7 +379,7 @@
       <div class="col-6 col-md">
         <a href="/netbox_devices" class="text-decoration-none">
           <div class="dash-quick-link">
-            <i class="fas fa-server mb-1" style="font-size: 1.1rem; color: #6366f1;"></i>
+            <i class="fas fa-server mb-1" style="font-size: 1.1rem; color: #047857;"></i>
             <div style="font-size: 0.72rem; font-weight: 600; color: #444;">NetBox 디바이스</div>
           </div>
         </a>
@@ -376,7 +388,7 @@
 
     <!-- ============ 섹션 1: 회선매출/비용 ============ -->
     <div class="dash-section-divider">
-      <span class="dash-section-title"><i class="fas fa-chart-pie" style="color: #4a7cff;"></i>회선매출 / 비용</span>
+      <span class="dash-section-title"><i class="fas fa-chart-pie" style="color: #059669;"></i>회선매출 / 비용</span>
       <div class="dash-section-line"></div>
     </div>
 
@@ -386,46 +398,58 @@
       <div class="col-lg-3 d-flex">
         <div class="row g-3 flex-grow-1 align-content-stretch">
           <div class="col-6 d-flex">
-            <div class="dash-stat-card flex-grow-1" onclick="location.href='/circuits'">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <div class="d-flex align-items-center mb-1"><span class="dash-stat-dot" style="background: #4a7cff;"></span><span class="dash-stat-label">총 회선</span></div>
-                  <div class="dash-stat-value" id="stat_total_circuits">-</div>
+            <div class="flex-grow-1 position-relative" style="border-radius:14px;padding:18px 20px;background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 4px 15px rgba(5,150,105,0.25);overflow:hidden;cursor:pointer;" onclick="location.href='/circuits'">
+              <div style="position:absolute;top:-10px;right:-10px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.1);"></div>
+              <div class="d-flex align-items-center gap-3">
+                <div style="width:42px;height:42px;min-width:42px;border-radius:10px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
+                  <i class="fas fa-network-wired" style="color:#fff;font-size:1.1rem;"></i>
                 </div>
-                <div class="dash-stat-icon" style="background: rgba(74,124,255,0.1);"><i class="fas fa-network-wired" style="color: #4a7cff;"></i></div>
+                <div>
+                  <div style="font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:2px;">총 회선</div>
+                  <div class="fw-bold" id="stat_total_circuits" style="font-size:2.2rem;color:#fff;line-height:1;">-</div>
+                </div>
               </div>
             </div>
           </div>
           <div class="col-6 d-flex">
-            <div class="dash-stat-card flex-grow-1" onclick="location.href='/subscriber_codes'">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <div class="d-flex align-items-center mb-1"><span class="dash-stat-dot" style="background: #36b37e;"></span><span class="dash-stat-label">등록 회원사</span></div>
-                  <div class="dash-stat-value" id="stat_total_members">-</div>
+            <div class="flex-grow-1 position-relative" style="border-radius:14px;padding:18px 20px;background:linear-gradient(135deg,#0d9488,#14b8a6);box-shadow:0 4px 15px rgba(13,148,136,0.25);overflow:hidden;cursor:pointer;" onclick="location.href='/subscriber_codes'">
+              <div style="position:absolute;top:-10px;right:-10px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.1);"></div>
+              <div class="d-flex align-items-center gap-3">
+                <div style="width:42px;height:42px;min-width:42px;border-radius:10px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
+                  <i class="fas fa-building" style="color:#fff;font-size:1.1rem;"></i>
                 </div>
-                <div class="dash-stat-icon" style="background: rgba(54,179,126,0.1);"><i class="fas fa-building" style="color: #36b37e;"></i></div>
+                <div>
+                  <div style="font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:2px;">등록 회원사</div>
+                  <div class="fw-bold" id="stat_total_members" style="font-size:2.2rem;color:#fff;line-height:1;">-</div>
+                </div>
               </div>
             </div>
           </div>
           <div class="col-6 d-flex">
-            <div class="dash-stat-card flex-grow-1" onclick="location.href='/sise_products'">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <div class="d-flex align-items-center mb-1"><span class="dash-stat-dot" style="background: #ff9f43;"></span><span class="dash-stat-label">시세상품</span></div>
-                  <div class="dash-stat-value" id="stat_total_products">-</div>
+            <div class="flex-grow-1 position-relative" style="border-radius:14px;padding:18px 20px;background:linear-gradient(135deg,#047857,#059669);box-shadow:0 4px 15px rgba(4,120,87,0.25);overflow:hidden;cursor:pointer;" onclick="location.href='/sise_products'">
+              <div style="position:absolute;top:-10px;right:-10px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.1);"></div>
+              <div class="d-flex align-items-center gap-3">
+                <div style="width:42px;height:42px;min-width:42px;border-radius:10px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
+                  <i class="fas fa-box-open" style="color:#fff;font-size:1.1rem;"></i>
                 </div>
-                <div class="dash-stat-icon" style="background: rgba(255,159,67,0.1);"><i class="fas fa-box-open" style="color: #ff9f43;"></i></div>
+                <div>
+                  <div style="font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:2px;">시세상품</div>
+                  <div class="fw-bold" id="stat_total_products" style="font-size:2.2rem;color:#fff;line-height:1;">-</div>
+                </div>
               </div>
             </div>
           </div>
           <div class="col-6 d-flex">
-            <div class="dash-stat-card flex-grow-1" onclick="location.href='/fee_schedule'">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <div class="d-flex align-items-center mb-1"><span class="dash-stat-dot" style="background: #a855f7;"></span><span class="dash-stat-label">요금기준</span></div>
-                  <div class="dash-stat-value" id="stat_total_fee">-</div>
+            <div class="flex-grow-1 position-relative" style="border-radius:14px;padding:18px 20px;background:linear-gradient(135deg,#065f46,#047857);box-shadow:0 4px 15px rgba(6,95,70,0.25);overflow:hidden;cursor:pointer;" onclick="location.href='/fee_schedule'">
+              <div style="position:absolute;top:-10px;right:-10px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.1);"></div>
+              <div class="d-flex align-items-center gap-3">
+                <div style="width:42px;height:42px;min-width:42px;border-radius:10px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
+                  <i class="fas fa-won-sign" style="color:#fff;font-size:1.1rem;"></i>
                 </div>
-                <div class="dash-stat-icon" style="background: rgba(168,85,247,0.1);"><i class="fas fa-won-sign" style="color: #a855f7;"></i></div>
+                <div>
+                  <div style="font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:2px;">요금기준</div>
+                  <div class="fw-bold" id="stat_total_fee" style="font-size:2.2rem;color:#fff;line-height:1;">-</div>
+                </div>
               </div>
             </div>
           </div>
@@ -450,15 +474,15 @@
           <div class="row g-0 mb-2">
             <div class="col-3 text-center dash-revenue-divider" style="border-right: 1px solid #f0f0f0;">
               <div class="dash-panel-subtitle" style="margin-bottom: 2px;">회원사 ORD</div>
-              <div id="stat_revenue_ord" style="font-size: 1rem; font-weight: 700; color: #36b37e;">-</div>
+              <div id="stat_revenue_ord" style="font-size: 1rem; font-weight: 700; color: #059669;">-</div>
             </div>
             <div class="col-3 text-center dash-revenue-divider" style="border-right: 1px solid #f0f0f0;">
               <div class="dash-panel-subtitle" style="margin-bottom: 2px;">회원사 MPR</div>
-              <div id="stat_revenue_mpr" style="font-size: 1rem; font-weight: 700; color: #4a7cff;">-</div>
+              <div id="stat_revenue_mpr" style="font-size: 1rem; font-weight: 700; color: #10b981;">-</div>
             </div>
             <div class="col-3 text-center dash-revenue-divider" style="border-right: 1px solid #f0f0f0;">
               <div class="dash-panel-subtitle" style="margin-bottom: 2px;">정보사 MKD</div>
-              <div id="stat_revenue_info_mkd" style="font-size: 1rem; font-weight: 700; color: #a855f7;">-</div>
+              <div id="stat_revenue_info_mkd" style="font-size: 1rem; font-weight: 700; color: #047857;">-</div>
             </div>
             <div class="col-3 text-center">
               <div class="dash-panel-subtitle" style="margin-bottom: 2px;">전체 합계</div>
@@ -495,7 +519,7 @@
       <div class="col-lg-5 d-flex">
         <div class="dash-panel flex-grow-1">
           <div class="d-flex align-items-center mb-1">
-            <div class="dash-panel-title mb-0"><i class="fas fa-chart-area me-2" style="color: #36b37e; font-size: 0.8rem;"></i>최근 12개월 월 매출 현황</div>
+            <div class="dash-panel-title mb-0"><i class="fas fa-chart-area me-2" style="color: #059669; font-size: 0.8rem;"></i>최근 12개월 월 매출 현황</div>
             <a href="/revenue_summary" class="ms-auto text-decoration-none" style="font-size: 0.68rem; color: #b0b0b0;">상세보기 ›</a>
           </div>
           <div class="dash-panel-subtitle">Monthly revenue trend (ORD / MPR / MKD)</div>
@@ -510,7 +534,7 @@
       <div class="col-lg-3 d-flex">
         <div class="dash-panel flex-grow-1">
           <div class="d-flex align-items-center mb-1">
-            <div class="dash-panel-title mb-0"><i class="fas fa-chart-line me-2" style="color: #f59e0b; font-size: 0.8rem;"></i>이익 현황</div>
+            <div class="dash-panel-title mb-0"><i class="fas fa-chart-line me-2" style="color: #0d9488; font-size: 0.8rem;"></i>이익 현황</div>
             <a href="/profit_summary" class="ms-auto text-decoration-none" style="font-size: 0.68rem; color: #b0b0b0;">상세보기 ›</a>
           </div>
           <div class="dash-panel-subtitle">Profit overview (회원사 + 정보이용사)</div>
@@ -528,15 +552,15 @@
               </div>
             </div>
             <div class="col-6">
-              <div style="padding: 10px 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(245,158,11,0.06), rgba(245,158,11,0.02));">
+              <div style="padding: 10px 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(13,148,136,0.06), rgba(13,148,136,0.02));">
                 <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 500;">총 이익</div>
-                <div id="stat_profit_total" style="font-size: 1.1rem; font-weight: 700; color: #f59e0b; margin-top: 2px;">-</div>
+                <div id="stat_profit_total" style="font-size: 1.1rem; font-weight: 700; color: #0d9488; margin-top: 2px;">-</div>
               </div>
             </div>
             <div class="col-6">
-              <div style="padding: 10px 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(99,102,241,0.02));">
+              <div style="padding: 10px 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(5,150,105,0.06), rgba(5,150,105,0.02));">
                 <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 500;">이익률</div>
-                <div id="stat_profit_rate" style="font-size: 1.1rem; font-weight: 700; color: #6366f1; margin-top: 2px;">-</div>
+                <div id="stat_profit_rate" style="font-size: 1.1rem; font-weight: 700; color: #059669; margin-top: 2px;">-</div>
               </div>
             </div>
           </div>
@@ -554,19 +578,19 @@
       <div class="col-lg-5 d-flex">
         <div class="dash-panel flex-grow-1">
           <div class="d-flex align-items-center mb-1">
-            <div class="dash-panel-title mb-0"><i class="fas fa-table me-2" style="color: #6366f1; font-size: 0.8rem;"></i>회원사별 매출 / 매입 / 이익</div>
+            <div class="dash-panel-title mb-0"><i class="fas fa-table me-2" style="color: #059669; font-size: 0.8rem;"></i>회원사별 매출 / 매입 / 이익</div>
             <a href="/profit_summary" class="ms-auto text-decoration-none" style="font-size: 0.68rem; color: #b0b0b0;">상세보기 ›</a>
           </div>
           <div class="dash-panel-subtitle">Profit by member</div>
           <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
-            <table class="table table-sm mb-0" style="font-size: 0.73rem;">
+            <table class="table table-sm mb-0" style="font-size: 0.88rem;">
               <thead style="position: sticky; top: 0; background: #fff; z-index: 1;">
                 <tr style="border-bottom: 2px solid #f0f0f0;">
-                  <th class="py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">회원사</th>
-                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">매출</th>
-                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">매입</th>
-                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">이익</th>
-                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">이익률</th>
+                  <th class="py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">회원사</th>
+                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">매출</th>
+                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">매입</th>
+                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">이익</th>
+                  <th class="text-end py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">이익률</th>
                 </tr>
               </thead>
               <tbody id="profitMemberTableBody">
@@ -603,7 +627,7 @@
           <!-- 상태 뱃지 -->
           <div class="d-flex gap-3 mb-3">
             <div class="d-flex align-items-center">
-              <span class="dash-stat-dot" style="background: #ff6b6b;"></span>
+              <span class="dash-stat-dot" style="background: #10b981;"></span>
               <span class="dash-monitor-label" style="font-size: 0.75rem; color: #555;">멀티캐스트</span>
               <span class="dash-badge dash-badge-info ms-2" id="stat_multicast"><span class="spinner-border spinner-border-sm" style="width:0.6rem;height:0.6rem;"></span> 확인 중</span>
             </div>
@@ -615,15 +639,15 @@
           </div>
           <!-- 멀티캐스트 테이블 -->
           <div class="table-responsive" style="max-height: 210px; overflow-y: auto;">
-            <table class="table table-sm mb-0" style="font-size: 0.73rem;">
+            <table class="table table-sm mb-0" style="font-size: 0.88rem;">
               <thead style="position: sticky; top: 0; background: #fff; z-index: 1;">
                 <tr style="border-bottom: 2px solid #f0f0f0;">
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">회원사</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">장비</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">상품</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">mroute</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">OIF</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">상태</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">회원사</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">장비</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">상품</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">mroute</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">OIF</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">상태</th>
                 </tr>
               </thead>
               <tbody id="multicastTableBody">
@@ -642,16 +666,16 @@
           </div>
           <div class="dash-panel-subtitle">PTP time synchronization status</div>
           <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-            <table class="table table-sm mb-0" style="font-size: 0.73rem;">
+            <table class="table table-sm mb-0" style="font-size: 0.88rem;">
               <thead style="position: sticky; top: 0; background: #fff; z-index: 1;">
                 <tr style="border-bottom: 2px solid #f0f0f0;">
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">구분</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">장비명</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">측정시각</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">Offset(ns)</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">Path Delay</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">Jitter</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">연속성(%)</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">구분</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">장비명</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">측정시각</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">Offset(ns)</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">Path Delay</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">Jitter</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">연속성(%)</th>
                 </tr>
               </thead>
               <tbody id="ptpTableBody">
@@ -669,13 +693,13 @@
       <div class="col-lg-3 d-flex">
         <div class="dash-panel flex-grow-1">
           <div class="d-flex align-items-center mb-1">
-            <div class="dash-panel-title mb-0"><i class="fas fa-server me-2" style="color: #6366f1; font-size: 0.8rem;"></i>NetBox 디바이스</div>
+            <div class="dash-panel-title mb-0"><i class="fas fa-server me-2" style="color: #059669; font-size: 0.8rem;"></i>NetBox 디바이스</div>
             <a href="/netbox_devices" class="ms-auto text-decoration-none" style="font-size: 0.68rem; color: #b0b0b0;">상세보기 ›</a>
           </div>
           <div class="dash-panel-subtitle">Device inventory overview</div>
-          <div class="dash-nb-stats d-flex align-items-center mb-3" style="padding: 12px 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(129,140,248,0.05));">
+          <div class="dash-nb-stats d-flex align-items-center mb-3" style="padding: 12px 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(5,150,105,0.08), rgba(16,185,129,0.04));">
             <div class="flex-grow-1 text-center">
-              <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;" id="stat_nb_total">-</div>
+              <div style="font-size: 1.5rem; font-weight: 700; color: #059669;" id="stat_nb_total">-</div>
               <div style="font-size: 0.65rem; color: #8c8c8c;">총 디바이스</div>
             </div>
             <div style="width: 1px; height: 32px; background: #e5e7eb; flex-shrink: 0;"></div>
@@ -685,12 +709,12 @@
             </div>
             <div style="width: 1px; height: 32px; background: #e5e7eb; flex-shrink: 0;"></div>
             <div class="flex-grow-1 text-center">
-              <div style="font-size: 1.5rem; font-weight: 700; color: #0ea5e9;" id="stat_nb_sites">-</div>
+              <div style="font-size: 1.5rem; font-weight: 700; color: #34d399;" id="stat_nb_sites">-</div>
               <div style="font-size: 0.65rem; color: #8c8c8c;">사이트</div>
             </div>
           </div>
           <!-- 운영/유휴 장비 현황 -->
-          <div class="dash-nb-stats d-flex align-items-center mb-3" style="padding: 10px 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(245,158,11,0.06));">
+          <div class="dash-nb-stats d-flex align-items-center mb-3" style="padding: 10px 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(13,148,136,0.06));">
             <div class="flex-grow-1 text-center" style="border-right: 1px solid #e5e7eb;">
               <div class="d-flex align-items-center justify-content-center gap-2">
                 <i class="fas fa-play-circle" style="color: #10b981; font-size: 0.8rem;"></i>
@@ -702,9 +726,9 @@
             </div>
             <div class="flex-grow-1 text-center">
               <div class="d-flex align-items-center justify-content-center gap-2">
-                <i class="fas fa-pause-circle" style="color: #f59e0b; font-size: 0.8rem;"></i>
+                <i class="fas fa-pause-circle" style="color: #0d9488; font-size: 0.8rem;"></i>
                 <div>
-                  <div style="font-size: 1.2rem; font-weight: 700; color: #f59e0b;" id="stat_nb_idle">-</div>
+                  <div style="font-size: 1.2rem; font-weight: 700; color: #0d9488;" id="stat_nb_idle">-</div>
                   <div style="font-size: 0.62rem; color: #8c8c8c;">유휴장비</div>
                 </div>
               </div>
@@ -737,18 +761,18 @@
       <div class="col-lg-6 d-flex">
         <div class="dash-panel flex-grow-1">
           <div class="d-flex align-items-center mb-1">
-            <div class="dash-panel-title mb-0"><i class="fas fa-industry me-2" style="color: #6366f1; font-size: 0.8rem;"></i>제조사별 장비 현황</div>
+            <div class="dash-panel-title mb-0"><i class="fas fa-industry me-2" style="color: #059669; font-size: 0.8rem;"></i>제조사별 장비 현황</div>
           </div>
           <div class="dash-panel-subtitle">Devices by manufacturer (Total / Operating / Idle)</div>
           <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
-            <table class="table table-sm mb-0" style="font-size: 0.73rem;">
+            <table class="table table-sm mb-0" style="font-size: 0.88rem;">
               <thead style="position: sticky; top: 0; background: #fff; z-index: 1;">
                 <tr style="border-bottom: 2px solid #f0f0f0;">
-                  <th class="py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">제조사</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">전체</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">운영</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">유휴</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">유휴비율</th>
+                  <th class="py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">제조사</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">전체</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">운영</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">유휴</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">유휴비율</th>
                 </tr>
               </thead>
               <tbody id="mfrSummaryTableBody">
@@ -762,16 +786,16 @@
       <div class="col-lg-6 d-flex">
         <div class="dash-panel flex-grow-1">
           <div class="d-flex align-items-center mb-1">
-            <div class="dash-panel-title mb-0"><i class="fas fa-pause-circle me-2" style="color: #f59e0b; font-size: 0.8rem;"></i>유휴자산 제조사·모델별 보유수량</div>
+            <div class="dash-panel-title mb-0"><i class="fas fa-pause-circle me-2" style="color: #0d9488; font-size: 0.8rem;"></i>유휴자산 제조사·모델별 보유수량</div>
           </div>
           <div class="dash-panel-subtitle">Idle devices by manufacturer &amp; model</div>
           <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
-            <table class="table table-sm mb-0" style="font-size: 0.73rem;">
+            <table class="table table-sm mb-0" style="font-size: 0.88rem;">
               <thead style="position: sticky; top: 0; background: #fff; z-index: 1;">
                 <tr style="border-bottom: 2px solid #f0f0f0;">
-                  <th class="py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">제조사</th>
-                  <th class="py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">모델</th>
-                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.7rem;">수량</th>
+                  <th class="py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">제조사</th>
+                  <th class="py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">모델</th>
+                  <th class="text-center py-2" style="color: #8c8c8c; font-weight: 600; font-size: 0.82rem;">수량</th>
                 </tr>
               </thead>
               <tbody id="idleAssetTableBody">
@@ -785,7 +809,7 @@
 
     <!-- 시스템 모니터링 -->
     <div class="dash-section-divider">
-      <span class="dash-section-title"><i class="fas fa-desktop" style="color: #6366f1;"></i>시스템 현황</span>
+      <span class="dash-section-title"><i class="fas fa-desktop" style="color: #059669;"></i>시스템 현황</span>
       <div class="dash-section-line"></div>
     </div>
     <div class="row g-3 mb-4 mt-2">
@@ -793,7 +817,7 @@
         <div class="card border-0 shadow-sm bg-body-emphasis">
           <div class="card-body py-3 px-4">
             <div class="d-flex align-items-center mb-3">
-              <span style="font-size: 0.88rem; font-weight: 700;"><i class="fas fa-desktop me-2" style="color: #6366f1;"></i>호스트 시스템</span>
+              <span style="font-size: 0.88rem; font-weight: 700;"><i class="fas fa-desktop me-2" style="color: #059669;"></i>호스트 시스템</span>
               <span id="sysUptime" class="ms-auto" style="font-size: 0.72rem; color: #94a3b8;"></span>
             </div>
             <div class="row g-3" id="hostMetrics">
@@ -801,7 +825,7 @@
                 <div style="text-align:center;">
                   <div style="font-size:0.72rem;color:#64748b;font-weight:600;margin-bottom:4px;">CPU</div>
                   <div style="height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;">
-                    <div id="hostCpuBar" style="height:100%;width:0%;border-radius:5px;transition:width 0.5s;background:linear-gradient(90deg,#6366f1,#818cf8);"></div>
+                    <div id="hostCpuBar" style="height:100%;width:0%;border-radius:5px;transition:width 0.5s;background:linear-gradient(90deg,#059669,#10b981);"></div>
                   </div>
                   <div id="hostCpuText" style="font-size:1.1rem;font-weight:700;color:#6366f1;margin-top:4px;">-</div>
                 </div>
@@ -819,9 +843,9 @@
                 <div style="text-align:center;">
                   <div style="font-size:0.72rem;color:#64748b;font-weight:600;margin-bottom:4px;">DISK</div>
                   <div style="height:10px;background:#f1f5f9;border-radius:5px;overflow:hidden;">
-                    <div id="hostDiskBar" style="height:100%;width:0%;border-radius:5px;transition:width 0.5s;background:linear-gradient(90deg,#d97706,#fbbf24);"></div>
+                    <div id="hostDiskBar" style="height:100%;width:0%;border-radius:5px;transition:width 0.5s;background:linear-gradient(90deg,#047857,#059669);"></div>
                   </div>
-                  <div id="hostDiskText" style="font-size:1.1rem;font-weight:700;color:#d97706;margin-top:4px;">-</div>
+                  <div id="hostDiskText" style="font-size:1.1rem;font-weight:700;color:#047857;margin-top:4px;">-</div>
                 </div>
               </div>
               <div class="col-6 col-lg-3">
@@ -841,7 +865,7 @@
         <div class="card border-0 shadow-sm bg-body-emphasis h-100">
           <div class="card-body py-3 px-4">
             <div class="d-flex align-items-center mb-3">
-              <span style="font-size: 0.88rem; font-weight: 700;"><i class="fas fa-cubes me-2" style="color: #0ea5e9;"></i>컨테이너 현황</span>
+              <span style="font-size: 0.88rem; font-weight: 700;"><i class="fas fa-cubes me-2" style="color: #34d399;"></i>컨테이너 현황</span>
             </div>
             <div class="table-responsive">
               <table class="table table-sm table-hover mb-0" style="font-size:0.82rem;">

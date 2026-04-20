@@ -24,9 +24,12 @@
 
         // 장비별 LLDP 수 바 차트
         renderDeviceBarChart(data);
+        // 원격장비별 연결 현황
+        renderRemoteDeviceList(data);
     }
 
     function renderDeviceBarChart(data) {
+        var isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
         var deviceCounts = {};
         data.forEach(function(r) {
             var name = r.hostname || '-';
@@ -37,32 +40,159 @@
             return deviceCounts[b] - deviceCounts[a];
         });
 
-        var top = sorted.slice(0, 20);
+        var top = sorted.slice(0, 15);
         var max = top.length > 0 ? deviceCounts[top[0]] : 1;
-        var colors = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#84cc16', '#e11d48', '#7c3aed', '#0d9488', '#dc2626', '#a855f7', '#0891b2', '#16a34a', '#d97706', '#be123c'];
+        var total = data.length;
 
-        var html = '';
-        top.forEach(function(name, i) {
-            var count = deviceCounts[name];
-            var heightPct = Math.max(15, Math.round((count / max) * 100));
-            var color = colors[i % colors.length];
-            var shortName = name.length > 16 ? name.substring(0, 16) + '..' : name;
-
-            html += '<div class="text-center" style="flex: 1; min-width: 40px;">';
-            html += '  <div style="font-size: 0.6rem; color: #fff; font-weight: 700; margin-bottom: 3px;">' + count + '</div>';
-            html += '  <div style="height: ' + heightPct + '%; min-height: 12px; background: ' + color + '; border-radius: 4px 4px 0 0; opacity: 0.85; transition: opacity 0.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0.85"></div>';
-            html += '  <div style="font-size: 0.5rem; color: rgba(255,255,255,0.6); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="' + name + '">' + shortName + '</div>';
-            html += '</div>';
-        });
-
-        if (sorted.length > 20) {
-            $('#stat_device_label').text('TOP 20 / ' + sorted.length + '개');
+        if (sorted.length > 15) {
+            $('#stat_device_label').text('TOP 15 / ' + sorted.length + '개');
         } else {
             $('#stat_device_label').text(sorted.length + '개 장비');
         }
 
+        var html = '';
+        top.forEach(function(name, i) {
+            var count = deviceCounts[name];
+            var barW = Math.max(3, Math.round((count / max) * 100));
+            var pct = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+
+            html += '<div style="display:flex; align-items:center; gap:8px;">' +
+                '<span style="min-width:14px; font-size:0.72rem; font-weight:600; color:#94a3b8; text-align:right;">' + (i + 1) + '</span>' +
+                '<span style="min-width:130px; font-size:0.78rem; font-weight:600; color:' + (isDark ? '#e2e8f0' : '#1e293b') + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="' + name + '">' + name + '</span>' +
+                '<div style="flex:1; height:8px; background:rgba(0,0,0,0.04); border-radius:4px; overflow:hidden;">' +
+                '<div style="height:100%; width:' + barW + '%; background:rgba(99,102,241,0.45); border-radius:4px;"></div>' +
+                '</div>' +
+                '<span style="min-width:60px; text-align:right; font-size:0.75rem; font-weight:700; color:' + (isDark ? '#a5b4fc' : '#6366f1') + ';">' + count + ' <span style="font-weight:400;color:#94a3b8;font-size:0.6rem;">(' + pct + '%)</span></span>' +
+                '</div>';
+        });
+
         $('#deviceBarChart').html(html);
     }
+
+    // 원격장비별 데이터 저장 (팝업용)
+    var _remoteDeviceData = {};
+
+    function renderRemoteDeviceList(data) {
+        var isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        // 원격 호스트네임별 집계
+        var remoteMap = {};
+        data.forEach(function(r) {
+            var rh = r.remote_hostname || '';
+            if (!rh) return;
+            if (!remoteMap[rh]) remoteMap[rh] = { count: 0, localDevices: {}, connections: [] };
+            remoteMap[rh].count++;
+            if (r.hostname) remoteMap[rh].localDevices[r.hostname] = true;
+            remoteMap[rh].connections.push({
+                hostname: r.hostname || '-',
+                device_ip: r.device_ip || '-',
+                local_ifname: r.local_ifname || '-',
+                local_ifdesc: r.local_ifdesc || '-',
+                remote_port: r.remote_port || '-'
+            });
+        });
+
+        _remoteDeviceData = remoteMap;
+
+        var sorted = Object.keys(remoteMap).sort(function(a, b) {
+            return remoteMap[b].count - remoteMap[a].count;
+        });
+        var top = sorted.slice(0, 15);
+        var max = top.length > 0 ? remoteMap[top[0]].count : 1;
+
+        if (sorted.length > 15) {
+            $('#stat_remote_label').text('TOP 15 / ' + sorted.length + '개');
+        } else {
+            $('#stat_remote_label').text(sorted.length + '개 원격장비');
+        }
+
+        var html = '';
+        top.forEach(function(name, i) {
+            var info = remoteMap[name];
+            var localCount = Object.keys(info.localDevices).length;
+            var barW = Math.max(3, Math.round((info.count / max) * 100));
+
+            html += '<div style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:3px 0; border-radius:4px; transition:background 0.15s;" onmouseenter="this.style.background=\'' + (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)') + '\'" onmouseleave="this.style.background=\'transparent\'" onclick="showRemoteDetail(\'' + name.replace(/'/g, "\\'") + '\')">' +
+                '<span style="min-width:14px; font-size:0.72rem; font-weight:600; color:#94a3b8; text-align:right;">' + (i + 1) + '</span>' +
+                '<span style="min-width:130px; font-size:0.78rem; font-weight:600; color:' + (isDark ? '#e2e8f0' : '#1e293b') + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="' + name + '">' + name + '</span>' +
+                '<div style="flex:1; height:8px; background:rgba(0,0,0,0.04); border-radius:4px; overflow:hidden;">' +
+                '<div style="height:100%; width:' + barW + '%; background:rgba(124,58,237,0.4); border-radius:4px;"></div>' +
+                '</div>' +
+                '<span style="min-width:80px; text-align:right; font-size:0.72rem;">' +
+                '<span style="font-weight:700; color:' + (isDark ? '#c4b5fd' : '#7c3aed') + ';">' + info.count + '포트</span>' +
+                ' <span style="color:#94a3b8;">· ' + localCount + '장비</span>' +
+                '</span>' +
+                '</div>';
+        });
+
+        $('#remoteDeviceList').html(html || '<div style="color:#94a3b8;font-size:0.8rem;text-align:center;padding:20px;">데이터 없음</div>');
+    }
+
+    // 원격장비 상세 팝업
+    window.showRemoteDetail = function(remoteName) {
+        var info = _remoteDeviceData[remoteName];
+        if (!info) return;
+
+        var conns = info.connections;
+        // 로컬 장비별 그룹핑
+        var grouped = {};
+        conns.forEach(function(c) {
+            if (!grouped[c.hostname]) grouped[c.hostname] = [];
+            grouped[c.hostname].push(c);
+        });
+
+        var html = '<div style="max-height:500px; overflow-y:auto;">';
+
+        // 요약 정보
+        html += '<div style="display:flex; gap:20px; margin-bottom:16px; padding:12px 16px; background:#f8fafc; border-radius:8px;">';
+        html += '<div><span style="font-size:0.72rem;color:#94a3b8;">총 연결 포트</span><div style="font-size:1.1rem;font-weight:700;color:#7c3aed;">' + conns.length + '</div></div>';
+        html += '<div><span style="font-size:0.72rem;color:#94a3b8;">연결된 로컬 장비</span><div style="font-size:1.1rem;font-weight:700;color:#6366f1;">' + Object.keys(grouped).length + '</div></div>';
+        html += '</div>';
+
+        // 로컬 장비별 테이블
+        var gKeys = Object.keys(grouped).sort();
+        gKeys.forEach(function(hostname) {
+            var items = grouped[hostname];
+            html += '<div style="margin-bottom:14px;">';
+            html += '<div style="font-size:0.82rem;font-weight:700;color:#1e293b;margin-bottom:6px;display:flex;align-items:center;gap:6px;">';
+            html += '<span style="width:6px;height:6px;border-radius:50%;background:#6366f1;display:inline-block;"></span>';
+            html += hostname + ' <span style="font-weight:400;color:#94a3b8;font-size:0.72rem;">(' + items.length + '포트)</span></div>';
+            html += '<table class="table table-sm table-hover mb-0" style="font-size:0.8rem;">';
+            html += '<thead><tr style="background:#f1f5f9;">';
+            html += '<th class="py-1" style="color:#64748b;font-weight:600;">장비IP</th>';
+            html += '<th class="py-1" style="color:#64748b;font-weight:600;">로컬 인터페이스</th>';
+            html += '<th class="py-1" style="color:#64748b;font-weight:600;">인터페이스 설명</th>';
+            html += '<th class="py-1" style="color:#64748b;font-weight:600;">원격 포트</th>';
+            html += '</tr></thead><tbody>';
+            items.forEach(function(c) {
+                html += '<tr>';
+                html += '<td class="py-1" style="color:#0ea5e9;font-weight:500;">' + c.device_ip + '</td>';
+                html += '<td class="py-1"><span class="badge badge-phoenix badge-phoenix-primary" style="font-size:0.72rem;">' + c.local_ifname + '</span></td>';
+                html += '<td class="py-1" style="color:#059669;font-weight:500;">' + c.local_ifdesc + '</td>';
+                html += '<td class="py-1"><span class="badge badge-phoenix badge-phoenix-warning" style="font-size:0.72rem;">' + c.remote_port + '</span></td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+        });
+
+        html += '</div>';
+
+        // 모달
+        var modal = document.getElementById('lldpRemoteModal');
+        if (!modal) {
+            var md = document.createElement('div');
+            md.innerHTML = '<div class="modal fade" id="lldpRemoteModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content" style="border:none;border-radius:12px;overflow:hidden;">' +
+                '<div class="modal-header py-2 px-3" style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">' +
+                '<h6 class="modal-title" id="lldpRemoteModalTitle" style="font-size:0.92rem;font-weight:700;"></h6>' +
+                '<button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size:0.6rem;"></button></div>' +
+                '<div class="modal-body p-3" id="lldpRemoteModalBody"></div>' +
+                '</div></div></div>';
+            document.body.appendChild(md);
+            modal = document.getElementById('lldpRemoteModal');
+        }
+        document.getElementById('lldpRemoteModalTitle').innerHTML = '<i class="fas fa-project-diagram me-2" style="color:#7c3aed;"></i>' + remoteName + ' 연결 상세';
+        document.getElementById('lldpRemoteModalBody').innerHTML = html;
+        new bootstrap.Modal(modal).show();
+    };
 
     var initTable = function() {
         var data_back = document.getElementById("back_data");
@@ -247,13 +377,7 @@
             }
         });
 
-        // 요약 카드 호버 애니메이션
-        $('#summaryCards > div > div').css('transition', 'transform 0.25s ease, box-shadow 0.25s ease');
-        $('#summaryCards > div > div').on('mouseenter', function() {
-            $(this).css({ 'transform': 'translateY(-4px) scale(1.02)', 'box-shadow': '0 8px 25px rgba(0,0,0,0.2)' });
-        }).on('mouseleave', function() {
-            $(this).css({ 'transform': 'translateY(0) scale(1)', 'box-shadow': '' });
-        });
+        // (stat bar 스타일 - 호버 불필요)
     };
 
     window.refreshTable = function() {

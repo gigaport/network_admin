@@ -346,7 +346,7 @@
                 },
                 {
                     targets: 3, // 요약주소
-                    width: '8%',
+                    width: '12%',
                     className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data) return '-';
@@ -480,7 +480,7 @@
                 },
                 {
                     targets: 18, // 비고
-                    width: '16%',
+                    width: '10%',
                     className: 'text-start py-2 align-middle',
                     render: function(data) {
                         if (!data) return '-';

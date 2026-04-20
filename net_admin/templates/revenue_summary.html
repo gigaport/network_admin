@@ -36,107 +36,91 @@
         </div>
       </div>
 
-      <!-- 월별 매출 추이 차트 -->
-      <div class="row g-3 mb-4" id="trendChartRow">
-        <div class="col-12">
-          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
-            <div class="card-body" style="padding: 18px 20px;">
-              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
-                <i class="fas fa-chart-area me-2" style="color: #6366f1;"></i>월별 매출 추이 (최근 12개월)
-              </h6>
-              <div style="height: 250px;">
-                <canvas id="chartTrend"></canvas>
-              </div>
-            </div>
-          </div>
+      <!-- Stat bar (최상단) -->
+      <div class="mb-1" style="text-align:right; padding:0 6px;">
+        <span style="font-size:0.7rem; color:#94a3b8;"><i class="fas fa-info-circle me-1"></i>괄호 안 수치는 전년 12월 대비 증감</span>
+      </div>
+      <div class="mb-3" id="summaryCards" style="display:flex; align-items:center; gap:28px; padding:16px 24px; background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(99,102,241,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">전체 회원사</span>
+          <span id="stat_members" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
+        </div>
+        <div style="width:1px; height:24px; background:#e2e8f0;"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(30,41,59,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">전체 매출</span>
+          <span id="stat_grand_total" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
+        </div>
+        <div style="width:1px; height:24px; background:#e2e8f0;"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(37,99,235,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">ORD 매출</span>
+          <span id="stat_ord_total" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
+        </div>
+        <div style="width:1px; height:24px; background:#e2e8f0;"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(245,158,11,0.7); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">MPR 매출</span>
+          <span id="stat_mpr_total" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
         </div>
       </div>
 
-      <!-- 요약 통계 카드 -->
-      <div class="row g-3 mb-4" id="summaryCards">
-        <!-- 전체 회원사 -->
-        <div class="col-md-3">
-          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #6366f1, #818cf8); box-shadow: 0 4px 15px rgba(99,102,241,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
-              <i class="fas fa-building" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
-              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">전체 회원사</span>
-            </div>
-            <div class="fw-bold" id="stat_members" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
-          </div>
+      <!-- 월별 매출 추이 차트 -->
+      <div class="mb-3" id="trendChartRow" style="background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0); overflow:hidden;">
+        <div style="padding:12px 22px; border-bottom:1px solid var(--phoenix-border-color, #e2e8f0); display:flex; align-items:center; gap:8px;">
+          <span style="font-size:0.92rem; font-weight:600; color:var(--phoenix-body-color, #1e293b);">월별 매출 추이</span>
+          <span style="font-size:0.72rem; color:#94a3b8;">최근 12개월</span>
         </div>
-        <!-- 전체 매출 -->
-        <div class="col-md-3">
-          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 4px 15px rgba(16,185,129,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
-              <i class="fas fa-won-sign" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
-              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">전체 매출</span>
-            </div>
-            <div class="fw-bold" id="stat_grand_total" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</div>
-          </div>
-        </div>
-        <!-- ORD 매출 -->
-        <div class="col-md-3">
-          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); box-shadow: 0 4px 15px rgba(14,165,233,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
-              <i class="fas fa-exchange-alt" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
-              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">ORD 매출</span>
-            </div>
-            <div class="fw-bold" id="stat_ord_total" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</div>
-          </div>
-        </div>
-        <!-- MPR 매출 -->
-        <div class="col-md-3">
-          <div class="h-100 position-relative" style="border-radius: 12px; padding: 14px 18px; background: linear-gradient(135deg, #d97706, #f59e0b); box-shadow: 0 4px 15px rgba(245,158,11,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center" style="margin-bottom: 6px;">
-              <i class="fas fa-chart-line" style="color: rgba(255,255,255,0.7); font-size: 0.65rem; margin-right: 6px;"></i>
-              <span style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8);">MPR 매출</span>
-            </div>
-            <div class="fw-bold" id="stat_mpr_total" style="font-size: 1.3rem; color: #fff; line-height: 1;">-</div>
-          </div>
+        <div style="padding:16px 22px;">
+          <div style="height:280px;"><canvas id="chartTrend"></canvas></div>
         </div>
       </div>
 
       <!-- 차트 영역 -->
       <div class="row g-3 mb-4">
-        <!-- 매출 TOP 5 -->
+        <div class="col-md-3">
+          <div style="background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0); overflow:hidden; height:100%;">
+            <div style="padding:12px 22px; border-bottom:1px solid var(--phoenix-border-color, #e2e8f0);">
+              <span style="font-size:0.92rem; font-weight:600; color:var(--phoenix-body-color, #1e293b);">매출 TOP 5</span>
+            </div>
+            <div style="padding:16px 22px;">
+              <div style="height:240px;"><canvas id="chartTop5"></canvas></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div style="background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0); overflow:hidden; height:100%;">
+            <div style="padding:12px 22px; border-bottom:1px solid var(--phoenix-border-color, #e2e8f0);">
+              <span style="font-size:0.92rem; font-weight:600; color:var(--phoenix-body-color, #1e293b);">ORD / MPR 매출 비율</span>
+            </div>
+            <div style="padding:16px 22px;">
+              <div style="height:240px;"><canvas id="chartOrdMpr"></canvas></div>
+            </div>
+          </div>
+        </div>
         <div class="col-md-6">
-          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
-            <div class="card-body" style="padding: 18px 20px;">
-              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
-                <i class="fas fa-trophy me-2" style="color: #f59e0b;"></i>매출 TOP 5
-              </h6>
-              <div style="height: 220px;">
-                <canvas id="chartTop5"></canvas>
-              </div>
+          <div style="background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0); overflow:hidden; height:100%;">
+            <div style="padding:12px 22px; border-bottom:1px solid var(--phoenix-border-color, #e2e8f0);">
+              <span style="font-size:0.92rem; font-weight:600; color:var(--phoenix-body-color, #1e293b);">최근 월별 매출 추이</span>
+              <span style="font-size:0.65rem; color:#94a3b8; margin-left:8px;">행 클릭 시 변동 상세</span>
             </div>
-          </div>
-        </div>
-        <!-- ORD vs MPR 매출 비율 -->
-        <div class="col-md-3">
-          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
-            <div class="card-body" style="padding: 18px 20px;">
-              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
-                <i class="fas fa-chart-pie me-2" style="color: #6366f1;"></i>ORD / MPR 매출 비율
-              </h6>
-              <div style="height: 220px;">
-                <canvas id="chartOrdMpr"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- 가입유형별 매출 -->
-        <div class="col-md-3">
-          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
-            <div class="card-body" style="padding: 18px 20px;">
-              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
-                <i class="fas fa-users me-2" style="color: #10b981;"></i>가입유형별 매출
-              </h6>
-              <div style="height: 220px;">
-                <canvas id="chartSubType"></canvas>
+            <div style="padding:12px 22px;">
+              <div class="table-responsive" style="max-height:300px; overflow-y:auto;">
+                <table class="table table-sm table-hover mb-0" style="font-size:0.82rem;" id="monthlyTrendTable">
+                  <thead style="position:sticky; top:0; background:#fff; z-index:1;">
+                    <tr style="border-bottom:2px solid #f0f0f0;">
+                      <th class="text-center py-2" style="color:var(--phoenix-tertiary-color, #64748b); font-weight:600;">월</th>
+                      <th class="py-2" style="color:var(--phoenix-body-color, #1e293b); font-weight:600;">ORD 매출</th>
+                      <th class="py-2" style="color:var(--phoenix-body-color, #1e293b); font-weight:600;">MPR 매출</th>
+                      <th class="py-2" style="color:#059669; font-weight:600;">합계</th>
+                      <th class="text-center py-2" style="color:var(--phoenix-tertiary-color, #64748b); font-weight:600;">증감률</th>
+                    </tr>
+                  </thead>
+                  <tbody id="monthlyTrendBody">
+                    <tr><td colspan="5" class="text-center py-3" style="color:#94a3b8;">로딩 중...</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -145,9 +129,12 @@
 
       <div class="card border-0 shadow-sm bg-body-emphasis" style="margin: 0 auto;">
         <div class="card-body" style="padding: 2rem 1rem !important; min-height: 400px;">
+          <div style="margin-bottom:8px; padding:0 8px;">
+            <span style="font-size:0.82rem; color:var(--phoenix-tertiary-color, #64748b); font-weight:500;"><i class="fas fa-hand-pointer me-1" style="color:#6366f1;"></i>회원사 행을 클릭하면 회선별 상세 정보를 확인할 수 있습니다</span>
+          </div>
           <div class="table-list" id="advanceAjaxTable">
             <div class="table-responsive scrollbar">
-              <table class="table table-hover table-sm mb-0" id="revenueTable" style="width: 100% !important; font-size: 0.7rem !important;">
+              <table class="table table-hover table-sm mb-0" id="revenueTable" style="width: 100% !important; font-size: 0.85rem !important;">
               <thead>
                 <tr>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col">회원번호</th>

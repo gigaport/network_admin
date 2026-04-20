@@ -62,7 +62,172 @@
 
         // 차트 렌더링
         renderCharts(memberAmounts, ktAmount, lguAmount, dcAmounts);
+
+        // 월별 변경내역 렌더링
+        renderPurchaseChangeTrend(data);
     }
+
+    var _purchaseChangeData = {};
+
+    function renderPurchaseChangeTrend(data) {
+        var tbody = document.getElementById('purchaseChangeTrendBody');
+        if (!tbody) return;
+
+        var now = new Date();
+        var months = [];
+        for (var i = 11; i >= 0; i--) {
+            var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            var ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            months.push(ym);
+        }
+
+        // 월별 추가/종료 건수+금액+상세 집계
+        var added = {}, ended = {}, addedAmt = {}, endedAmt = {};
+        var addedItems = {}, endedItems = {};
+        months.forEach(function(m) { added[m] = 0; ended[m] = 0; addedAmt[m] = 0; endedAmt[m] = 0; addedItems[m] = []; endedItems[m] = []; });
+
+        data.forEach(function(item) {
+            var price = item.cost_price || 0;
+            var info = {
+                company_name: item.company_name || item.member_code || '-',
+                member_code: item.member_code || '-',
+                provider: item.provider || '-',
+                datacenter_code: item.datacenter_code || '-',
+                cost_standart: item.cost_standart || '-',
+                cost_price: price,
+                service_id: item.service_id || '-',
+                billing_start_date: item.billing_start_date || '-',
+                contract_end_date: item.contract_end_date || '-'
+            };
+            if (item.billing_start_date) {
+                var startYm = item.billing_start_date.substring(0, 7);
+                if (added.hasOwnProperty(startYm)) {
+                    added[startYm]++;
+                    addedAmt[startYm] += price;
+                    addedItems[startYm].push(info);
+                }
+            }
+            if (item.contract_end_date) {
+                var endYm = item.contract_end_date.substring(0, 7);
+                if (ended.hasOwnProperty(endYm)) {
+                    ended[endYm]++;
+                    endedAmt[endYm] += price;
+                    endedItems[endYm].push(info);
+                }
+            }
+        });
+
+        _purchaseChangeData = { added: addedItems, ended: endedItems };
+
+        function fmtAmt(v) {
+            if (v === 0) return '';
+            if (v >= 10000) return (v / 10000).toFixed(0) + '만';
+            return v.toLocaleString();
+        }
+
+        var html = '';
+        months.slice().reverse().forEach(function(m) {
+            var a = added[m] || 0;
+            var e = ended[m] || 0;
+            var aAmt = addedAmt[m] || 0;
+            var eAmt = endedAmt[m] || 0;
+            var diff = a - e;
+            var diffAmt = aAmt - eAmt;
+            var diffColor = diff > 0 ? '#059669' : (diff < 0 ? '#dc2626' : '#94a3b8');
+            var diffStr = diff > 0 ? '+' + diff : (diff === 0 ? '-' : String(diff));
+            var label = m.substring(2).replace('-', '.');
+            var hasData = a > 0 || e > 0;
+            var cursor = hasData ? 'cursor:pointer;' : '';
+            var onclick = hasData ? ' onclick="showPurchaseChangeDetail(\'' + m + '\')"' : '';
+
+            html += '<tr style="border-bottom:1px solid #f5f5f5;' + cursor + '"' + onclick + '>' +
+                '<td class="text-center py-2" style="font-weight:600; color:var(--phoenix-tertiary-color, #475569);">' + label + '</td>' +
+                '<td class="text-center py-2">' +
+                    (a > 0 ? '<span style="color:#059669;font-weight:600;">+' + a + '</span> <span style="font-size:0.6rem;color:#94a3b8;">' + fmtAmt(aAmt) + '</span>' : '<span style="color:#94a3b8;">-</span>') +
+                '</td>' +
+                '<td class="text-center py-2">' +
+                    (e > 0 ? '<span style="color:#dc2626;font-weight:600;">-' + e + '</span> <span style="font-size:0.6rem;color:#94a3b8;">' + fmtAmt(eAmt) + '</span>' : '<span style="color:#94a3b8;">-</span>') +
+                '</td>' +
+                '<td class="text-center py-2" style="color:' + diffColor + '; font-weight:700;">' + diffStr +
+                    (diffAmt !== 0 ? ' <span style="font-size:0.6rem;color:#94a3b8;">(' + (diffAmt >= 0 ? '+' : '') + fmtAmt(diffAmt) + ')</span>' : '') +
+                '</td>' +
+                '</tr>';
+        });
+        tbody.innerHTML = html || '<tr><td colspan="4" class="text-center py-3" style="color:#94a3b8;">데이터 없음</td></tr>';
+    }
+
+    // 매입 변경 상세 팝업
+    window.showPurchaseChangeDetail = function(month) {
+        var d = _purchaseChangeData;
+        if (!d) return;
+        var addedList = (d.added && d.added[month]) || [];
+        var endedList = (d.ended && d.ended[month]) || [];
+        var label = month.substring(2).replace('-', '.');
+
+        var html = '<div style="max-height:500px;overflow-y:auto;">';
+
+        // 추가 건
+        html += '<div style="margin-bottom:16px;">';
+        html += '<div style="font-size:0.9rem;font-weight:700;color:#059669;margin-bottom:8px;"><i class="fas fa-plus-circle me-1"></i>추가 (' + addedList.length + '건)</div>';
+        if (addedList.length > 0) {
+            html += '<table class="table table-sm table-hover mb-0" style="font-size:0.8rem;">';
+            html += '<thead><tr style="background:#f0fdf4;"><th class="py-1">회원사</th><th class="py-1">통신사</th><th class="py-1">DC</th><th class="py-1">비용기준</th><th class="text-end py-1">매입금액</th><th class="py-1">과금시작</th></tr></thead><tbody>';
+            addedList.forEach(function(item) {
+                html += '<tr>' +
+                    '<td class="py-1">' + item.company_name + '</td>' +
+                    '<td class="py-1 text-center">' + item.provider + '</td>' +
+                    '<td class="py-1 text-center">' + item.datacenter_code + '</td>' +
+                    '<td class="py-1">' + item.cost_standart + '</td>' +
+                    '<td class="text-end py-1" style="font-weight:600;color:#059669;">' + Number(item.cost_price).toLocaleString() + '원</td>' +
+                    '<td class="py-1 text-center">' + item.billing_start_date + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table>';
+        } else {
+            html += '<div style="color:#94a3b8;font-size:0.8rem;">해당 월 추가 건 없음</div>';
+        }
+        html += '</div>';
+
+        // 종료 건
+        html += '<div>';
+        html += '<div style="font-size:0.9rem;font-weight:700;color:#dc2626;margin-bottom:8px;"><i class="fas fa-minus-circle me-1"></i>종료 (' + endedList.length + '건)</div>';
+        if (endedList.length > 0) {
+            html += '<table class="table table-sm table-hover mb-0" style="font-size:0.8rem;">';
+            html += '<thead><tr style="background:#fef2f2;"><th class="py-1">회원사</th><th class="py-1">통신사</th><th class="py-1">DC</th><th class="py-1">비용기준</th><th class="text-end py-1">매입금액</th><th class="py-1">계약종료</th></tr></thead><tbody>';
+            endedList.forEach(function(item) {
+                html += '<tr>' +
+                    '<td class="py-1">' + item.company_name + '</td>' +
+                    '<td class="py-1 text-center">' + item.provider + '</td>' +
+                    '<td class="py-1 text-center">' + item.datacenter_code + '</td>' +
+                    '<td class="py-1">' + item.cost_standart + '</td>' +
+                    '<td class="text-end py-1" style="font-weight:600;color:#dc2626;">' + Number(item.cost_price).toLocaleString() + '원</td>' +
+                    '<td class="py-1 text-center">' + item.contract_end_date + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table>';
+        } else {
+            html += '<div style="color:#94a3b8;font-size:0.8rem;">해당 월 종료 건 없음</div>';
+        }
+        html += '</div></div>';
+
+        // 모달 표시
+        var modal = document.getElementById('purchaseChangeModal');
+        if (!modal) {
+            var mdiv = document.createElement('div');
+            mdiv.innerHTML = '<div class="modal fade" id="purchaseChangeModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content" style="border:none;border-radius:12px;overflow:hidden;">' +
+                '<div class="modal-header py-2 px-3" style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">' +
+                '<h6 class="modal-title" id="purchaseChangeModalTitle" style="font-size:0.92rem;font-weight:700;"></h6>' +
+                '<button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size:0.6rem;"></button></div>' +
+                '<div class="modal-body p-3" id="purchaseChangeModalBody"></div>' +
+                '</div></div></div>';
+            document.body.appendChild(mdiv);
+            modal = document.getElementById('purchaseChangeModal');
+        }
+        document.getElementById('purchaseChangeModalTitle').textContent = label + ' 매입 변경 상세';
+        document.getElementById('purchaseChangeModalBody').innerHTML = html;
+        var bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    };
 
     function renderCharts(memberAmounts, ktAmount, lguAmount, dcAmounts) {
         if (chartProvider) chartProvider.destroy();
@@ -71,89 +236,114 @@
         var isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
         var textColor = isDark ? '#cbd5e1' : '#475569';
 
-        // 1. 매입 TOP 5 (카드)
+        // 1. 매입 TOP 5 (리스트 + 프로그레스바 - 초록 계열)
         var members = Object.keys(memberAmounts).map(function(k) { return memberAmounts[k]; });
         members.sort(function(a, b) { return b.amount - a.amount; });
         var top5 = members.slice(0, 5);
         var totalAmount = members.reduce(function(s, m) { return s + m.amount; }, 0);
+        var maxAmount = top5.length > 0 ? top5[0].amount : 1;
 
-        var rankColors = [
-            { bg: '#fef3c7', border: '#f59e0b', badge: '#92400e', badgeBg: '#fbbf24', icon: 'fa-crown' },
-            { bg: '#e0e7ff', border: '#6366f1', badge: '#3730a3', badgeBg: '#a5b4fc', icon: 'fa-medal' },
-            { bg: '#d1fae5', border: '#10b981', badge: '#065f46', badgeBg: '#6ee7b7', icon: 'fa-medal' },
-            { bg: '#f1f5f9', border: '#94a3b8', badge: '#334155', badgeBg: '#cbd5e1', icon: 'fa-award' },
-            { bg: '#f1f5f9', border: '#94a3b8', badge: '#334155', badgeBg: '#cbd5e1', icon: 'fa-award' }
-        ];
+        var barColors = ['#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
 
         var html = '';
         top5.forEach(function(m, i) {
-            var c = rankColors[i];
+            var barW = maxAmount > 0 ? Math.round(m.amount / maxAmount * 100) : 0;
             var pct = totalAmount > 0 ? ((m.amount / totalAmount) * 100).toFixed(1) : 0;
-            html += '<div style="display: flex; align-items: center; padding: 10px 14px; border-radius: 10px; background: ' + c.bg + '; border-left: 3px solid ' + c.border + ';">' +
-                '<div style="width: 28px; height: 28px; border-radius: 50%; background: ' + c.badgeBg + '; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">' +
-                '<i class="fas ' + c.icon + '" style="font-size: 0.65rem; color: ' + c.badge + ';"></i>' +
+            html += '<div style="padding:12px 0; border-bottom:1px solid ' + (isDark ? '#334155' : '#f1f5f9') + ';">' +
+                '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">' +
+                '<span style="min-width:18px;font-size:0.82rem;font-weight:700;color:#94a3b8;text-align:right;">' + (i + 1) + '</span>' +
+                '<span style="flex:1;font-size:0.82rem;font-weight:600;color:' + (isDark ? '#e2e8f0' : '#1e293b') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + m.name + '</span>' +
+                '<span style="font-size:0.82rem;font-weight:700;color:#059669;">' + m.amount.toLocaleString() + '원</span>' +
                 '</div>' +
-                '<div style="flex: 1; margin-left: 12px; min-width: 0;">' +
-                '<div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">' +
-                '<span style="font-size: 0.8rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + m.name + '</span>' +
-                '<span style="font-size: 1rem; font-weight: 700; color: ' + c.badge + '; margin-left: 8px; white-space: nowrap;">' + m.amount.toLocaleString() + '원</span>' +
+                '<div style="display:flex;align-items:center;gap:8px;padding-left:28px;">' +
+                '<div style="flex:1;height:6px;background:rgba(0,0,0,0.03);border-radius:4px;overflow:hidden;">' +
+                '<div style="height:100%;width:' + barW + '%;background:' + barColors[i] + ';border-radius:4px;transition:width 0.4s;"></div>' +
                 '</div>' +
-                '<div style="display: flex; align-items: center; gap: 8px;">' +
-                '<div style="flex: 1; height: 4px; border-radius: 2px; background: rgba(0,0,0,0.06);">' +
-                '<div style="height: 100%; border-radius: 2px; background: ' + c.border + '; width: ' + pct + '%;"></div>' +
-                '</div>' +
-                '<span style="font-size: 0.65rem; color: #64748b; white-space: nowrap;">' + m.count + '건 / ' + pct + '%</span>' +
-                '</div>' +
+                '<span style="font-size:0.68rem;color:#94a3b8;white-space:nowrap;">' + m.count + '건 · ' + pct + '%</span>' +
                 '</div>' +
                 '</div>';
         });
         $('#top5Cards').html(html);
 
-        // 2. KT vs LGU 매입 비율 (도넛)
+        // 도넛 중앙 텍스트 플러그인
+        var centerTextPlugin = {
+            id: 'centerText',
+            afterDraw: function(chart) {
+                var meta = chart.getDatasetMeta(0);
+                if (!meta || !meta.data || !meta.data[0]) return;
+                var ctx = chart.ctx;
+                var centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+                var centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '700 1.3rem -apple-system, sans-serif';
+                ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b';
+                ctx.fillText(chart._centerValue || '', centerX, centerY - 8);
+                ctx.font = '500 0.65rem -apple-system, sans-serif';
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(chart._centerLabel || '', centerX, centerY + 14);
+                ctx.restore();
+            }
+        };
+
+        // 2. KT vs LGU 매입 비율 (도넛 - 초록 계열 + 중앙 텍스트)
+        var provTotal = ktAmount + lguAmount;
+        var ktPct = provTotal > 0 ? ((ktAmount / provTotal) * 100).toFixed(1) : '0';
+
         chartProvider = new Chart(document.getElementById('chartProvider').getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: ['KTC', 'LGU'],
                 datasets: [{
                     data: [ktAmount, lguAmount],
-                    backgroundColor: ['rgba(14, 165, 233, 0.85)', 'rgba(245, 158, 11, 0.85)'],
-                    borderWidth: 2,
-                    borderColor: isDark ? '#1e293b' : '#fff'
+                    backgroundColor: ['rgba(5, 150, 105, 0.7)', 'rgba(52, 211, 153, 0.6)'],
+                    borderWidth: 2.5,
+                    borderColor: isDark ? '#1e293b' : '#fff',
+                    hoverOffset: 8,
+                    spacing: 3
                 }]
             },
+            plugins: [centerTextPlugin],
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '62%',
+                cutout: '72%',
+                animation: { animateRotate: true, duration: 800 },
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { color: textColor, font: { size: 11 }, padding: 12, boxWidth: 12 }
+                        labels: { color: textColor, font: { size: 11 }, padding: 14, boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle' }
                     },
                     tooltip: {
+                        backgroundColor: 'rgba(15,23,42,0.9)',
+                        cornerRadius: 8,
+                        padding: 10,
                         callbacks: {
                             label: function(ctx) {
-                                var total = ktAmount + lguAmount;
-                                var pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
-                                return ctx.label + ': ' + Number(ctx.raw).toLocaleString() + '원 (' + pct + '%)';
+                                var pct = provTotal > 0 ? ((ctx.raw / provTotal) * 100).toFixed(1) : 0;
+                                return ' ' + ctx.label + ': ' + Number(ctx.raw).toLocaleString() + '원 (' + pct + '%)';
                             }
                         }
                     }
                 }
             }
         });
+        chartProvider._centerValue = ktPct + '%';
+        chartProvider._centerLabel = 'KTC 비율';
 
-        // 3. 데이터센터별 매입 분포 (도넛)
+        // 3. 데이터센터별 매입 분포 (도넛 - 초록 계열 + 중앙 텍스트)
         var dcKeys = Object.keys(dcAmounts).sort();
         var dcLabels = dcKeys;
         var dcData = dcKeys.map(function(k) { return dcAmounts[k].amount; });
+        var dcTotal = dcData.reduce(function(a, b) { return a + b; }, 0);
         var dcColors = [
-            'rgba(99, 102, 241, 0.85)',
-            'rgba(16, 185, 129, 0.85)',
-            'rgba(236, 72, 153, 0.85)',
-            'rgba(14, 165, 233, 0.85)',
-            'rgba(245, 158, 11, 0.85)',
-            'rgba(139, 92, 246, 0.85)'
+            'rgba(5, 150, 105, 0.75)',
+            'rgba(16, 185, 129, 0.7)',
+            'rgba(52, 211, 153, 0.65)',
+            'rgba(110, 231, 183, 0.6)',
+            'rgba(13, 148, 136, 0.7)',
+            'rgba(15, 118, 110, 0.65)'
         ];
 
         chartDC = new Chart(document.getElementById('chartDC').getContext('2d'), {
@@ -163,31 +353,39 @@
                 datasets: [{
                     data: dcData,
                     backgroundColor: dcColors.slice(0, dcLabels.length),
-                    borderWidth: 2,
-                    borderColor: isDark ? '#1e293b' : '#fff'
+                    borderWidth: 2.5,
+                    borderColor: isDark ? '#1e293b' : '#fff',
+                    hoverOffset: 8,
+                    spacing: 3
                 }]
             },
+            plugins: [centerTextPlugin],
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '62%',
+                cutout: '72%',
+                animation: { animateRotate: true, duration: 800 },
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { color: textColor, font: { size: 11 }, padding: 12, boxWidth: 12 }
+                        labels: { color: textColor, font: { size: 10 }, padding: 10, boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle' }
                     },
                     tooltip: {
+                        backgroundColor: 'rgba(15,23,42,0.9)',
+                        cornerRadius: 8,
+                        padding: 10,
                         callbacks: {
                             label: function(ctx) {
-                                var total = dcData.reduce(function(a, b) { return a + b; }, 0);
-                                var pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
-                                return ctx.label + ': ' + Number(ctx.raw).toLocaleString() + '원 (' + pct + '%)';
+                                var pct = dcTotal > 0 ? ((ctx.raw / dcTotal) * 100).toFixed(1) : 0;
+                                return ' ' + ctx.label + ': ' + Number(ctx.raw).toLocaleString() + '원 (' + pct + '%)';
                             }
                         }
                     }
                 }
             }
         });
+        chartDC._centerValue = dcLabels.length + '개';
+        chartDC._centerLabel = '데이터센터';
     }
 
     function populateCostCodeSelect(selectId, selectedValue) {
@@ -422,11 +620,11 @@
                 },
                 {
                     targets: 11, // 매입금액
-                    width: '9%',
+                    width: '12%',
                     className: 'text-end py-2 align-middle',
                     render: function(data) {
                         if (!data && data !== 0) return '-';
-                        return '<span class="fw-bold" style="color: #0f172a;">' + Number(data).toLocaleString() + '원</span>';
+                        return '<span class="fw-bold" style="color: #0f172a; white-space:nowrap;">' + Number(data).toLocaleString() + '원</span>';
                     }
                 }
             ],
@@ -474,7 +672,7 @@
                         '<td colspan="3" class="text-start py-2 align-middle" style="font-size: 0.85rem; font-weight: 700; color: #4338ca; padding-left: 14px !important;">' +
                         '<i class="fas fa-calculator me-1" style="font-size: 0.6rem; opacity: 0.7;"></i>' + p.name + ' 소계 (' + p.count + '건)</td>' +
                         '<td colspan="9"></td>' +
-                        '<td class="text-end py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #4338ca; padding-right: 12px !important;">' + Number(p.amount).toLocaleString() + '원</td>' +
+                        '<td class="text-end py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #4338ca; padding-right: 12px !important; white-space:nowrap;">' + Number(p.amount).toLocaleString() + '원</td>' +
                         '</tr>';
                     $(rows[p.afterIdx]).after(subtotalRow);
                 }
@@ -485,7 +683,7 @@
                         '<td colspan="3" class="text-start py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #fff; padding-left: 14px !important;">' +
                         '<i class="fas fa-coins me-1" style="font-size: 0.7rem; opacity: 0.8;"></i>전체 합계 (' + grandCount + '건)</td>' +
                         '<td colspan="9"></td>' +
-                        '<td class="text-end py-2 align-middle" style="font-size: 0.95rem; font-weight: 800; color: #fbbf24; padding-right: 12px !important;">' + Number(grandTotal).toLocaleString() + '원</td>' +
+                        '<td class="text-end py-2 align-middle" style="font-size: 0.95rem; font-weight: 800; color: #fbbf24; padding-right: 12px !important; white-space:nowrap;">' + Number(grandTotal).toLocaleString() + '원</td>' +
                         '</tr>';
                     $('#purchaseTable tbody').append(grandRow);
                 }

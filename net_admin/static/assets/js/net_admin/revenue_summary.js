@@ -3,6 +3,8 @@
     factory();
 })((function () {
     'use strict';
+    function _isDark() { return document.documentElement.getAttribute('data-bs-theme') === 'dark'; }
+    function T(l, d) { return _isDark() ? d : l; }
 
     var revenueTable = null;
     var allDetails = [];
@@ -19,7 +21,22 @@
     }
 
     // 요약 통계 업데이트
+    var _savedTrend = null;
+    var _pendingRevSummary = null;
+
+    function fmtCompact(v) {
+        if (v === 0) return '0';
+        var s = v >= 0 ? '+' : '';
+        if (Math.abs(v) >= 100000000) return s + (v / 100000000).toFixed(1) + '억';
+        if (Math.abs(v) >= 10000) return s + (v / 10000).toFixed(0) + '만';
+        return s + v.toLocaleString();
+    }
+
     function updateSummary(summary) {
+        if (!_savedTrend) {
+            _pendingRevSummary = summary;
+        }
+
         var memberSet = {};
         summary.forEach(function(r) { memberSet[r.member_code] = true; });
         var totalMembers = Object.keys(memberSet).length;
@@ -30,9 +47,37 @@
             mprTotal += Number(r.mpr_total) || 0;
         });
         $('#stat_members').text(totalMembers.toLocaleString());
-        $('#stat_grand_total').text(grandTotal.toLocaleString() + '원');
-        $('#stat_ord_total').text(ordTotal.toLocaleString() + '원');
-        $('#stat_mpr_total').text(mprTotal.toLocaleString() + '원');
+
+        // 작년 12월 대비 증감 계산
+        var baseLine = null;
+        if (_savedTrend && _savedTrend.length > 0) {
+            var lastYear = String(Number(_savedTrend[_savedTrend.length - 1].month.substring(0, 4)) - 1);
+            for (var ti = 0; ti < _savedTrend.length; ti++) {
+                if (_savedTrend[ti].month === lastYear + '-12') {
+                    baseLine = _savedTrend[ti];
+                    break;
+                }
+            }
+        }
+
+        if (baseLine) {
+            var bGrand = Number(baseLine.grand_total) || 0;
+            var bOrd = Number(baseLine.ord_total) || 0;
+            var bMpr = Number(baseLine.mpr_total) || 0;
+            var gDiff = grandTotal - bGrand, oDiff = ordTotal - bOrd, mDiff = mprTotal - bMpr;
+            var gPct = bGrand > 0 ? ((gDiff / bGrand) * 100).toFixed(1) : '0.0';
+            var oPct = bOrd > 0 ? ((oDiff / bOrd) * 100).toFixed(1) : '0.0';
+            var mPct = bMpr > 0 ? ((mDiff / bMpr) * 100).toFixed(1) : '0.0';
+
+            var diffColor = function(v) { return v >= 0 ? '#dc2626' : '#2563eb'; };
+            $('#stat_grand_total').html(grandTotal.toLocaleString() + '원 <span style="font-size:0.72rem;color:' + diffColor(gDiff) + ';font-weight:600;">(' + fmtCompact(gDiff) + ', ' + (gDiff >= 0 ? '+' : '') + gPct + '%)</span>');
+            $('#stat_ord_total').html(ordTotal.toLocaleString() + '원 <span style="font-size:0.72rem;color:' + diffColor(oDiff) + ';font-weight:600;">(' + fmtCompact(oDiff) + ', ' + (oDiff >= 0 ? '+' : '') + oPct + '%)</span>');
+            $('#stat_mpr_total').html(mprTotal.toLocaleString() + '원 <span style="font-size:0.72rem;color:' + diffColor(mDiff) + ';font-weight:600;">(' + fmtCompact(mDiff) + ', ' + (mDiff >= 0 ? '+' : '') + mPct + '%)</span>');
+        } else {
+            $('#stat_grand_total').text(grandTotal.toLocaleString() + '원');
+            $('#stat_ord_total').text(ordTotal.toLocaleString() + '원');
+            $('#stat_mpr_total').text(mprTotal.toLocaleString() + '원');
+        }
 
         renderCharts(summary, ordTotal, mprTotal);
     }
@@ -42,7 +87,7 @@
         // 기존 차트 파괴
         if (chartTop5) chartTop5.destroy();
         if (chartOrdMpr) chartOrdMpr.destroy();
-        if (chartSubType) chartSubType.destroy();
+        // chartSubType 삭제됨
 
         var isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
         var textColor = isDark ? '#cbd5e1' : '#475569';
@@ -107,89 +152,68 @@
         });
 
         // 2. ORD vs MPR 매출 비율 (도넛)
+        var ordPct = (ordTotal + mprTotal) > 0 ? ((ordTotal / (ordTotal + mprTotal)) * 100).toFixed(1) : '0';
+        var centerTextPlugin = {
+            id: 'centerText',
+            afterDraw: function(chart) {
+                var ctx = chart.ctx;
+                var centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+                var centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '700 1.3rem -apple-system, sans-serif';
+                ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b';
+                ctx.fillText(chart._centerValue || '', centerX, centerY - 8);
+                ctx.font = '500 0.68rem -apple-system, sans-serif';
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(chart._centerLabel || '', centerX, centerY + 14);
+                ctx.restore();
+            }
+        };
+
         chartOrdMpr = new Chart(document.getElementById('chartOrdMpr').getContext('2d'), {
             type: 'doughnut',
+            plugins: [centerTextPlugin],
             data: {
                 labels: ['ORD', 'MPR'],
                 datasets: [{
                     data: [ordTotal, mprTotal],
-                    backgroundColor: ['rgba(37, 99, 235, 0.85)', 'rgba(245, 158, 11, 0.85)'],
+                    backgroundColor: ['rgba(37, 99, 235, 0.6)', 'rgba(245, 158, 11, 0.55)'],
                     borderWidth: 2,
-                    borderColor: isDark ? '#1e293b' : '#fff'
+                    borderColor: isDark ? '#1e293b' : '#fff',
+                    hoverOffset: 8,
+                    spacing: 3
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '62%',
+                cutout: '72%',
+                animation: { animateRotate: true, duration: 800 },
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { color: textColor, font: { size: 11 }, padding: 12, boxWidth: 12 }
+                        labels: { color: textColor, font: { size: 11 }, padding: 14, boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle' }
                     },
                     tooltip: {
+                        backgroundColor: 'rgba(15,23,42,0.9)',
+                        cornerRadius: 8,
+                        padding: 10,
                         callbacks: {
                             label: function(ctx) {
                                 var total = ordTotal + mprTotal;
                                 var pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
-                                return ctx.label + ': ' + Number(ctx.raw).toLocaleString() + '원 (' + pct + '%)';
+                                return ' ' + ctx.label + ': ' + Number(ctx.raw).toLocaleString() + '원 (' + pct + '%)';
                             }
                         }
                     }
                 }
             }
         });
+        chartOrdMpr._centerValue = ordPct + '%';
+        chartOrdMpr._centerLabel = 'ORD 비율';
 
-        // 3. 가입유형별 매출 (도넛)
-        var subTypeMap = {};
-        summary.forEach(function(r) {
-            var st = r.subscription_type || '미분류';
-            if (!subTypeMap[st]) subTypeMap[st] = 0;
-            subTypeMap[st] += Number(r.grand_total) || 0;
-        });
-        var subTypeLabels = Object.keys(subTypeMap);
-        var subTypeData = subTypeLabels.map(function(k) { return subTypeMap[k]; });
-        var subTypeColors = [
-            'rgba(16, 185, 129, 0.85)',
-            'rgba(99, 102, 241, 0.85)',
-            'rgba(236, 72, 153, 0.85)',
-            'rgba(14, 165, 233, 0.85)',
-            'rgba(245, 158, 11, 0.85)',
-            'rgba(139, 92, 246, 0.85)'
-        ];
-
-        chartSubType = new Chart(document.getElementById('chartSubType').getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: subTypeLabels,
-                datasets: [{
-                    data: subTypeData,
-                    backgroundColor: subTypeColors.slice(0, subTypeLabels.length),
-                    borderWidth: 2,
-                    borderColor: isDark ? '#1e293b' : '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '62%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: textColor, font: { size: 11 }, padding: 12, boxWidth: 12 }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(ctx) {
-                                var total = subTypeData.reduce(function(a, b) { return a + b; }, 0);
-                                var pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
-                                return ctx.label + ': ' + Number(ctx.raw).toLocaleString() + '원 (' + pct + '%)';
-                            }
-                        }
-                    }
-                }
-            }
-        });
     }
 
     // 상세 모달 표시
@@ -382,7 +406,7 @@
                     className: 'text-end py-2 align-middle',
                     render: function(data) {
                         if (!data && data !== 0) return '-';
-                        return '<span style="color: #2563eb; font-weight: 600;">' + Number(data).toLocaleString() + '원</span>';
+                        return '<span style="color: #1e293b; font-weight: 600;">' + Number(data).toLocaleString() + '원</span>';
                     }
                 },
                 {
@@ -399,7 +423,7 @@
                     className: 'text-end py-2 align-middle',
                     render: function(data) {
                         if (!data && data !== 0) return '-';
-                        return '<span style="color: #d97706; font-weight: 600;">' + Number(data).toLocaleString() + '원</span>';
+                        return '<span style="color: #1e293b; font-weight: 600;">' + Number(data).toLocaleString() + '원</span>';
                     }
                 },
                 {
@@ -416,7 +440,7 @@
                     className: 'text-end py-2 align-middle',
                     render: function(data) {
                         if (!data && data !== 0) return '-';
-                        return '<span style="color: #059669; font-weight: 700; font-size: 0.8rem;">' + Number(data).toLocaleString() + '원</span>';
+                        return '<span style="color: #059669; font-weight: 700; font-size: 0.85rem;">' + Number(data).toLocaleString() + '원</span>';
                     }
                 }
             ],
@@ -450,8 +474,8 @@
                     '<td class="text-end py-2 align-middle" style="font-weight: 700; color: #93c5fd;">' + totalOrdAmount.toLocaleString() + '원</td>' +
                     '<td class="text-center py-2 align-middle" style="font-weight: 700; color: #fcd34d;">' + totalMprCount.toLocaleString() + '</td>' +
                     '<td class="text-end py-2 align-middle" style="font-weight: 700; color: #fcd34d;">' + totalMprAmount.toLocaleString() + '원</td>' +
-                    '<td class="text-center py-2 align-middle" style="font-weight: 700; color: #fff;">' + totalCount.toLocaleString() + '</td>' +
-                    '<td class="text-end py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #fbbf24; padding-right: 12px !important;">' + grandTotal.toLocaleString() + '원</td>' +
+                    '<td class="text-center py-2 align-middle" style="font-weight: 700; color: #f1f5f9;">' + totalCount.toLocaleString() + '</td>' +
+                    '<td class="text-end py-2 align-middle" style="font-size: 0.9rem; font-weight: 800; color: #6ee7b7; padding-right: 12px !important;">' + grandTotal.toLocaleString() + '원</td>' +
                     '</tr>';
                 $('#revenueTable tbody').append(grandRow);
             },
@@ -569,6 +593,12 @@
 
     // 12개월 추이 차트
     function renderTrendChart(trend) {
+        _savedTrend = trend;
+        // trend 로드 후 대기 중인 summary 재실행
+        if (_pendingRevSummary) {
+            updateSummary(_pendingRevSummary);
+            _pendingRevSummary = null;
+        }
         if (chartTrend) chartTrend.destroy();
         if (!trend || !trend.length) return;
 
@@ -581,9 +611,52 @@
         var mprData = trend.map(function(t) { return Number(t.mpr_total) || 0; });
         var totalData = trend.map(function(t) { return Number(t.grand_total) || 0; });
 
+        // 전월 대비 증감률/증감값 계산
+        var changeLabels = totalData.map(function(v, i) {
+            if (i === 0) return '';
+            var prev = totalData[i - 1];
+            if (!prev || prev === 0) return '';
+            var diff = v - prev;
+            var pct = ((diff / prev) * 100).toFixed(1);
+            var diffStr = diff >= 0 ? '+' : '';
+            if (Math.abs(diff) >= 100000000) diffStr += (diff / 100000000).toFixed(1) + '억';
+            else if (Math.abs(diff) >= 10000) diffStr += (diff / 10000).toFixed(0) + '만';
+            else diffStr += diff.toLocaleString();
+            return (diff >= 0 ? '+' : '') + pct + '% (' + diffStr + ')';
+        });
+
+        var changePlugin = {
+            id: 'changeLabel',
+            afterDatasetsDraw: function(chart) {
+                var meta = chart.getDatasetMeta(2); // 합계 데이터셋
+                if (!meta || meta.hidden) return;
+                var ctx = chart.ctx;
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.font = '800 0.82rem -apple-system, sans-serif';
+                meta.data.forEach(function(point, i) {
+                    if (!changeLabels[i]) return;
+                    var isUp = totalData[i] >= (totalData[i - 1] || 0);
+                    // 배경 라운드 박스
+                    var text = changeLabels[i];
+                    var tw = ctx.measureText(text).width;
+                    var px = point.x, py = point.y - 16;
+                    ctx.fillStyle = isUp ? 'rgba(239, 68, 68, 0.08)' : 'rgba(59, 130, 246, 0.08)';
+                    ctx.beginPath();
+                    ctx.roundRect(px - tw / 2 - 6, py - 8, tw + 12, 18, 4);
+                    ctx.fill();
+                    // 텍스트
+                    ctx.fillStyle = isUp ? 'rgba(220, 38, 38, 0.9)' : 'rgba(37, 99, 235, 0.9)';
+                    ctx.fillText(text, px, py);
+                });
+                ctx.restore();
+            }
+        };
+
         var ctx = document.getElementById('chartTrend').getContext('2d');
         chartTrend = new Chart(ctx, {
             type: 'line',
+            plugins: [changePlugin],
             data: {
                 labels: labels,
                 datasets: [
@@ -591,23 +664,23 @@
                         label: 'ORD 매출',
                         data: ordData,
                         borderColor: 'rgba(37, 99, 235, 0.9)',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        backgroundColor: 'rgba(37, 99, 235, 0.05)',
                         fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        borderWidth: 2
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        borderWidth: 1.2
                     },
                     {
                         label: 'MPR 매출',
                         data: mprData,
                         borderColor: 'rgba(245, 158, 11, 0.9)',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        backgroundColor: 'rgba(245, 158, 11, 0.05)',
                         fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        borderWidth: 2
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        borderWidth: 1.2
                     },
                     {
                         label: '합계',
@@ -615,16 +688,17 @@
                         borderColor: 'rgba(16, 185, 129, 0.9)',
                         backgroundColor: 'transparent',
                         borderDash: [6, 3],
-                        tension: 0.3,
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
-                        borderWidth: 2
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        borderWidth: 1.2
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: { padding: { top: 25, right: 60 } },
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
                     legend: {
@@ -645,6 +719,7 @@
                         ticks: { color: textColor, font: { size: 10 } }
                     },
                     y: {
+                        beginAtZero: false,
                         grid: { color: gridColor },
                         ticks: {
                             color: textColor,
@@ -655,6 +730,117 @@
                 }
             }
         });
+
+        // 월별 매출 추이 테이블
+        var tbody = document.getElementById('monthlyTrendBody');
+        if (tbody && trend && trend.length) {
+            var reversed = trend.slice().reverse();
+            var html = '';
+            function fmtDiff(v) {
+                if (v === 0) return '';
+                var s = v >= 0 ? '+' : '';
+                if (Math.abs(v) >= 100000000) return s + (v / 100000000).toFixed(1) + '억';
+                if (Math.abs(v) >= 10000) return s + (v / 10000).toFixed(0) + '만';
+                return s + v.toLocaleString();
+            }
+
+            reversed.forEach(function(t, i) {
+                var ord = Number(t.ord_total) || 0;
+                var mpr = Number(t.mpr_total) || 0;
+                var total = Number(t.grand_total) || 0;
+                var hasPrev = i < reversed.length - 1;
+                var prevOrd = hasPrev ? (Number(reversed[i + 1].ord_total) || 0) : 0;
+                var prevMpr = hasPrev ? (Number(reversed[i + 1].mpr_total) || 0) : 0;
+                var prevTotal = hasPrev ? (Number(reversed[i + 1].grand_total) || 0) : 0;
+
+                var ordDiff = hasPrev ? ord - prevOrd : 0;
+                var mprDiff = hasPrev ? mpr - prevMpr : 0;
+                var totalDiff = hasPrev ? total - prevTotal : 0;
+                var totalPct = prevTotal > 0 ? ((totalDiff / prevTotal) * 100).toFixed(1) : '0.0';
+
+                var ordSub = hasPrev && ordDiff !== 0 ? ' <span style="font-size:0.6rem;color:' + (ordDiff >= 0 ? '#dc2626' : '#2563eb') + ';">(' + fmtDiff(ordDiff) + ')</span>' : '';
+                var mprSub = hasPrev && mprDiff !== 0 ? ' <span style="font-size:0.6rem;color:' + (mprDiff >= 0 ? '#dc2626' : '#2563eb') + ';">(' + fmtDiff(mprDiff) + ')</span>' : '';
+                var totalSub = hasPrev && totalDiff !== 0 ? ' <span style="font-size:0.6rem;color:' + (totalDiff >= 0 ? '#dc2626' : '#2563eb') + ';">(' + fmtDiff(totalDiff) + ')</span>' : '';
+
+                var diffStr = '';
+                if (hasPrev) {
+                    var arrow = totalDiff >= 0 ? '<span style="color:#dc2626;">▲</span>' : '<span style="color:#2563eb;">▼</span>';
+                    diffStr = arrow + ' ' + (totalDiff >= 0 ? '+' : '') + totalPct + '%';
+                }
+                html += '<tr class="trend-row" data-month="' + t.month + '" style="border-bottom:1px solid #f5f5f5; cursor:pointer; transition: background 0.15s;" onmouseenter="this.style.background=\'#f8fafc\'" onmouseleave="this.style.background=\'\'">' +
+                    '<td class="text-center py-2" style="font-weight:600; color:' + T('#475569','#94a3b8') + ';">' + t.month + '</td>' +
+                    '<td class="py-2" style="color:' + T('#1e293b','#e2e8f0') + '; font-weight:600;">' + ord.toLocaleString() + '원' + ordSub + '</td>' +
+                    '<td class="py-2" style="color:' + T('#1e293b','#e2e8f0') + '; font-weight:600;">' + mpr.toLocaleString() + '원' + mprSub + '</td>' +
+                    '<td class="py-2" style="color:#059669; font-weight:700;">' + total.toLocaleString() + '원' + totalSub + '</td>' +
+                    '<td class="text-center py-2" style="font-size:0.78rem; font-weight:600;">' + diffStr + '</td>' +
+                    '</tr>';
+            });
+            tbody.innerHTML = html;
+
+            // 행 클릭 → 변동 내역 펼침
+            tbody.querySelectorAll('.trend-row').forEach(function(row) {
+                row.addEventListener('click', function() {
+                    var month = this.getAttribute('data-month');
+                    var existing = this.nextElementSibling;
+                    if (existing && existing.classList.contains('diff-detail-row')) {
+                        existing.remove();
+                        return;
+                    }
+                    // 기존 열린 상세 닫기
+                    tbody.querySelectorAll('.diff-detail-row').forEach(function(r) { r.remove(); });
+
+                    var detailRow = document.createElement('tr');
+                    detailRow.className = 'diff-detail-row';
+                    detailRow.innerHTML = '<td colspan="5" style="padding:12px 16px; background:#fafbfc;"><div style="text-align:center; color:#94a3b8; font-size:0.78rem;"><span class="spinner-border spinner-border-sm me-1" style="width:0.6rem;height:0.6rem;"></span>변동 내역 조회 중...</div></td>';
+                    this.parentNode.insertBefore(detailRow, this.nextSibling);
+
+                    fetch('/revenue_summary/get_revenue_monthly_diff?year_month=' + month)
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            if (!data.success) {
+                                detailRow.innerHTML = '<td colspan="5" style="padding:12px; color:#dc2626; font-size:0.78rem;">조회 실패</td>';
+                                return;
+                            }
+                            var dhtml = '<td colspan="5" style="padding:0; background:#fafbfc;">';
+                            if (data.added.length === 0 && data.removed.length === 0) {
+                                dhtml += '<div style="padding:12px 16px; color:#94a3b8; font-size:0.78rem; text-align:center;">전월 대비 변동 없음</div>';
+                            } else {
+                                dhtml += '<table class="table table-sm mb-0" style="font-size:0.75rem; background:transparent;">';
+                                if (data.added.length > 0) {
+                                    dhtml += '<tr><td colspan="6" style="padding:8px 16px; font-weight:700; color:#059669; font-size:0.72rem; background:rgba(16,185,129,0.06);">▲ 추가 (' + data.added.length + '건)</td></tr>';
+                                    data.added.forEach(function(a) {
+                                        dhtml += '<tr style="border-bottom:1px solid #f0f0f0;">' +
+                                            '<td style="padding:4px 16px; color:' + T('#475569','#94a3b8') + ';">' + (a.company_name || a.member_code) + '</td>' +
+                                            '<td style="color:' + (a.usage === 'ORD' ? '#7c3aed' : '#6366f1') + '; font-weight:600;">' + a.usage + '</td>' +
+                                            '<td>' + a.product + '</td>' +
+                                            '<td>' + a.bandwidth + '</td>' +
+                                            '<td>' + a.provider + '</td>' +
+                                            '<td style="text-align:right; font-weight:600; color:#dc2626;">' + Number(a.price).toLocaleString() + '원</td></tr>';
+                                    });
+                                }
+                                if (data.removed.length > 0) {
+                                    dhtml += '<tr><td colspan="6" style="padding:8px 16px; font-weight:700; color:#dc2626; font-size:0.72rem; background:rgba(239,68,68,0.06);">▼ 제거 (' + data.removed.length + '건)</td></tr>';
+                                    data.removed.forEach(function(a) {
+                                        dhtml += '<tr style="border-bottom:1px solid #f0f0f0; opacity:0.6;">' +
+                                            '<td style="padding:4px 16px; color:' + T('#475569','#94a3b8') + ';">' + (a.company_name || a.member_code) + '</td>' +
+                                            '<td style="color:#94a3b8;">' + a.usage + '</td>' +
+                                            '<td>' + a.product + '</td>' +
+                                            '<td>' + a.bandwidth + '</td>' +
+                                            '<td>' + a.provider + '</td>' +
+                                            '<td style="text-align:right; color:#94a3b8;">' + Number(a.price).toLocaleString() + '원</td></tr>';
+                                    });
+                                }
+                                dhtml += '</table>';
+                            }
+                            dhtml += '</td>';
+                            detailRow.innerHTML = dhtml;
+                        })
+                        .catch(function() {
+                            detailRow.innerHTML = '<td colspan="5" style="padding:12px; color:#dc2626; font-size:0.78rem;">조회 실패</td>';
+                        });
+                });
+            });
+        }
     }
 
     // PDF 다운로드

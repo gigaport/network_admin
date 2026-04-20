@@ -2,6 +2,8 @@
     'use strict';
 
     var autoRefreshTimer = null;
+    function isDark() { return document.documentElement.getAttribute('data-bs-theme') === 'dark'; }
+    function T(light, dark) { return isDark() ? dark : light; }
 
     function esc(s) {
         if (!s) return '';
@@ -153,10 +155,10 @@
             // 카드 헤더
             html += '<div class="d-flex align-items-center flex-wrap gap-2 mb-3">';
             html += '<span style="background:#eef2ff;color:#6366f1;padding:5px 14px;border-radius:8px;font-size:0.95rem;font-weight:700;">절차 ' + esc(device.procedure) + '</span>';
-            html += '<span style="font-size:1.1rem;font-weight:700;color:#1e293b;">' + esc(device.device_name) + '</span>';
+            html += '<span style="font-size:1.1rem;font-weight:700;color:' + T('#1e293b','#e2e8f0') + ';">' + esc(device.device_name) + '</span>';
             html += '<span style="font-size:0.9rem;color:#64748b;">(' + esc(device.ip) + ')</span>';
             if (device.label) {
-                html += '<span style="font-size:0.82rem;color:#475569;margin-left:10px;font-weight:500;">- ' + esc(device.label) + '</span>';
+                html += '<span style="font-size:0.82rem;color:' + T('#475569','#94a3b8') + ';margin-left:10px;font-weight:500;">- ' + esc(device.label) + '</span>';
             }
             html += '<span class="ms-auto d-flex align-items-center gap-2">';
             if (totalItems > 0) {
@@ -186,7 +188,7 @@
 
                     html += '<div class="table-responsive">';
                     html += '<table class="table table-sm table-hover mb-0" style="font-size:0.95rem;">';
-                    html += '<thead><tr style="background:#f8fafc;">';
+                    html += '<thead><tr style="background:' + T('#f8fafc','#1e293b') + ';">';
                     html += '<th class="text-center" style="width:5%;">No</th>';
                     if (hasDrJudge) {
                         html += '<th class="text-center" style="width:9%;background:#f0fdf4;">가동상태</th>';
@@ -266,7 +268,7 @@
 
                 html += '<div class="table-responsive">';
                 html += '<table class="table table-sm table-hover mb-0" style="font-size:0.95rem;">';
-                html += '<thead><tr style="background:#f8fafc;">';
+                html += '<thead><tr style="background:' + T('#f8fafc','#1e293b') + ';">';
                 html += '<th class="text-center" style="width:5%;">No</th>';
                 if (hasCfgDrJudge) {
                     html += '<th class="text-center" style="width:9%;background:#f0fdf4;">가동상태</th>';
@@ -324,7 +326,7 @@
                         html += '<td class="text-center" style="background:rgba(254,242,242,0.5);">' + cfgDrJudge + '</td>';
                     }
                     html += '<td class="text-center">' + typeBadge + '</td>';
-                    html += '<td><code style="font-size:0.88rem;background:#f1f5f9;padding:2px 6px;border-radius:4px;">' + esc(chk.description) + '</code></td>';
+                    html += '<td><code style="font-size:0.88rem;background:' + T('#f1f5f9','#334155') + ';padding:2px 6px;border-radius:4px;">' + esc(chk.description) + '</code></td>';
                     html += '<td class="text-center">' + statusBadge + '</td>';
                     html += '<td style="color:#64748b;">' + esc(chk.detail || '-') + '</td>';
                     html += '</tr>';

@@ -24,76 +24,80 @@
           <h2 id="contents_title" class="mb-0">정보이용사 이익내역</h2>
         </div>
         <div class="col-auto ms-auto d-flex align-items-center gap-2">
+          <button class="btn btn-sm btn-outline-danger" onclick="downloadPdf()" title="PDF 보고서 다운로드">
+            <i class="fas fa-file-pdf me-1"></i>보고서출력
+          </button>
           <button class="btn btn-sm btn-primary" onclick="refreshTable()">
             <i class="fas fa-sync-alt me-1"></i>새로고침
           </button>
         </div>
       </div>
 
-      <!-- 요약 카드 2x2 + 월별 차트 -->
-      <div class="row g-3 mb-4" style="min-height: 260px;">
-        <!-- 왼쪽: 요약 카드 2x2 -->
-        <div class="col-md-4 d-flex" id="summaryCards">
-          <div class="row g-2 flex-fill">
-            <!-- 전체 정보이용사 -->
-            <div class="col-6 d-flex">
-              <div class="flex-fill d-flex align-items-center gap-3" style="border-radius: 12px; padding: 16px; background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #6366f1;">
-                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <i class="fas fa-building" style="color: #6366f1; font-size: 0.85rem;"></i>
-                </div>
-                <div>
-                  <div style="font-size: 0.7rem; font-weight: 500; color: #94a3b8; letter-spacing: 0.3px;">전체 정보이용사</div>
-                  <div class="fw-bold" id="stat_members" style="font-size: 1.6rem; color: #1e293b; line-height: 1.2;">-</div>
-                </div>
-              </div>
+      <!-- Stat bar -->
+      <div class="mb-1" style="text-align:right; padding:0 6px;">
+        <span style="font-size:0.7rem; color:#94a3b8;"><i class="fas fa-info-circle me-1"></i>괄호 안 수치는 전년 12월 대비 증감</span>
+      </div>
+      <div class="mb-3" id="summaryCards" style="display:flex; align-items:center; gap:28px; padding:16px 24px; background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(99,102,241,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">전체 정보이용사</span>
+          <span id="stat_members" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
+        </div>
+        <div style="width:1px; height:24px; background:#e2e8f0;"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(16,185,129,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">총 매출</span>
+          <span id="stat_revenue" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
+        </div>
+        <div style="width:1px; height:24px; background:#e2e8f0;"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(239,68,68,0.5); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">총 매입</span>
+          <span id="stat_purchase" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
+        </div>
+        <div style="width:1px; height:24px; background:#e2e8f0;"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(245,158,11,0.7); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">총 이익</span>
+          <span id="stat_profit" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
+        </div>
+      </div>
+
+      <!-- 월별 이익 추이 (차트 + 테이블) -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <div style="background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0); overflow:hidden; height:100%;">
+            <div style="padding:12px 22px; border-bottom:1px solid var(--phoenix-border-color, #e2e8f0); display:flex; align-items:center; gap:8px;">
+              <span style="font-size:0.92rem; font-weight:600; color:var(--phoenix-body-color, #1e293b);">월별 이익 추이</span>
+              <span style="font-size:0.72rem; color:#94a3b8;">최근 12개월</span>
             </div>
-            <!-- 총 매출 -->
-            <div class="col-6 d-flex">
-              <div class="flex-fill d-flex align-items-center gap-3" style="border-radius: 12px; padding: 16px; background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #10b981;">
-                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16,185,129,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <i class="fas fa-won-sign" style="color: #10b981; font-size: 0.85rem;"></i>
-                </div>
-                <div style="min-width: 0;">
-                  <div style="font-size: 0.7rem; font-weight: 500; color: #94a3b8; letter-spacing: 0.3px;">총 매출</div>
-                  <div class="fw-bold" id="stat_revenue" style="font-size: 1.15rem; color: #1e293b; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
-                </div>
-              </div>
-            </div>
-            <!-- 총 매입 -->
-            <div class="col-6 d-flex">
-              <div class="flex-fill d-flex align-items-center gap-3" style="border-radius: 12px; padding: 16px; background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #ef4444;">
-                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(239,68,68,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <i class="fas fa-file-invoice" style="color: #ef4444; font-size: 0.85rem;"></i>
-                </div>
-                <div style="min-width: 0;">
-                  <div style="font-size: 0.7rem; font-weight: 500; color: #94a3b8; letter-spacing: 0.3px;">총 매입</div>
-                  <div class="fw-bold" id="stat_purchase" style="font-size: 1.15rem; color: #1e293b; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
-                </div>
-              </div>
-            </div>
-            <!-- 총 이익 -->
-            <div class="col-6 d-flex">
-              <div class="flex-fill d-flex align-items-center gap-3" style="border-radius: 12px; padding: 16px; background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #f59e0b;">
-                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(245,158,11,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <i class="fas fa-chart-line" style="color: #f59e0b; font-size: 0.85rem;"></i>
-                </div>
-                <div style="min-width: 0;">
-                  <div style="font-size: 0.7rem; font-weight: 500; color: #94a3b8; letter-spacing: 0.3px;">총 이익</div>
-                  <div class="fw-bold" id="stat_profit" style="font-size: 1.15rem; color: #1e293b; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
-                </div>
-              </div>
+            <div style="padding:16px 22px;">
+              <div style="height:260px;"><canvas id="chartMonthly"></canvas></div>
             </div>
           </div>
         </div>
-        <!-- 오른쪽: 월별 이익 추이 차트 -->
-        <div class="col-md-8 d-flex">
-          <div class="card border-0 shadow-sm flex-fill" style="border-radius: 14px; overflow: hidden;">
-            <div class="card-body d-flex flex-column" style="padding: 14px 18px;">
-              <h6 class="fw-bold mb-2" style="color: #1f2937; font-size: 0.85rem;">
-                <i class="fas fa-chart-area me-2" style="color: #6366f1;"></i>월별 이익 추이 (최근 12개월)
-              </h6>
-              <div class="flex-fill" style="min-height: 200px;">
-                <canvas id="chartMonthly"></canvas>
+        <div class="col-md-6">
+          <div style="background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0); overflow:hidden; height:100%;">
+            <div style="padding:12px 22px; border-bottom:1px solid var(--phoenix-border-color, #e2e8f0); display:flex; align-items:center; gap:8px;">
+              <span style="font-size:0.92rem; font-weight:600; color:var(--phoenix-body-color, #1e293b);">최근 월별 이익 추이</span>
+              <span style="font-size:0.65rem; color:#94a3b8;">전월 대비 증감</span>
+            </div>
+            <div style="padding:12px 22px;">
+              <div class="table-responsive" style="max-height:280px; overflow-y:auto;">
+                <table class="table table-sm table-hover mb-0" style="font-size:0.82rem;">
+                  <thead style="position:sticky; top:0; background:#fff; z-index:1;">
+                    <tr style="border-bottom:2px solid #f0f0f0;">
+                      <th class="text-center py-2" style="color:var(--phoenix-tertiary-color, #64748b); font-weight:600;">월</th>
+                      <th class="py-2" style="color:var(--phoenix-body-color, #1e293b); font-weight:600;">매출</th>
+                      <th class="py-2" style="color:var(--phoenix-body-color, #1e293b); font-weight:600;">매입</th>
+                      <th class="py-2" style="color:#059669; font-weight:600;">이익</th>
+                      <th class="text-center py-2" style="color:var(--phoenix-tertiary-color, #64748b); font-weight:600;">증감률</th>
+                    </tr>
+                  </thead>
+                  <tbody id="profitTrendBody">
+                    <tr><td colspan="5" class="text-center py-3" style="color:#94a3b8;">로딩 중...</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -102,42 +106,33 @@
 
       <!-- 차트 영역 -->
       <div class="row g-3 mb-4">
-        <!-- 이익 TOP 10 -->
         <div class="col-md-6">
-          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
-            <div class="card-body" style="padding: 18px 20px;">
-              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
-                <i class="fas fa-trophy me-2" style="color: #f59e0b;"></i>이익 TOP 10
-              </h6>
-              <div style="height: 240px;">
-                <canvas id="chartTop5"></canvas>
-              </div>
+          <div style="background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0); overflow:hidden; height:100%;">
+            <div style="padding:12px 22px; border-bottom:1px solid var(--phoenix-border-color, #e2e8f0);">
+              <span style="font-size:0.92rem; font-weight:600; color:var(--phoenix-body-color, #1e293b);">이익 TOP 10</span>
+            </div>
+            <div style="padding:16px 22px;">
+              <div id="chartTop5" style="max-height:260px;overflow-y:auto;"></div>
             </div>
           </div>
         </div>
-        <!-- 매출 vs 매입 비율 -->
         <div class="col-md-3">
-          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
-            <div class="card-body" style="padding: 18px 20px;">
-              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
-                <i class="fas fa-chart-pie me-2" style="color: #6366f1;"></i>매출 / 매입 비율
-              </h6>
-              <div style="height: 240px;">
-                <canvas id="chartRevPur"></canvas>
-              </div>
+          <div style="background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0); overflow:hidden; height:100%;">
+            <div style="padding:12px 22px; border-bottom:1px solid var(--phoenix-border-color, #e2e8f0);">
+              <span style="font-size:0.92rem; font-weight:600; color:var(--phoenix-body-color, #1e293b);">매출 / 매입 비율</span>
+            </div>
+            <div style="padding:16px 22px;">
+              <div style="height:240px;"><canvas id="chartRevPur"></canvas></div>
             </div>
           </div>
         </div>
-        <!-- 이익률 분포 -->
         <div class="col-md-3">
-          <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
-            <div class="card-body" style="padding: 18px 20px;">
-              <h6 class="fw-bold mb-3" style="color: #1f2937; font-size: 0.85rem;">
-                <i class="fas fa-percentage me-2" style="color: #10b981;"></i>이익률 분포
-              </h6>
-              <div style="height: 240px;">
-                <canvas id="chartProfitDist"></canvas>
-              </div>
+          <div style="background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0); overflow:hidden; height:100%;">
+            <div style="padding:12px 22px; border-bottom:1px solid var(--phoenix-border-color, #e2e8f0);">
+              <span style="font-size:0.92rem; font-weight:600; color:var(--phoenix-body-color, #1e293b);">이익률 분포</span>
+            </div>
+            <div style="padding:16px 22px;">
+              <div style="height:240px;"><canvas id="chartProfitDist"></canvas></div>
             </div>
           </div>
         </div>
@@ -147,17 +142,18 @@
         <div class="card-body" style="padding: 2rem 1rem !important; min-height: 400px;">
           <div class="table-list" id="advanceAjaxTable">
             <div class="table-responsive scrollbar">
-              <table class="table table-hover table-sm mb-0" id="profitTable" style="width: 100% !important; font-size: 0.8rem !important;">
+              <table class="table table-hover table-sm mb-0" id="profitTable" style="width: 100% !important; font-size: 0.88rem !important;">
               <thead>
                 <tr>
-                  <th class="sort white-space-nowrap align-middle text-center" scope="col">정보이용사번호</th>
-                  <th class="sort white-space-nowrap align-middle text-center" scope="col">정보이용사코드</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">회원번호</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">회원사코드</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col">회사명</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col">가입유형</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col">PB</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col">Phase</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col">MKD회선수</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col">MKD매출</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col">매입회선수</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col">총매입</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col">이익</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col">이익률</th>
@@ -165,14 +161,15 @@
               </thead>
               <tfoot class="sort text-center" style="display: table-header-group">
                 <tr>
-                  <th class="text-center">정보이용사번호</th>
-                  <th class="text-center">정보이용사코드</th>
+                  <th class="text-center">회원번호</th>
+                  <th class="text-center">회원사코드</th>
                   <th class="text-center">회사명</th>
                   <th class="text-center">가입유형</th>
                   <th class="text-center">PB</th>
                   <th class="text-center">Phase</th>
                   <th class="text-center">MKD회선수</th>
                   <th class="text-center">MKD매출</th>
+                  <th class="text-center">매입회선수</th>
                   <th class="text-center">총매입</th>
                   <th class="text-center">이익</th>
                   <th class="text-center">이익률</th>

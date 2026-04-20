@@ -6,15 +6,15 @@ var chartInstances = {};
 
 // 컬러 팔레트 (Clean & Minimal)
 var C = {
-    blue: '#4a7cff',
-    green: '#36b37e',
-    orange: '#ff9f43',
-    purple: '#a855f7',
-    red: '#ff6b6b',
-    cyan: '#00b8d9',
-    pink: '#f06595',
-    teal: '#20c997',
-    multi: ['#4a7cff', '#36b37e', '#ff9f43', '#a855f7', '#ff6b6b', '#00b8d9', '#f06595', '#20c997']
+    blue: '#059669',
+    green: '#10b981',
+    orange: '#0d9488',
+    purple: '#047857',
+    red: '#34d399',
+    cyan: '#065f46',
+    pink: '#6ee7b7',
+    teal: '#0f766e',
+    multi: ['#059669', '#10b981', '#0d9488', '#047857', '#34d399', '#065f46', '#6ee7b7', '#0f766e']
 };
 
 // 다크 테마 감지
@@ -128,12 +128,12 @@ function renderTopProfitChart(members) {
         yAxis: {
             type: 'category', data: names,
             axisLine: { show: false }, axisTick: { show: false },
-            axisLabel: { fontSize: 11, color: T('#555', '#94a3b8'), fontWeight: 500, width: 110, overflow: 'truncate' }
+            axisLabel: { fontSize: 14, color: T('#555', '#94a3b8'), fontWeight: 600, width: 130, overflow: 'truncate' }
         },
         series: [{
-            type: 'bar', data: profits, barWidth: 12,
-            itemStyle: { borderRadius: [0, 6, 6, 0], color: '#f59e0b' },
-            label: { show: true, position: 'right', fontSize: 11, fontWeight: 700, color: T('#1a1a2e', '#e2e8f0'), formatter: function(p) { return fmtWon(p.value); } }
+            type: 'bar', data: profits, barWidth: 14,
+            itemStyle: { borderRadius: [0, 6, 6, 0], color: '#6ee7b7' },
+            label: { show: true, position: 'right', fontSize: 14, fontWeight: 700, color: T('#1a1a2e', '#e2e8f0'), formatter: function(p) { return fmtWon(p.value); } }
         }]
     });
 }
@@ -305,7 +305,7 @@ function renderMulticastTable(data) {
         var badge = getMcBadge(d.check_result, d.check_result_badge);
         html += '<tr style="border-bottom:1px solid #f5f5f5;">' +
             '<td class="text-center py-2">' + esc(d.member_name || d.member_code || '-') + '</td>' +
-            '<td class="text-center py-2" style="color:#999;font-size:0.68rem;">' + esc(d.device_name || '-') + '</td>' +
+            '<td class="text-center py-2" style="color:#999;">' + esc(d.device_name || '-') + '</td>' +
             '<td class="text-center py-2">' + (d.product_cnt != null ? d.product_cnt : '-') + '</td>' +
             '<td class="text-center py-2">' + (d.mroute_cnt != null ? d.mroute_cnt : '-') + '</td>' +
             '<td class="text-center py-2">' + (d.oif_cnt != null ? d.oif_cnt : '-') + '</td>' +
@@ -340,8 +340,8 @@ function renderPtpTable(data) {
         var region = getPtpRegion(d.device_name);
         html += '<tr style="border-bottom:1px solid #f5f5f5;">' +
             '<td class="text-center py-2">' + esc(region) + '</td>' +
-            '<td class="text-center py-2" style="font-size:0.68rem;">' + esc(d.device_name || '-') + '</td>' +
-            '<td class="text-center py-2" style="font-size:0.68rem;color:#999;">' + esc(d.current_time || '-') + '</td>' +
+            '<td class="text-center py-2">' + esc(d.device_name || '-') + '</td>' +
+            '<td class="text-center py-2" style="color:#999;">' + esc(d.current_time || '-') + '</td>' +
             '<td class="text-center py-2" style="' + (oW ? 'color:#c62828;font-weight:700;' : '') + '">' + fmtPtp(d.offset) + '</td>' +
             '<td class="text-center py-2">' + fmtPtp(d.mean_path_delay) + '</td>' +
             '<td class="text-center py-2">' + fmtPtp(d.jitter) + '</td>' +
@@ -376,12 +376,12 @@ function renderTopMembersChart(members) {
         yAxis: {
             type: 'category', data: names,
             axisLine: { show: false }, axisTick: { show: false },
-            axisLabel: { fontSize: 11, color: T('#555', '#94a3b8'), fontWeight: 500, width: 110, overflow: 'truncate' }
+            axisLabel: { fontSize: 14, color: T('#555', '#94a3b8'), fontWeight: 600, width: 130, overflow: 'truncate' }
         },
         series: [{
-            type: 'bar', data: counts, barWidth: 12,
+            type: 'bar', data: counts, barWidth: 14,
             itemStyle: { borderRadius: [0, 6, 6, 0], color: C.blue },
-            label: { show: true, position: 'right', fontSize: 11, fontWeight: 700, color: T('#1a1a2e', '#e2e8f0'), formatter: '({c})' }
+            label: { show: true, position: 'right', fontSize: 14, fontWeight: 700, color: T('#1a1a2e', '#e2e8f0'), formatter: '({c})' }
         }]
     });
 }
@@ -584,7 +584,7 @@ function renderNetboxSummary(data) {
     setText('stat_nb_idle', fmtNum(idle));
 
     // 역할별 그리드
-    var roleColors = { 'PRD': '#10b981', 'TST': '#f59e0b', 'DR': '#a855f7', 'DEV': '#3b82f6' };
+    var roleColors = { 'PRD': '#059669', 'TST': '#0d9488', 'DR': '#047857', 'DEV': '#10b981' };
     var gridEl = document.getElementById('statGridNetbox');
     if (gridEl) {
         var html = '<div style="font-size:0.72rem;font-weight:600;color:' + T('#8c8c8c', '#64748b') + ';margin-bottom:6px;">역할별</div>';
@@ -676,7 +676,7 @@ function renderNetboxMfrChart(mfrCounts) {
             itemStyle: {
                 borderRadius: [0, 6, 6, 0],
                 color: function(params) {
-                    var gradients = ['#6366f1', '#818cf8', '#a5b4fc', '#6366f1', '#818cf8', '#a5b4fc', '#6366f1', '#818cf8', '#a5b4fc', '#6366f1'];
+                    var gradients = ['#059669', '#10b981', '#34d399', '#0d9488', '#047857', '#6ee7b7', '#065f46', '#0f766e', '#059669', '#10b981'];
                     return gradients[params.dataIndex % gradients.length];
                 }
             },
@@ -890,8 +890,8 @@ function renderRevenueTrendChart(trend, infoTrend) {
             {
                 name: '합계', type: 'line', yAxisIndex: 0,
                 data: totalData,
-                lineStyle: { color: '#ff9f43', width: 2, type: 'dashed' },
-                itemStyle: { color: '#ff9f43' },
+                lineStyle: { color: '#0d9488', width: 2, type: 'dashed' },
+                itemStyle: { color: '#0d9488' },
                 symbol: 'circle', symbolSize: 5,
                 label: {
                     show: true, position: 'top', fontSize: 9, color: T('#999', '#94a3b8'),
@@ -901,8 +901,8 @@ function renderRevenueTrendChart(trend, infoTrend) {
             {
                 name: '유효 회선수', type: 'line', yAxisIndex: 1,
                 data: circuitData,
-                lineStyle: { color: '#ff6b6b', width: 1.5 },
-                itemStyle: { color: '#ff6b6b' },
+                lineStyle: { color: '#047857', width: 1.5 },
+                itemStyle: { color: '#047857' },
                 symbol: 'diamond', symbolSize: 5
             }
         ]
@@ -1028,3 +1028,69 @@ function loadSystemMetrics() {
 // 시스템 메트릭 초기 로드 + 30초 주기 갱신
 loadSystemMetrics();
 setInterval(loadSystemMetrics, 30000);
+
+// ===== DR훈련 전환율 배지 (타이틀 옆) =====
+function loadDrTrainingRate() {
+    var mainEl = document.getElementById('drMainRate');
+    var drEl = document.getElementById('drDrRate');
+    if (!mainEl || !drEl) return;
+
+    fetch('/get_dr_training_status', { cache: 'no-store' })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) {
+            if (!data || !data.success || !data.devices) {
+                mainEl.textContent = '-';
+                drEl.textContent = '-';
+                return;
+            }
+            var grandTotal = 0, grandMainOk = 0, grandDrOk = 0;
+            data.devices.forEach(function(device) {
+                if (!device.reachable) return;
+                var isIntfNormalDown = device.procedure === '51.01' ||
+                    (device.procedure === '51.02' && (device.device_name === 'RBD_MPR_L3_01' || device.device_name === 'RBD_SVC_L3_01'));
+                var isIntfNormalUp = (device.procedure === '51.02' && (device.device_name === 'PYD_DFP_BB_01' || device.device_name === 'PYD_DFP_BB_02')) ||
+                    device.procedure === '51.04' || device.procedure === '51.05';
+                if (device.interfaces) {
+                    device.interfaces.forEach(function(intf) {
+                        grandTotal++;
+                        var isDown = intf.oper_state !== 'up';
+                        if (isIntfNormalDown) {
+                            if (isDown) grandMainOk++; else grandDrOk++;
+                        } else if (isIntfNormalUp) {
+                            if (!isDown) grandMainOk++; else grandDrOk++;
+                        }
+                    });
+                }
+                var isCfgDevice = device.procedure === '51.02' &&
+                    (device.device_name === 'PYD_MPR_L3_01' || device.device_name === 'PHQ_MPR_L3_01' ||
+                     device.device_name === 'PYD_MKD_L3_01' || device.device_name === 'PHQ_MKD_L3_01' ||
+                     device.device_name === 'RBD_MPR_L3_01');
+                var isRbdMpr = device.device_name === 'RBD_MPR_L3_01';
+                if (isCfgDevice && device.config_checks) {
+                    device.config_checks.forEach(function(chk) {
+                        grandTotal++;
+                        if (isRbdMpr) {
+                            if (!chk.found) grandMainOk++; else grandDrOk++;
+                        } else {
+                            if (chk.found) grandMainOk++; else grandDrOk++;
+                        }
+                    });
+                }
+            });
+            var mainPct = grandTotal > 0 ? Math.round(grandMainOk / grandTotal * 100) : 0;
+            var drPct = grandTotal > 0 ? Math.round(grandDrOk / grandTotal * 100) : 0;
+            mainEl.textContent = mainPct + '%';
+            drEl.textContent = drPct + '%';
+            mainEl.style.color = mainPct === 100 ? '#059669' : (mainPct >= 50 ? '#d97706' : '#dc2626');
+            drEl.style.color = drPct === 100 ? '#059669' : (drPct >= 50 ? '#d97706' : '#dc2626');
+        })
+        .catch(function(e) {
+            console.error('DR훈련 전환율 로드 실패:', e);
+            mainEl.textContent = '-';
+            drEl.textContent = '-';
+        });
+}
+
+// DR훈련 전환율 초기 로드 + 60초 주기 갱신
+loadDrTrainingRate();
+setInterval(loadDrTrainingRate, 60000);
