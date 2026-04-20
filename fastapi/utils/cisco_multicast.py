@@ -95,7 +95,7 @@ def ProcessMulticastInfo(data:dict, market_gubn:str):
                     multicast_group = data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']
 
                     ## 유요한 (S,G) 및 VLAN 1100 개수를 계산하여 기존 데이터에 삽입
-                    valid_source_address_count = CountValidSourceAddress(multicast_group)
+                    valid_source_address_count = CountValidSourceAddress(multicast_group, device_os)
 
                     #####################==>> RP Address os별 삽입 기준 정리 해야됨!!!!!
                     valid_multicast_data = CountValidOifAndGetMinUptime(multicast_group, device_os)
@@ -158,7 +158,7 @@ def ProcessMulticastInfo(data:dict, market_gubn:str):
     return result
 
 ## 유효한 멀티캐스트 IP를 선별하기는 과정
-def CountValidSourceAddress(data):
+def CountValidSourceAddress(data, device_os:str='iosxe'):
     count = 0
 
     for multicast_ip, info in data.items():
@@ -166,10 +166,16 @@ def CountValidSourceAddress(data):
         # 예외 멀티캐스트 IP 제외 처리 (공인 멀티캐스트 IP + 회원사 리커버리 멀티캐스트 IP)
         if all(not multicast_ip.startswith(ip_prefix) for ip_prefix in EXCEPTION_MULTICAST_IP):
             source = info.get('source_address',{})
-            for key in source:
-                if '*' not in key:
-                    count += 1
-    
+            for key, addr_info in source.items():
+                if '*' in key:
+                    continue
+                # nxos: Incoming interface가 Null인 (S,G)는 RPF 실패로 유효 라우팅이 아니므로 카운트 제외
+                if device_os == 'nxos':
+                    iil = addr_info.get('incoming_interface_list', {}) if isinstance(addr_info, dict) else {}
+                    if not iil or all(k == 'Null' for k in iil.keys()):
+                        continue
+                count += 1
+
     return count
 
 def CountValidOifAndGetMinUptime(data, device_os:str):
@@ -220,10 +226,14 @@ def CountValidOifAndGetMinUptime(data, device_os:str):
                     #         }
                     #     }
                     # }
-                    first_key = next(iter(addr_info['incoming_interface_list']))
-                    first_value = addr_info['incoming_interface_list'][first_key]
+                    iil = addr_info.get('incoming_interface_list', {})
+                    # Incoming interface가 Null인 (S,G)는 RPF 실패로 유효 라우팅이 아니므로 OIF 카운트 / RPF 대상에서 제외
+                    if not iil or all(k == 'Null' for k in iil.keys()):
+                        continue
+                    first_key = next(iter(iil))
+                    first_value = iil[first_key]
                     # print(f"rpf {first_key}, {first_value}")
-                    if first_value['rpf_nbr'] not in rpf_nbrs:
+                    if first_value.get('rpf_nbr') and first_value['rpf_nbr'] not in rpf_nbrs:
                         rpf_nbrs.append(first_value['rpf_nbr'])
                 
                 outgoing_interface = addr_info.get("outgoing_interface_list", {})

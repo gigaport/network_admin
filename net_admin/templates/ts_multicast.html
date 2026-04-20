@@ -33,62 +33,29 @@
       </div>
 
       <!-- 요약 통계 -->
-      <div class="row g-3 mb-4" id="summaryCards">
-        <div class="col-6 col-md-3">
-          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #6366f1, #818cf8); box-shadow: 0 4px 15px rgba(99,102,241,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center gap-3">
-              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-building" style="color: #fff; font-size: 0.9rem;"></i>
-              </div>
-              <div>
-                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">총 회원사</div>
-                <div class="fw-bold" id="stat_total" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
-              </div>
-            </div>
-          </div>
+      <div class="mb-3" id="summaryCards" style="display:flex; align-items:center; gap:28px; padding:16px 24px; background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(99,102,241,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">총 회원사</span>
+          <span id="stat_total" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
         </div>
-        <div class="col-6 col-md-3">
-          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #059669, #10B981); box-shadow: 0 4px 15px rgba(16,185,129,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center gap-3">
-              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-check-circle" style="color: #fff; font-size: 0.9rem;"></i>
-              </div>
-              <div>
-                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">정상확인</div>
-                <div class="fw-bold" id="stat_normal" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
-              </div>
-            </div>
-          </div>
+        <div style="width:1px; height:24px; background:var(--phoenix-border-color, #e2e8f0);"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(16,185,129,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">정상확인</span>
+          <span id="stat_normal" style="font-size:1.25rem; font-weight:700; color:#059669;">-</span>
         </div>
-        <div class="col-6 col-md-3">
-          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #DC2626, #EF4444); box-shadow: 0 4px 15px rgba(239,68,68,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center gap-3">
-              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-exclamation-triangle" style="color: #fff; font-size: 0.9rem;"></i>
-              </div>
-              <div>
-                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">확인필요</div>
-                <div class="fw-bold" id="stat_alert" style="font-size: 1.5rem; color: #fff; line-height: 1;">-</div>
-              </div>
-            </div>
-          </div>
+        <div style="width:1px; height:24px; background:var(--phoenix-border-color, #e2e8f0);"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(239,68,68,0.5); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">확인필요</span>
+          <span id="stat_alert" style="font-size:1.25rem; font-weight:700; color:#dc2626;">-</span>
         </div>
-        <div class="col-6 col-md-3">
-          <div class="h-100 position-relative" style="border-radius: 14px; padding: 18px 20px; background: linear-gradient(135deg, #0EA5E9, #38BDF8); box-shadow: 0 4px 15px rgba(14,165,233,0.3); overflow: hidden;">
-            <div style="position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1);"></div>
-            <div class="d-flex align-items-center gap-3">
-              <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-sync-alt" style="color: #fff; font-size: 0.9rem;"></i>
-              </div>
-              <div>
-                <div style="font-size: 0.7rem; font-weight: 500; color: rgba(255,255,255,0.8); margin-bottom: 2px;">자동 새로고침</div>
-                <div class="fw-bold" id="stat_countdown" style="font-size: 1.5rem; color: #fff; line-height: 1;">60초</div>
-              </div>
-            </div>
-          </div>
+        <div style="width:1px; height:24px; background:var(--phoenix-border-color, #e2e8f0);"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(14,165,233,0.5); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">자동 새로고침</span>
+          <span id="stat_countdown" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">60초</span>
         </div>
       </div>
 
@@ -103,17 +70,15 @@
                   <th class="sort align-middle text-center" scope="col" style="width:7%;">회원사명</th>
                   <th class="sort align-middle text-center" scope="col" style="width:6%;">장비명</th>
                   <th class="sort align-middle text-center" scope="col" style="width:5%;">장비OS</th>
-                  <th class="sort align-middle text-center" scope="col" style="width:10%;">시세상품</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:10%;">신청_시세상품</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:10%;">수신_시세상품</th>
                   <th class="sort align-middle text-center" scope="col" style="width:8%;">PIM-RP</th>
                   <th class="sort align-middle text-center" scope="col" style="width:4%;">정상그룹</th>
                   <th class="sort align-middle text-center" scope="col" style="width:4%;">MROUTE</th>
                   <th class="sort align-middle text-center" scope="col" style="width:4%;">OIF</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:6%;">MIN UPTIME</th>
-                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:5%;">BFD NBR</th>
-                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:7%;">RPF NBR</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:8%;">체크시간</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:4%;">연결서버</th>
-                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:4%;">알람</th>
-                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:5%;">비고</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:4%;">명령어결과</th>
                   <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:5%;">체크결과</th>
                 </tr>
@@ -125,17 +90,15 @@
                   <th class="text-center">회원사명</th>
                   <th class="text-center">장비명</th>
                   <th class="text-center">장비OS</th>
-                  <th class="text-center">시세상품</th>
+                  <th class="text-center">신청_시세상품</th>
+                  <th class="text-center">수신_시세상품</th>
                   <th class="text-center">PIM-RP</th>
                   <th class="text-center">정상그룹</th>
                   <th class="text-center">MROUTE</th>
                   <th class="text-center">OIF</th>
                   <th class="text-center">UPTIME</th>
-                  <th class="text-center">BFD</th>
-                  <th class="text-center">RPF</th>
+                  <th class="text-center">체크시간</th>
                   <th class="text-center">서버</th>
-                  <th class="text-center">알람</th>
-                  <th class="text-center">비고</th>
                   <th class="text-center">명령어</th>
                   <th class="text-center">체크</th>
                 </tr>

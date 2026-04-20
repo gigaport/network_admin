@@ -28,90 +28,113 @@ def index (request):
 
     return render(request, path, context=context)
 
-def init (request):
-    now = timezone.localtime()
-    # TODAY_STR = NOW.date()
-    today_str = datetime.today().strftime('%Y-%m-%d')
+FASTAPI_BASE_URL = 'http://fastapi:8000'
+
+def init(request):
+    """멀티캐스트 상태 조회 (DB에서 읽기, 없으면 기존 JSON 방식 fallback)"""
+    logger.info(f'[CALL_INIT]')
+
+    if request.method != "GET":
+        return JsonResponse({"data": []})
+
+    sub_menu = request.GET.get("sub_menu")
+    market_gubn = ""
+
+    if sub_menu == "pr_multicast":
+        market_gubn = "pr_members"
+    elif sub_menu == "ts_multicast":
+        market_gubn = "ts_members"
+    elif sub_menu == "pr_info_multicast":
+        market_gubn = "pr_information"
+
+    logger.info(f"[SUB_MENU] : {sub_menu}, [MARKET_GUBN] : {market_gubn}")
+
+    # DB 조회 시도
+    try:
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/multicast/status?market_type={market_gubn}"
+        response = requests.get(api_url, timeout=30)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("data") and len(data["data"]) > 0:
+                logger.info(f"[DB_READ] market={market_gubn}, count={len(data['data'])}")
+                return HttpResponse(json.dumps(data, ensure_ascii=False), content_type="application/json")
+    except Exception as e:
+        logger.warning(f"[DB_READ_FAIL] {e}, JSON fallback 시도")
+
+    # Fallback: 기존 방식 (정보사는 API, 회원사는 JSON)
+    response_data = []
+    collection_meta = None
     today_time = datetime.today().strftime('%Y-%m-%d %H:%M')
 
-    logger.info(f'[CALL_INIT_TODAY] : {today_str}, {today_time}, {now}')
-    response_data = []
+    if market_gubn == "pr_information":
+        try:
+            api_url = f"{FASTAPI_BASE_URL}/api/v1/network/collect/multicast/arista/pr"
+            response = requests.get(api_url, timeout=30)
+            if response.status_code == 200:
+                data = response.json()
+                response_data = [item for item in data if item is not None]
+        except Exception as e:
+            logger.error(f"[ARISTA_FALLBACK_FAIL] {e}")
+    else:
+        path = f"../data/{market_gubn}_mroute.json"
+        members_mroute = openJsonFile(path)
+        collection_meta = members_mroute.get('_meta') if isinstance(members_mroute, dict) else None
 
-    if request.method == "GET":
-        sub_menu = request.GET.get("sub_menu")
-        market_gubn = ""
-        
-        if sub_menu == "pr_multicast":
-            market_gubn = "pr_members"
-        elif sub_menu == "ts_multicast":
-            market_gubn = "ts_members"
-        elif sub_menu == "pr_info_multicast":
-            market_gubn = "pr_information"
-
-        collection_meta = None
-        logger.info(f"[SUB_MENU] : {sub_menu}, [MARKET_GUBN] : {market_gubn}")
-
-        # market_gubn이 pr_information인 경우 (Arista 멀티캐스트 정보 수집)
-        if market_gubn == "pr_information":
-            api_url = "http://fastapi:8000/api/v1/network/collect/multicast/arista/pr"
-            logger.info(f"[CALL_API] ==> {api_url}")
-            try:
-                response = requests.get(api_url, timeout=30)
-                if response.status_code == 200:
-                    data = response.json()
-                    logger.debug(f"[API_RESPONSE] : {data}")
-                    # None 값 필터링
-                    response_data = [item for item in data if item is not None]
-                    logger.info(f"[FILTERED_DATA_COUNT] : {len(response_data)} items (removed None values)")
-                else:
-                    logger.error(f"[API_ERROR] : {response.status_code} - {response.text}")
-                    return HttpResponse(status=response.status_code, content=response.text)
-            except requests.exceptions.Timeout:
-                logger.error(f"[TIMEOUT] 멀티캐스트 수집 타임아웃 (30초)")
-                return JsonResponse([], safe=False)
-            except requests.exceptions.ConnectionError as e:
-                logger.error(f"[CONNECTION_ERROR] 멀티캐스트 연결 실패: {e}")
-                return JsonResponse([], safe=False)
-        # market_gubn이 pr_members 또는 ts_members인 경우 (cisco 멀티캐스트 정보 수집)
+        if sub_menu in ("pr_multicast", "ts_multicast"):
+            client_info = openJsonFile("../common/members_info.json")
         else:
-            path = f"../data/{market_gubn}_mroute.json"
-            logger.debug(f"PATH : {path}")
-            members_mroute:Dict = openJsonFile(path)
+            client_info = openJsonFile("../common/information_info.json")
 
-            # 수집 메타데이터 추출 (_meta가 있으면 실제 수집 시각 사용)
-            collection_meta = members_mroute.get('_meta') if isinstance(members_mroute, dict) else None
+        mpr_path = "../common/pr_mpr_multicast_info.json" if sub_menu != "ts_multicast" else "../common/ts_mpr_multicast_info.json"
+        mpr_multicast_info = openJsonFile(mpr_path)
 
-            ## 회원사 or 정보이용사 정보 가져오기 ##
-            if sub_menu == "pr_multicast" or sub_menu == "ts_multicast":
-                path = f"../common/members_info.json"
-            elif sub_menu == "pr_info_multicast":
-                path = f"../common/information_info.json"
+        if members_mroute and client_info and mpr_multicast_info:
+            merge_members_mroute = merge_multicast_group_count(members_mroute['data'], mpr_multicast_info)
+            actual_time = collection_meta.get('collected_at', today_time) if collection_meta else today_time
+            response_data = create_member_sise_info(merge_members_mroute, client_info, actual_time)
 
-            client_info:Dict = openJsonFile(path)
-
-            if sub_menu == "pr_multicast" or sub_menu == "pr_info_multicast":
-                path = f"../common/pr_mpr_multicast_info.json"
-            elif sub_menu == "ts_multicast":
-                path = f"../common/ts_mpr_multicast_info.json"
-
-            mpr_multicast_info:Dict = openJsonFile(path)
-
-            ## 데이터 유무 검증
-            if members_mroute and client_info and mpr_multicast_info:
-                merge_members_mroute = merge_multicast_group_count(members_mroute['data'], mpr_multicast_info)
-                # updated_time: _meta가 있으면 실제 수집 시각, 없으면 현재 시각
-                actual_time = collection_meta.get('collected_at', today_time) if collection_meta else today_time
-                response_data = create_member_sise_info(merge_members_mroute, client_info, actual_time)
-
-        logger.info(f"SUB_MENU => {sub_menu}, MARKET_GUBN => {market_gubn}")
-
-    # _meta 포함 응답 (수집 신선도 정보)
     result = {"data": response_data}
     if collection_meta:
         result["_meta"] = collection_meta
 
-    return HttpResponse(json.dumps(result, ensure_ascii=False, indent=4), content_type="application/json")
+    return HttpResponse(json.dumps(result, ensure_ascii=False), content_type="application/json")
    
+
+def mroute_output(request):
+    """특정 장비의 show ip mroute 원본 출력 반환 (on-demand, data JSON 파일에서 조회)."""
+    if request.method != "GET":
+        return JsonResponse({"success": False, "error": "method not allowed", "output": ""}, status=405)
+
+    market_type = request.GET.get("market_type", "")
+    device_name = request.GET.get("device_name", "")
+    if not device_name:
+        return JsonResponse({"success": False, "error": "device_name required", "output": ""}, status=400)
+
+    if market_type in ("pr_members", "pr"):
+        path = "/app/data/pr_members_mroute.json"
+    elif market_type in ("ts_members", "ts"):
+        path = "/app/data/ts_members_mroute.json"
+    else:
+        return JsonResponse({"success": False, "error": "invalid market_type", "output": ""}, status=400)
+
+    try:
+        data = openJsonFile(path)
+        for device in data.get("data", []) or []:
+            if device.get("device_name") == device_name:
+                for cmd in device.get("mroute", []) or []:
+                    if cmd.get("cmd") in ("show_ip_mroute_source-tree", "show_ip_mroute"):
+                        return JsonResponse({
+                            "success": True,
+                            "device_name": device_name,
+                            "cmd": cmd.get("cmd"),
+                            "output": cmd.get("org_output", "")
+                        })
+                return JsonResponse({"success": False, "error": "mroute output not found for device", "output": ""})
+        return JsonResponse({"success": False, "error": f"device not found: {device_name}", "output": ""})
+    except Exception as e:
+        logger.error(f"mroute_output 조회 실패: {e}")
+        return JsonResponse({"success": False, "error": str(e), "output": ""}, status=500)
+
 
 def openJsonFile(path):
     data = {}

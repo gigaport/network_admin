@@ -186,16 +186,14 @@
                 { data: 'device_name' },
                 { data: 'device_os' },
                 { data: 'products' },
+                { data: 'received_products' },
                 { data: 'pim_rp' },
                 { data: 'product_cnt' },
                 { data: 'mroute_cnt' },
                 { data: 'oif_cnt' },
                 { data: 'min_update' },
-                { data: 'bfd_nbr' },
-                { data: 'rpf_nbr' },
+                { data: 'checked_at' },
                 { data: 'connected_server_cnt' },
-                { data: 'alarm' },
-                { data: 'member_note' },
                 { data: 'org_output' },
                 { data: 'check_result' }
             ],
@@ -249,16 +247,49 @@
                     }
                 },
                 {
-                    targets: 5, // products
+                    targets: 5, // products (신청_시세상품)
                     className: 'text-center py-2 align-middle',
                     render: function(data, type) {
-                        if (type === 'export') return data;
-                        if (!data) return '-';
-                        return '<span style="color: #0ea5e9; font-weight: 500; font-size: 0.8rem;">' + escapeHtml(data) + '</span>';
+                        if (type === 'export') {
+                            if (Array.isArray(data)) return data.join(',');
+                            return data || '';
+                        }
+                        if (!data || (Array.isArray(data) && data.length === 0)) return '-';
+                        var arr = Array.isArray(data) ? data : [data];
+                        return arr.map(function(p) {
+                            return '<span class="badge badge-phoenix badge-phoenix-info me-1" style="font-size:0.72rem;">' + escapeHtml(p) + '</span>';
+                        }).join('');
                     }
                 },
                 {
-                    targets: 6, // pim_rp
+                    targets: 6, // received_products (수신_시세상품) - 신청 리스트 전부 표시, 누락은 빨강
+                    className: 'text-center py-2 align-middle',
+                    render: function(data, type, row) {
+                        var received = Array.isArray(data) ? data : (data ? [data] : []);
+                        var applied = Array.isArray(row.products) ? row.products : (row.products ? [row.products] : []);
+                        if (type === 'export') {
+                            return applied.map(function(p) {
+                                return p + (received.indexOf(p) >= 0 ? '(O)' : '(X)');
+                            }).concat(received.filter(function(p) { return applied.indexOf(p) < 0; }).map(function(p) { return p + '(+)'; })).join(',');
+                        }
+                        if (applied.length === 0 && received.length === 0) return '<span style="color:#cbd5e1;">-</span>';
+                        var html = applied.map(function(p) {
+                            var ok = received.indexOf(p) >= 0;
+                            var cls = ok ? 'success' : 'danger';
+                            return '<span class="badge badge-phoenix badge-phoenix-' + cls + ' me-1" style="font-size:0.72rem;">' + escapeHtml(p) + '</span>';
+                        }).join('');
+                        // 신청엔 없지만 실제 수신중인 상품 (warning 뱃지로 보조 표시)
+                        var extras = received.filter(function(p) { return applied.indexOf(p) < 0; });
+                        if (extras.length > 0) {
+                            html += extras.map(function(p) {
+                                return '<span class="badge badge-phoenix badge-phoenix-warning me-1" style="font-size:0.72rem;" title="신청 없이 수신중">' + escapeHtml(p) + '</span>';
+                            }).join('');
+                        }
+                        return html;
+                    }
+                },
+                {
+                    targets: 7, // pim_rp
                     className: 'text-center py-2 align-middle',
                     render: function(data, type) {
                         if (type === 'export') return data;
@@ -267,7 +298,7 @@
                     }
                 },
                 {
-                    targets: 7, // product_cnt
+                    targets: 8, // product_cnt
                     className: 'text-center py-2 align-middle',
                     render: function(data, type, row) {
                         if (type === 'export') return data;
@@ -278,7 +309,7 @@
                     }
                 },
                 {
-                    targets: 8, // mroute_cnt
+                    targets: 9, // mroute_cnt
                     className: 'text-center py-2 align-middle',
                     render: function(data, type, row) {
                         if (type === 'export') return data;
@@ -289,7 +320,7 @@
                     }
                 },
                 {
-                    targets: 9, // oif_cnt
+                    targets: 10, // oif_cnt
                     className: 'text-center py-2 align-middle',
                     render: function(data, type, row) {
                         if (type === 'export') return data;
@@ -300,7 +331,7 @@
                     }
                 },
                 {
-                    targets: 10, // min_update
+                    targets: 11, // min_update
                     className: 'text-center py-2 align-middle',
                     render: function(data, type) {
                         if (type === 'export') return data;
@@ -308,20 +339,11 @@
                     }
                 },
                 {
-                    targets: 11, // bfd_nbr
+                    targets: 12, // checked_at
                     className: 'text-center py-2 align-middle',
                     render: function(data, type) {
                         if (type === 'export') return data;
-                        return data || '-';
-                    }
-                },
-                {
-                    targets: 12, // rpf_nbr
-                    className: 'text-center py-2 align-middle',
-                    render: function(data, type) {
-                        if (type === 'export') return data;
-                        if (!data) return '-';
-                        return '<span style="font-size: 0.8rem;">' + escapeHtml(data) + '</span>';
+                        return '<span style="font-size: 0.78rem; font-weight: 700; color: #0ea5e9; background: #f0f9ff; padding: 2px 8px; border-radius: 4px;">' + (data || '-') + '</span>';
                     }
                 },
                 {
@@ -336,28 +358,7 @@
                     }
                 },
                 {
-                    targets: 14, // alarm
-                    className: 'text-center py-2 align-middle',
-                    render: function(data, type, row) {
-                        if (type === 'export') return data;
-                        var icon = row.alarm_icon || '';
-                        if (icon) {
-                            return '<span class="fa-solid ' + icon + ' text-primary me-1"></span>' + escapeHtml(data || '');
-                        }
-                        return data || '-';
-                    }
-                },
-                {
-                    targets: 15, // member_note
-                    className: 'text-center py-2 align-middle',
-                    render: function(data, type) {
-                        if (type === 'export') return data;
-                        if (!data) return '<span style="color: #cbd5e1;">-</span>';
-                        return '<span style="font-size: 0.8rem;">' + escapeHtml(data) + '</span>';
-                    }
-                },
-                {
-                    targets: 16, // org_output - mroute button
+                    targets: 14, // org_output - mroute button
                     orderable: false,
                     searchable: false,
                     className: 'text-center py-2 align-middle',
@@ -367,7 +368,7 @@
                     }
                 },
                 {
-                    targets: 17, // check_result - badge
+                    targets: 15, // check_result - badge
                     className: 'text-center py-2 align-middle',
                     render: function(data, type, row) {
                         if (type === 'export') return data;
@@ -413,28 +414,55 @@
             $(this).css({ 'transform': 'translateY(0) scale(1)', 'box-shadow': '' });
         });
 
-        // mroute 모달 (이벤트 위임)
+        // mroute 모달 (이벤트 위임) - org_output은 DB에 저장하지 않고 on-demand로 조회
         $('#multicast_table tbody').on('click', '.btn-mroute', function() {
             var row = multicastTable.row($(this).closest('tr'));
             var data = row.data();
-            if (data) {
-                var output = String(data.org_output || '').replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n').replace(/\\r/g, '\n');
-                $('#modal_output').text(output);
-                $('#modal_title').text(data.device_name || '-');
+            if (!data) return;
 
-                var parts = [];
-                if (data.member_code) parts.push(data.member_code);
-                if (data.member_name) parts.push(data.member_name);
-                if (data.device_os) parts.push(data.device_os);
-                $('#modal_subtitle').text(parts.join(' · '));
+            $('#modal_title').text(data.device_name || '-');
+            var parts = [];
+            if (data.member_code) parts.push(data.member_code);
+            if (data.member_name) parts.push(data.member_name);
+            if (data.device_os) parts.push(data.device_os);
+            $('#modal_subtitle').text(parts.join(' · '));
+            $('#btn_copy_output').html('<i class="fas fa-copy me-1"></i>복사');
+            $('#modal_output').text('mroute 정보를 불러오는 중...');
 
-                // 복사 버튼 초기화
-                $('#btn_copy_output').html('<i class="fas fa-copy me-1"></i>복사');
+            var modalEl = document.getElementById('modal_mroute');
+            var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
 
-                var modalEl = document.getElementById('modal_mroute');
-                var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                modal.show();
+            var data_back = document.getElementById("back_data");
+            var currentPath = data_back ? data_back.dataset.submenu : 'pr_multicast';
+            var marketMap = { pr_multicast: 'pr_members', ts_multicast: 'ts_members', pr_info_multicast: 'pr_information' };
+            var marketType = marketMap[currentPath] || 'pr_members';
+
+            // org_output이 data에 이미 있으면(fallback 경로) 그대로 사용, 아니면 API 호출
+            if (data.org_output) {
+                var out = String(data.org_output).replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n').replace(/\\r/g, '\n');
+                $('#modal_output').text(out);
+                return;
             }
+
+            $.ajax({
+                url: '/' + currentPath + '/mroute_output',
+                type: 'GET',
+                data: { market_type: marketType, device_name: data.device_name },
+                success: function(resp) {
+                    if (resp && resp.success) {
+                        var out = String(resp.output || '').replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n').replace(/\\r/g, '\n');
+                        // HTML-escape 되어 저장된 경우 디코딩
+                        out = $('<textarea/>').html(out).text();
+                        $('#modal_output').text(out || '(출력 없음)');
+                    } else {
+                        $('#modal_output').text('mroute 정보를 불러올 수 없습니다: ' + (resp && resp.error ? resp.error : 'Unknown error'));
+                    }
+                },
+                error: function(xhr) {
+                    $('#modal_output').text('mroute 조회 실패 (HTTP ' + xhr.status + ')');
+                }
+            });
         });
 
         // 복사 버튼

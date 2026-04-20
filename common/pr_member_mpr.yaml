@@ -15,7 +15,7 @@ devices:
         ip: 50.1.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   ky_2_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -25,7 +25,7 @@ devices:
         ip: 50.1.2.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   sh_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -35,7 +35,7 @@ devices:
         ip: 50.2.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   sh_1_px_ydkt_n_mpr_03:
     os: nxos
     type: switch
@@ -45,7 +45,7 @@ devices:
         ip: 50.2.1.23
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM", "B-10", "B-COM"]
+      join_products: ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"]
   sh_r_pr_issh_c_com_01:
     os: iosxe
     type: switch
@@ -55,7 +55,7 @@ devices:
         ip: 50.2.9.51
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   kr_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -65,7 +65,7 @@ devices:
         ip: 50.3.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-3", "A-5", "A-10", "A-COM", "B-3", "B-5", "B-10", "B-COM"]
+      join_products: ["NXTA-3", "NXTA-5", "NXTA-10", "NXTA-COM", "NXTB-3", "NXTB-5", "NXTB-10", "NXTB-COM"]
   kr_2_px_ydkr_n_mpr_01:
     os: nxos
     type: switch
@@ -75,7 +75,7 @@ devices:
         ip: 50.3.2.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM", "B-10", "B-COM"]
+      join_products: ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"]
   da_1_px_wrda_n_mpr_01:
     os: nxos
     type: switch
@@ -85,7 +85,7 @@ devices:
         ip: 50.4.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   da_r_pr_jgda_n_com_01:
     os: nxos
     type: switch
@@ -95,7 +95,7 @@ devices:
         ip: 50.4.9.51
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   mr_1_px_ydmr_n_mpr_01:
     os: nxos
     type: switch
@@ -105,7 +105,7 @@ devices:
         ip: 50.5.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   mr_r_pr_nhlg_c_com_01:
     os: iosxe
     type: switch
@@ -115,7 +115,7 @@ devices:
         ip: 50.5.9.51
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   sy_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -125,7 +125,7 @@ devices:
         ip: 50.6.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   sy_r_pr_ydsy_c_com_01:
     os: iosxe
     type: switch
@@ -135,7 +135,7 @@ devices:
         ip: 50.6.9.51
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   eu_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -145,7 +145,7 @@ devices:
         ip: 50.8.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM", "B-3", "B-COM"]
+      join_products: ["NXTA-10", "NXTA-COM", "NXTB-3", "NXTB-COM"]
   me_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -155,7 +155,7 @@ devices:
         ip: 50.10.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   me_2_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -165,7 +165,7 @@ devices:
         ip: 50.10.2.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   nh_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -175,7 +175,7 @@ devices:
         ip: 50.12.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-3", "NXTA-5", "NXTA-10", "NXTA-COM", "NXTB-3", "NXTB-5", "NXTB-10", "NXTB-COM"]
   nh_2_px_ydnh_n_mpr_01:
     os: nxos
     type: switch
@@ -185,7 +185,7 @@ devices:
         ip: 50.12.2.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   nh_r_px_uwnh_n_mpr_01:
     os: nxos
     type: switch
@@ -195,7 +195,7 @@ devices:
         ip: 50.12.9.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   kb_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -205,7 +205,7 @@ devices:
         ip: 50.17.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   kb_2_px_kpkb_n_mpr_01:
     os: nxos
     type: switch
@@ -215,7 +215,7 @@ devices:
         ip: 50.17.2.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   kb_r_px_ydkb_c_mpr_01:
     os: iosxe
     type: switch
@@ -225,7 +225,7 @@ devices:
         ip: 50.17.9.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   hw_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -235,7 +235,7 @@ devices:
         ip: 50.21.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   hw_r_px_yihw_n_mpr_01:
     os: nxos
     type: switch
@@ -245,7 +245,7 @@ devices:
         ip: 50.21.9.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   hd_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -255,7 +255,7 @@ devices:
         ip: 50.22.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   hd_r_pr_pjhd_c_com_01:
     os: iosxe
     type: switch
@@ -265,7 +265,7 @@ devices:
         ip: 50.22.9.51
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   yu_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -275,7 +275,7 @@ devices:
         ip: 50.24.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   yu_2_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -285,7 +285,7 @@ devices:
         ip: 50.24.2.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM", "B-10", "B-COM"]
+      join_products: ["NXTA-10", "NXTA-COM", "NXTB-10", "NXTB-COM"]
   yu_r_pr_bdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -295,7 +295,7 @@ devices:
         ip: 50.24.9.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   sk_1_px_ydsk_n_mpr_01:
     os: nxos
     type: switch
@@ -305,7 +305,7 @@ devices:
         ip: 50.25.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   sk_r_pr_pksk_c_com_01:
     os: iosxe
     type: switch
@@ -315,7 +315,7 @@ devices:
         ip: 50.25.9.51
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   ss_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -325,7 +325,7 @@ devices:
         ip: 50.30.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   ss_r_pr_ccss_c_com_01:
     os: iosxe
     type: switch
@@ -335,7 +335,7 @@ devices:
         ip: 50.30.9.51
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   db_1_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -345,7 +345,7 @@ devices:
         ip: 50.31.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   db_2_px_yddb_n_mpr_01:
     os: nxos
     type: switch
@@ -355,7 +355,7 @@ devices:
         ip: 50.31.2.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   im_1_px_ydim_n_mpr_01:
     os: nxos
     type: switch
@@ -365,7 +365,7 @@ devices:
         ip: 50.46.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   kw_2_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -375,7 +375,7 @@ devices:
         ip: 50.50.2.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   kw_3_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -385,7 +385,7 @@ devices:
         ip: 50.50.3.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   kw_r_pr_scsk_c_com_01:
     os: iosxe
     type: switch
@@ -395,7 +395,7 @@ devices:
         ip: 50.50.9.51
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   hn_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -405,7 +405,7 @@ devices:
         ip: 50.56.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   hn_2_px_crhn_n_mpr_01:
     os: nxos
     type: switch
@@ -415,7 +415,7 @@ devices:
         ip: 50.56.2.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   hn_r_px_jjhn_n_mpr_02:
     os: nxos
     type: switch
@@ -425,7 +425,7 @@ devices:
         ip: 50.56.9.22
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   ls_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -435,7 +435,7 @@ devices:
         ip: 50.63.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-3", "NXTA-5", "NXTA-10", "NXTA-COM", "NXTB-3", "NXTB-5", "NXTB-10", "NXTB-COM"]
   ka_1_px_kslg_n_mpr_01:
     os: nxos
     type: switch
@@ -445,7 +445,7 @@ devices:
         ip: 50.69.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   ka_r_px_pkka_n_mpr_01:
     os: nxos
     type: switch
@@ -455,7 +455,7 @@ devices:
         ip: 50.69.9.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   do_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch
@@ -465,7 +465,7 @@ devices:
         ip: 50.71.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   do_2_px_mdkt_n_mpr_01:
     os: nxos
     type: switch
@@ -475,7 +475,7 @@ devices:
         ip: 50.71.2.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   ts_1_px_yslg_n_mpr_01:
     os: nxos
     type: switch
@@ -485,7 +485,7 @@ devices:
         ip: 50.77.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   ts_r_px_pclg_n_mpr_01:
     os: nxos
     type: switch
@@ -495,7 +495,7 @@ devices:
         ip: 50.77.9.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]
   pb_1_px_ydkx_n_mpr_01:
     os: nxos
     type: switch
@@ -505,4 +505,4 @@ devices:
         ip: 50.101.1.21
     custom:
       groups: ["product"]
-      join_products: ["A-10", "A-COM"]
+      join_products: ["NXTA-10", "NXTA-COM"]

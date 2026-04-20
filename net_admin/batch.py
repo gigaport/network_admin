@@ -154,6 +154,10 @@ def main():
                 # ## 확인필요 결과가 있을경우 슬랙으로 메세지 전송
                 check_multicast_info(data["market_gubn"], cisco_multicast_info)
 
+                # DB에 멀티캐스트 상태 저장
+                mcast_data_list = cisco_multicast_info.get('data', []) if isinstance(cisco_multicast_info, dict) else cisco_multicast_info
+                save_multicast_to_db(data["market_gubn"], mcast_data_list)
+
             except ValueError as e:
                 logger.error("⚠️ JSON 디코딩 실패: %s", e)
                 logger.error("응답 내용: %s", response.text)
@@ -261,6 +265,7 @@ def merge_multicast_group_count(members_mroute:list, mpr_multicast_info:Dict):
 def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:str):
     logger.info(f"[DEBUG] rws_create_member_sise_info")
 
+    sise_mapping = _fetch_sise_mapping()
     result = []
     member_no = 0
     member_code = ""
@@ -329,6 +334,11 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
             type = "danger"
             icon = "fas fa-x-square"
 
+        # 실제 수신중인 시세상품 및 누락 시세상품 산출
+        valid_pairs = _extract_valid_sg_pairs(device)
+        received_products = _compute_received_products(products, valid_pairs, sise_mapping)
+        missing_products = [p for p in (products or []) if p not in received_products]
+
         temp = {
             "id" : idx+1,
             "member_no": member_no,
@@ -337,6 +347,8 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
             "device_name": device_name,
             "device_os": device_os,
             "products": products,
+            "received_products": received_products,
+            "missing_products": missing_products,
             "pim_rp": pim_rp,
             "product_cnt": product_cnt,
             "mroute_cnt": mroute_cnt,
@@ -409,6 +421,163 @@ def OpenJsonFile(path):
         logger.error("JSON 형식이 잘못되었습니다.: %s", path)
 
     return data
+
+FASTAPI_API_URL = "http://fastapi:8000/api/v1/network"
+
+def _extract_valid_sg_pairs(device):
+    """장비의 raw mroute 파싱 결과에서 Incoming interface가 Null이 아닌 유효 (source, group) 페어 집합 추출."""
+    pairs = set()
+    device_os = device.get("device_os", "")
+    os_key = "default" if device_os == "nxos" else ""
+    for cmd in device.get("mroute", []) or []:
+        if cmd.get("cmd") not in ("show_ip_mroute_source-tree", "show_ip_mroute"):
+            continue
+        try:
+            mg = cmd["parsed_output"]["vrf"][os_key]["address_family"]["ipv4"]["multicast_group"]
+        except (KeyError, TypeError):
+            continue
+        for group_ip, ginfo in (mg or {}).items():
+            # "239.29.30.81/32" → "239.29.30.81"
+            g = group_ip.split("/")[0]
+            for src, addr_info in (ginfo.get("source_address") or {}).items():
+                if "*" in src:
+                    continue
+                if device_os == "nxos":
+                    iil = addr_info.get("incoming_interface_list") or {}
+                    if not iil or all(k == "Null" for k in iil.keys()):
+                        continue
+                s = src.split("/")[0]
+                pairs.add((s, g))
+    return pairs
+
+
+def _compute_received_products(device_products, valid_pairs, sise_mapping):
+    """장비가 실제 수신중인 시세상품 목록 산출.
+    신청 여부와 무관하게 sise_mapping 전체 product를 대상으로,
+    (source_ips × group_ips) 조합이 모두 valid_pairs에 포함되면 수신중으로 판정."""
+    received = []
+    for product, info in (sise_mapping or {}).items():
+        sources = info.get("source_ips") or []
+        groups = info.get("group_ips") or []
+        if not sources or not groups:
+            continue
+        expected = {(s, g) for s in sources for g in groups}
+        if expected.issubset(valid_pairs):
+            received.append(product)
+    return sorted(received)
+
+
+def _fetch_sise_mapping():
+    """FastAPI 에서 product → {source_ips, group_ips} 매핑 조회. 실패 시 빈 dict."""
+    try:
+        resp = requests.get(f"{FASTAPI_API_URL}/multicast/sise_mapping", timeout=10)
+        if resp.status_code == 200:
+            return resp.json().get("data") or {}
+    except Exception as e:
+        logger.warning(f"sise_mapping 조회 실패: {e}")
+    return {}
+
+
+def save_multicast_to_db(market_gubn, cisco_multicast_info, members_mroute_data=None):
+    """멀티캐스트 상태를 DB에 저장 (JSON 저장과 병행)"""
+    try:
+        # members_info, mpr_multicast_info 로드하여 최종 결과 생성
+        # market_gubn이 "pr" 또는 "ts"로 올 수 있으므로 정규화
+        if market_gubn in ("pr", "pr_members"):
+            market_gubn = "pr_members"
+            members_path = "/app/common/members_info.json"
+            mpr_path = "/app/common/pr_mpr_multicast_info.json"
+        elif market_gubn in ("ts", "ts_members"):
+            market_gubn = "ts_members"
+            members_path = "/app/common/members_info.json"
+            mpr_path = "/app/common/ts_mpr_multicast_info.json"
+        else:
+            return
+
+        with open(members_path, 'rt', encoding='UTF8') as f:
+            members_info = json.load(f)
+        with open(mpr_path, 'rt', encoding='UTF8') as f:
+            mpr_multicast_info = json.load(f)
+
+        sise_mapping = _fetch_sise_mapping()
+
+        # multicast_group_count 병합
+        for device in cisco_multicast_info:
+            total = 0
+            for product in device.get("products", []):
+                if product in mpr_multicast_info:
+                    total += mpr_multicast_info[product].get("multicast_group_count", 0)
+            device["multicast_group_count"] = total
+
+        # 최종 결과 생성 (create_member_sise_info 로직)
+        result_data = []
+        for device in cisco_multicast_info:
+            if not device.get("device_name"):
+                continue
+            product_cnt = device.get("multicast_group_count", 0)
+            mroute_cnt = device.get("valid_source_address_count", 0)
+            oif_cnt = device.get("valid_oif_count", 0)
+            connected_server_cnt = device.get("connected_server_count", 0)
+
+            # check_result 판정
+            if product_cnt == mroute_cnt == oif_cnt:
+                check_result = "정상확인"
+            elif connected_server_cnt == 0:
+                check_result = "회원사연결서버없음"
+            elif mroute_cnt > product_cnt:
+                check_result = "정상그룹개수초과"
+            else:
+                check_result = "확인필요"
+
+            # 회원사 정보 매핑
+            member_code = ""
+            member_name = ""
+            member_no = ""
+            alarm = True
+            mgmt_ip = device.get("mgmt_ip", "")
+            if mgmt_ip:
+                second_octet = mgmt_ip.split(".")[1]
+                if second_octet in members_info:
+                    member_code = members_info[second_octet].get("member_code", "")
+                    member_name = members_info[second_octet].get("member_name", "")
+                    member_no = second_octet
+                    alarm = members_info[second_octet].get("alarm", True)
+
+            # 실제 수신중인 시세상품 산출
+            valid_pairs = _extract_valid_sg_pairs(device)
+            received_products = _compute_received_products(
+                device.get("products", []), valid_pairs, sise_mapping
+            )
+
+            result_data.append({
+                "member_code": member_code,
+                "member_name": member_name,
+                "member_no": member_no,
+                "device_name": device.get("device_name", ""),
+                "device_os": device.get("device_os", ""),
+                "products": device.get("products", []),
+                "received_products": received_products,
+                "pim_rp": device.get("rp_addresses", []),
+                "product_cnt": product_cnt,
+                "mroute_cnt": mroute_cnt,
+                "oif_cnt": oif_cnt,
+                "connected_server_cnt": connected_server_cnt,
+                "min_update": device.get("min_uptime", ""),
+                "check_result": check_result,
+                "alarm": alarm
+            })
+
+        # FastAPI collect API 호출
+        resp = requests.post(
+            f"{FASTAPI_API_URL}/multicast/collect",
+            json={"market_type": market_gubn, "data": result_data},
+            timeout=15
+        )
+        logger.info(f"멀티캐스트 DB 저장: market={market_gubn}, response={resp.json()}")
+
+    except Exception as e:
+        logger.error(f"멀티캐스트 DB 저장 실패: {e}")
+
 
 if __name__ == "__main__":
     main()

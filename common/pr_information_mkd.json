@@ -9,8 +9,8 @@
           "product"
         ],
         "join_products": [
-          "A-10",
-          "A-COM"
+          "NXTA-10",
+          "NXTA-COM"
         ]
       }
     },
@@ -23,8 +23,8 @@
           "product"
         ],
         "join_products": [
-          "A-10",
-          "A-COM"
+          "NXTA-10",
+          "NXTA-COM"
         ]
       }
     },
@@ -37,7 +37,7 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "NXTA-COM"
         ]
       }
     },
@@ -50,7 +50,7 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "NXTA-COM"
         ]
       }
     },
@@ -63,8 +63,8 @@
           "product"
         ],
         "join_products": [
-          "A-10",
-          "A-COM"
+          "NXTA-10",
+          "NXTA-COM"
         ]
       }
     },
@@ -77,8 +77,8 @@
           "product"
         ],
         "join_products": [
-          "A-10",
-          "A-COM"
+          "NXTA-10",
+          "NXTA-COM"
         ]
       }
     },
@@ -91,7 +91,7 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "NXTA-COM"
         ]
       }
     },
@@ -104,7 +104,7 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "NXTA-COM"
         ]
       }
     },
@@ -117,7 +117,7 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "NXTA-COM"
         ]
       }
     },
@@ -130,7 +130,7 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "NXTA-COM"
         ]
       }
     },
@@ -143,7 +143,7 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "NXTA-COM"
         ]
       }
     },
@@ -156,7 +156,7 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "NXTA-COM"
         ]
       }
     },
@@ -169,8 +169,8 @@
           "product"
         ],
         "join_products": [
-          "A-10",
-          "A-COM"
+          "NXTA-10",
+          "NXTA-COM"
         ]
       }
     },
@@ -183,8 +183,8 @@
           "product"
         ],
         "join_products": [
-          "A-10",
-          "A-COM"
+          "NXTA-10",
+          "NXTA-COM"
         ]
       }
     },
@@ -197,8 +197,8 @@
           "product"
         ],
         "join_products": [
-          "A-10",
-          "A-COM"
+          "NXTA-10",
+          "NXTA-COM"
         ]
       }
     },
@@ -211,8 +211,8 @@
           "product"
         ],
         "join_products": [
-          "A-10",
-          "A-COM"
+          "NXTA-10",
+          "NXTA-COM"
         ]
       }
     },
@@ -225,7 +225,7 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "NXTA-COM"
         ]
       }
     },
@@ -238,7 +238,7 @@
           "product"
         ],
         "join_products": [
-          "A-COM"
+          "NXTA-COM"
         ]
       }
     },
@@ -251,8 +251,8 @@
           "product"
         ],
         "join_products": [
-          "A-COM",
-          "A-10"
+          "NXTA-COM",
+          "NXTA-10"
         ]
       }
     },
@@ -265,8 +265,8 @@
           "product"
         ],
         "join_products": [
-          "A-COM",
-          "A-10"
+          "NXTA-COM",
+          "NXTA-10"
         ]
       }
     },
@@ -279,8 +279,8 @@
           "product"
         ],
         "join_products": [
-          "A-COM",
-          "A-10"
+          "NXTA-COM",
+          "NXTA-10"
         ]
       }
     },
@@ -293,8 +293,8 @@
           "product"
         ],
         "join_products": [
-          "A-COM",
-          "A-10"
+          "NXTA-COM",
+          "NXTA-10"
         ]
       }
     },
@@ -307,8 +307,8 @@
           "product"
         ],
         "join_products": [
-          "A-COM",
-          "A-10"
+          "NXTA-COM",
+          "NXTA-10"
         ]
       }
     },
@@ -321,8 +321,8 @@
           "product"
         ],
         "join_products": [
-          "A-COM",
-          "A-10"
+          "NXTA-COM",
+          "NXTA-10"
         ]
       }
     },
@@ -339,8 +339,8 @@
           "product"
         ],
         "join_products": [
-          "A-COM",
-          "A-10"
+          "NXTA-COM",
+          "NXTA-10"
         ]
       }
     },
@@ -357,10 +357,10 @@
           "product"
         ],
         "join_products": [
-          "A-COM",
-          "A-10",
-          "B-COM",
-          "B-10"
+          "NXTA-COM",
+          "NXTA-10",
+          "NXTB-COM",
+          "NXTB-10"
         ]
       }
     }

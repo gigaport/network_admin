@@ -146,7 +146,8 @@ def _sanitize_details(details: dict) -> dict:
     safe = {}
     for k, v in details.items():
         if k in ("member_name", "member_code", "device_name", "device_os",
-                  "products", "pim_rp", "product_cnt", "mroute_cnt", "oif_cnt",
+                  "products", "received_products", "missing_products",
+                  "pim_rp", "product_cnt", "mroute_cnt", "oif_cnt",
                   "rpf_nbr", "connected_server_cnt", "check_result", "market_gubn"):
             safe[k] = v
     return safe

@@ -1097,10 +1097,25 @@ async def check_multicast_alarm_state(request: Request):
                 member_name = device.get("member_name", "N/A")
                 title = f":rotating_light: *({market_name}) {member_name} 시세수신 이상* :rotating_light:"
 
+                # 누락 시세상품 (신청 - 수신)
+                applied_list = device.get("products") or []
+                if isinstance(applied_list, str):
+                    applied_list = [p.strip() for p in applied_list.split(",") if p.strip()]
+                received_list = device.get("received_products") or []
+                if isinstance(received_list, str):
+                    received_list = [p.strip() for p in received_list.split(",") if p.strip()]
+                missing_list = device.get("missing_products")
+                if missing_list is None:
+                    missing_list = [p for p in applied_list if p not in received_list]
+                elif isinstance(missing_list, str):
+                    missing_list = [p.strip() for p in missing_list.split(",") if p.strip()]
+                missing_text = ", ".join(missing_list) if missing_list else "없음"
+
                 fields = [
                     {"title": "대상회원사", "value": f"`{member_name}`", "short": True},
                     {"title": "장비이름", "value": f"*{device_name}*", "short": True},
                     {"title": "가입상품", "value": f"`{device.get('products', 'N/A')}`", "short": True},
+                    {"title": "누락상품", "value": f"`{missing_text}`", "short": True},
                     {"title": "PIM_RP", "value": f"{device.get('pim_rp', 'N/A')}", "short": True},
                     {"title": "기준 mroute", "value": f"{device.get('product_cnt', 0)}", "short": True},
                     {"title": "현재 mroute", "value": f"{device.get('mroute_cnt', 0)}", "short": True},

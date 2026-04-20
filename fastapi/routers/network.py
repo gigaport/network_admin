@@ -174,6 +174,50 @@ async def CollectAristaMulticast(target: str):
     except Exception as e:
         logger.error(f"Arista 알람 상태 체크 중 오류: {e}")
 
+    # DB에 정보사 멀티캐스트 상태 저장
+    try:
+        valid_results = [r for r in results if r is not None]
+        if valid_results:
+            now = datetime.now()
+            rows = []
+            for item in valid_results:
+                products = item.get("products", [])
+                products_str = ",".join(products) if isinstance(products, list) else str(products or "")
+                pim_rp = item.get("pim_rp", "")
+                rows.append((
+                    "pr_information",
+                    item.get("member_code", ""),
+                    item.get("member_name", ""),
+                    str(item.get("member_no", "")),
+                    item.get("device_name", ""),
+                    item.get("device_os", ""),
+                    products_str,
+                    pim_rp if isinstance(pim_rp, str) else (pim_rp[0] if pim_rp else ""),
+                    item.get("product_cnt", 0) or 0,
+                    item.get("mroute_cnt", 0) or 0,
+                    item.get("oif_cnt", 0) or 0,
+                    item.get("connected_server_cnt", 0) or 0,
+                    str(item.get("min_update", "") or ""),
+                    item.get("check_result", ""),
+                    item.get("alarm", False),
+                    now
+                ))
+            with get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("DELETE FROM multicast_status WHERE market_type = 'pr_information' AND checked_at < NOW() - INTERVAL '2 days'")
+                    from psycopg2.extras import execute_values
+                    execute_values(cur, """
+                        INSERT INTO multicast_status
+                            (market_type, member_code, member_name, member_no, device_name, device_os,
+                             products, pim_rp, product_cnt, mroute_cnt, oif_cnt, connected_server_cnt,
+                             min_update, check_result, alarm, checked_at)
+                        VALUES %s
+                    """, rows)
+                conn.commit()
+            logger.info(f"정보사 멀티캐스트 DB 저장 완료: {len(rows)}건")
+    except Exception as e:
+        logger.error(f"정보사 멀티캐스트 DB 저장 실패: {e}")
+
     return results
 
 @router.get("/collect/ptp/arista/{target}")
@@ -2374,6 +2418,87 @@ async def GetRevenueMonthly(year_month: str = Query(..., description="조회 월
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
+@router.get("/revenue_monthly_diff")
+async def GetRevenueMonthlyDiff(year_month: str = Query(...)):
+    """전월 대비 회선 변동 내역 조회 (추가/제거된 회선)"""
+    try:
+        target = datetime.strptime(year_month, "%Y-%m").date()
+        cur_start = target.replace(day=1)
+        cur_end = (cur_start + relativedelta(months=1)) - relativedelta(days=1)
+        prev_start = cur_start - relativedelta(months=1)
+        prev_end = cur_start - relativedelta(days=1)
+
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            # 해당 월 활성 회선
+            circuit_query = """
+                SELECT c.id, c.member_code, sc.company_name, c.usage, c.product,
+                       c.bandwidth, c.provider, c.circuit_id, c.contract_date,
+                       mfs.price, mfs.description AS fee_desc
+                FROM circuit c
+                LEFT JOIN subscriber_codes sc ON c.member_code = sc.member_code
+                LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
+                WHERE c.usage IN ('ORD', 'MPR')
+                  AND (c.contract_date IS NULL OR c.contract_date <= %s)
+            """
+
+            cur.execute(circuit_query, (cur_end,))
+            cur_circuits = {r['id']: r for r in cur.fetchall()}
+
+            cur.execute(circuit_query, (prev_end,))
+            prev_circuits = {r['id']: r for r in cur.fetchall()}
+
+            cur.close()
+
+        added = []
+        for cid, c in cur_circuits.items():
+            if cid not in prev_circuits:
+                added.append({
+                    "type": "added",
+                    "member_code": c["member_code"],
+                    "company_name": c["company_name"],
+                    "usage": c["usage"],
+                    "product": c["product"] or "",
+                    "bandwidth": c["bandwidth"] or "",
+                    "provider": c["provider"] or "",
+                    "circuit_id": c["circuit_id"] or "",
+                    "contract_date": str(c["contract_date"]) if c["contract_date"] else "",
+                    "price": c["price"] or 0,
+                    "fee_desc": c["fee_desc"] or ""
+                })
+
+        removed = []
+        for cid, c in prev_circuits.items():
+            if cid not in cur_circuits:
+                removed.append({
+                    "type": "removed",
+                    "member_code": c["member_code"],
+                    "company_name": c["company_name"],
+                    "usage": c["usage"],
+                    "product": c["product"] or "",
+                    "bandwidth": c["bandwidth"] or "",
+                    "provider": c["provider"] or "",
+                    "circuit_id": c["circuit_id"] or "",
+                    "contract_date": str(c["contract_date"]) if c["contract_date"] else "",
+                    "price": c["price"] or 0,
+                    "fee_desc": c["fee_desc"] or ""
+                })
+
+        return {
+            "success": True,
+            "year_month": year_month,
+            "added": sorted(added, key=lambda x: (x["usage"], x["company_name"])),
+            "removed": sorted(removed, key=lambda x: (x["usage"], x["company_name"])),
+            "added_count": len(added),
+            "removed_count": len(removed)
+        }
+
+    except Exception as e:
+        logger.error(f"월별 변동 내역 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ==================== 정보이용사 매출내역 (Info Revenue Summary) ====================
 
 @router.get("/info_revenue_summary")
@@ -4138,17 +4263,26 @@ async def GetProfitReportPdf():
             rev = float(r['revenue_total'] or 0)
             monthly_data.append({'month': r['month'], 'revenue': rev, 'purchase': total_purchase, 'profit': rev - total_purchase})
 
+        # 작년 12월 기준선 찾기
+        base_line_data = None
+        if monthly_data:
+            last_year = str(int(monthly_data[-1]['month'][:4]) - 1)
+            for md in monthly_data:
+                if md['month'] == f"{last_year}-12":
+                    base_line_data = md
+                    break
+
         # ──────────────────────────────────────
-        # 차트 생성 (모노톤 + 절제된 컬러)
+        # 차트 생성 (화면 디자인 매칭)
         # ──────────────────────────────────────
-        # 색상 팔레트 (네이비 기반 모노톤)
-        C_NAVY = '#1b2a4a'
-        C_STEEL = '#4a5568'
-        C_SLATE = '#8896ab'
-        C_SILVER = '#cbd5e0'
-        C_BG = '#f7f8fa'
-        C_ACCENT = '#2b6cb0'  # 딥블루 액센트
-        C_RED = '#c53030'
+        # 색상 팔레트 (화면 기준)
+        C_DARK = '#1e293b'      # 매출
+        C_INDIGO = '#6366f1'    # 매입
+        C_RED = '#dc2626'       # 이익
+        C_GREEN = '#059669'     # 이익률/긍정
+        C_NAVY = '#1b2a4a'      # 타이틀
+        C_STEEL = '#475569'
+        C_SLATE = '#94a3b8'
         C_GRID = '#e8ecf1'
 
         chart_files = []
@@ -4168,38 +4302,35 @@ async def GetProfitReportPdf():
             if title_text:
                 ax.set_title(title_text, fontproperties=font_prop, fontsize=10, fontweight='bold', color=C_NAVY, pad=10, loc='left')
 
-        # 차트0: 월별 추이 (막대+라인) - 절제된 톤
+        # 차트0: 월별 추이 (라인 차트 - 화면과 동일)
         fig0, ax0 = plt.subplots(figsize=(10, 3.2))
         fig0.patch.set_facecolor('white')
         m_labels = [d['month'][2:].replace('-', '.') for d in monthly_data]
         m_revenues = [d['revenue'] / 10000 for d in monthly_data]
         m_purchases = [d['purchase'] / 10000 for d in monthly_data]
         m_profits = [d['profit'] / 10000 for d in monthly_data]
-        x_idx = range(len(m_labels))
-        bar_w = 0.28
-        ax0.bar([i - bar_w/2 for i in x_idx], m_revenues, width=bar_w, label='매출', color=C_ACCENT, alpha=0.25, edgecolor=C_ACCENT, linewidth=0.6)
-        ax0.bar([i + bar_w/2 for i in x_idx], m_purchases, width=bar_w, label='매입', color=C_RED, alpha=0.2, edgecolor=C_RED, linewidth=0.6)
-        ax0_twin = ax0.twinx()
-        ax0_twin.plot(x_idx, m_profits, color=C_NAVY, linewidth=2, marker='o', markersize=4, markerfacecolor='white', markeredgecolor=C_NAVY, markeredgewidth=1.5, label='이익', zorder=5)
-        ax0_twin.fill_between(x_idx, m_profits, alpha=0.04, color=C_NAVY)
+        x_idx = list(range(len(m_labels)))
+
+        # 매출: 어두운색 + fill
+        ax0.plot(x_idx, m_revenues, color='rgba(30,41,59,0.7)'.replace('rgba(', '#').split(',')[0] if False else C_DARK,
+                 linewidth=1.2, label='매출', alpha=0.7)
+        ax0.fill_between(x_idx, m_revenues, alpha=0.05, color=C_DARK)
+        # 매입: 인디고 + fill
+        ax0.plot(x_idx, m_purchases, color=C_INDIGO,
+                 linewidth=1.2, label='매입', alpha=0.7)
+        ax0.fill_between(x_idx, m_purchases, alpha=0.05, color=C_INDIGO)
+        # 이익: 초록 대시
+        ax0.plot(x_idx, m_profits, color=C_GREEN,
+                 linewidth=1.5, label='이익', linestyle='--', alpha=0.9)
+
+        ax0.set_xticks(x_idx)
+        ax0.set_xticklabels(m_labels, fontproperties=font_prop, fontsize=7)
         apply_chart_style(ax0, None)
-        ax0_twin.spines['top'].set_visible(False)
-        ax0_twin.spines['right'].set_color(C_GRID)
-        for tick in ax0_twin.get_yticklabels():
-            tick.set_fontproperties(font_prop)
-            tick.set_fontsize(7)
-            tick.set_color(C_STEEL)
-        ax0.set_ylabel('매출/매입 (만원)', fontproperties=font_prop, fontsize=7.5, color=C_SLATE)
-        ax0_twin.set_ylabel('이익 (만원)', fontproperties=font_prop, fontsize=7.5, color=C_SLATE)
         ax0.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:,.0f}'))
-        ax0_twin.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:,.0f}'))
-        ax0.grid(axis='y', alpha=0.08, color=C_STEEL)
-        # 범례를 차트 바깥 상단 우측에 가로로 배치
-        lines1, labels1 = ax0.get_legend_handles_labels()
-        lines2, labels2 = ax0_twin.get_legend_handles_labels()
-        leg = fig0.legend(lines1 + lines2, labels1 + labels2, prop=font_prop, fontsize=8,
-                          loc='upper right', bbox_to_anchor=(0.98, 0.98), ncol=3,
-                          frameon=True, fancybox=False, edgecolor=C_GRID, framealpha=0.95)
+        ax0.grid(axis='y', alpha=0.06, color=C_STEEL)
+        ax0.set_ylabel('금액 (만원)', fontproperties=font_prop, fontsize=7.5, color=C_SLATE)
+        leg = ax0.legend(prop=font_prop, fontsize=8, loc='upper right', ncol=3,
+                         frameon=True, fancybox=False, edgecolor=C_GRID, framealpha=0.95)
         leg.get_frame().set_linewidth(0.5)
         fig0.subplots_adjust(top=0.88)
         tmp0 = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
@@ -4207,54 +4338,31 @@ async def GetProfitReportPdf():
         plt.close(fig0)
         chart_files.append(tmp0.name)
 
-        # 차트1: 이익 TOP 10 (가로 막대) - 단색 계열
-        top10_chart = sorted(member_agg.values(), key=lambda x: x['profit'], reverse=True)[:10]
-        top10_chart.reverse()
-        fig1, ax1 = plt.subplots(figsize=(6.5, 4))
+        # 차트1: 매출/매입 비율 (도넛) - 큰 사이즈, 라벨 잘 보이게
+        fig1, ax1 = plt.subplots(figsize=(5.5, 4.5))
         fig1.patch.set_facecolor('white')
-        y_pos = range(len(top10_chart))
-        names = [m['company_name'] for m in top10_chart]
-        profits_c = [m['profit'] / 10000 for m in top10_chart]
-        # 단일 색상 그라데이션 (진한 순서대로)
-        bar_colors = [C_ACCENT if i >= 7 else (C_SLATE if i >= 4 else C_SILVER) for i in range(len(top10_chart))]
-        bars = ax1.barh(y_pos, profits_c, height=0.55, color=bar_colors, edgecolor='none')
-        # 값 표시
-        for i, (bar, val) in enumerate(zip(bars, profits_c)):
-            ax1.text(bar.get_width() + max(profits_c) * 0.01, bar.get_y() + bar.get_height()/2,
-                     f'{val:,.0f}', va='center', fontproperties=font_prop, fontsize=7, color=C_STEEL)
-        ax1.set_yticks(list(y_pos))
-        ax1.set_yticklabels(names, fontproperties=font_prop, fontsize=8, color=C_NAVY)
-        ax1.set_xlabel('이익 (만원)', fontproperties=font_prop, fontsize=7.5, color=C_SLATE)
-        apply_chart_style(ax1, '이익 상위 10 회원사')
-        ax1.grid(axis='x', alpha=0.06, color=C_STEEL)
-        ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:,.0f}'))
+        wedges, texts, autotexts = ax1.pie(
+            [total_revenue, total_purchase], labels=['매출', '매입'],
+            colors=[C_DARK, C_INDIGO],
+            autopct='%1.1f%%', startangle=90, pctdistance=0.82,
+            labeldistance=1.15,
+            wedgeprops=dict(width=0.32, edgecolor='white', linewidth=3)
+        )
+        for t in texts: t.set_fontproperties(font_prop); t.set_fontsize(13); t.set_color(C_NAVY); t.set_fontweight('bold')
+        for t in autotexts: t.set_fontproperties(font_prop); t.set_fontsize(11); t.set_fontweight('bold'); t.set_color(C_NAVY)
+        rev_pct = round(total_revenue / (total_revenue + total_purchase) * 100, 1) if (total_revenue + total_purchase) > 0 else 0
+        ax1.text(0, 0.04, f'{rev_pct}%', ha='center', va='center',
+                 fontproperties=font_prop, fontsize=22, fontweight='bold', color=C_NAVY)
+        ax1.text(0, -0.18, '매출 비율', ha='center', va='center',
+                 fontproperties=font_prop, fontsize=10, color=C_SLATE)
+        ax1.set_title('매출 / 매입 비율', fontproperties=font_prop, fontsize=13, fontweight='bold', color=C_NAVY, pad=12, loc='center')
         fig1.tight_layout()
         tmp1 = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
         fig1.savefig(tmp1.name, dpi=160, bbox_inches='tight', facecolor='white')
         plt.close(fig1)
         chart_files.append(tmp1.name)
 
-        # 차트2: 매출 vs 매입 (도넛) - 절제된 2색
-        fig2, ax2 = plt.subplots(figsize=(3.2, 3))
-        fig2.patch.set_facecolor('white')
-        wedges, texts, autotexts = ax2.pie(
-            [total_revenue, total_purchase], labels=['매출', '매입'],
-            colors=[C_ACCENT, '#a0aec0'],
-            autopct='%1.1f%%', startangle=90, pctdistance=0.78,
-            wedgeprops=dict(width=0.35, edgecolor='white', linewidth=2)
-        )
-        for t in texts: t.set_fontproperties(font_prop); t.set_fontsize(9); t.set_color(C_NAVY)
-        for t in autotexts: t.set_fontproperties(font_prop); t.set_fontsize(8); t.set_fontweight('bold'); t.set_color(C_NAVY)
-        ax2.text(0, 0, f'{profit_rate_total}%', ha='center', va='center',
-                 fontproperties=font_prop, fontsize=14, fontweight='bold', color=C_NAVY)
-        ax2.set_title('매출 / 매입 구성', fontproperties=font_prop, fontsize=9, fontweight='bold', color=C_NAVY, pad=6, loc='center')
-        fig2.tight_layout()
-        tmp2 = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
-        fig2.savefig(tmp2.name, dpi=160, bbox_inches='tight', facecolor='white')
-        plt.close(fig2)
-        chart_files.append(tmp2.name)
-
-        # 차트3: 이익률 분포 (도넛) - 모노톤 4단계
+        # 차트2: 이익률 분포 (도넛) - 큰 사이즈, 라벨 잘 보이게
         dist = {'90% 이상': 0, '70~90%': 0, '50~70%': 0, '50% 미만': 0}
         for m in member_agg.values():
             rate = (m['profit'] / m['revenue_total'] * 100) if m['revenue_total'] > 0 else 0
@@ -4262,25 +4370,30 @@ async def GetProfitReportPdf():
             elif rate >= 70: dist['70~90%'] += 1
             elif rate >= 50: dist['50~70%'] += 1
             else: dist['50% 미만'] += 1
-        fig3, ax3 = plt.subplots(figsize=(3.2, 3))
-        fig3.patch.set_facecolor('white')
-        dist_colors = [C_NAVY, C_ACCENT, C_SLATE, C_SILVER]
-        wedges3, texts3, autotexts3 = ax3.pie(
-            list(dist.values()), labels=list(dist.keys()), colors=dist_colors,
-            autopct=lambda pct: f'{int(round(pct/100.*sum(dist.values())))}',
+        fig2, ax2 = plt.subplots(figsize=(5.5, 4.5))
+        fig2.patch.set_facecolor('white')
+        dist_colors = ['#10b981', '#6366f1', '#f59e0b', '#ef4444']
+        dist_vals = list(dist.values())
+        dist_total = sum(dist_vals)
+        wedges2, texts2, autotexts2 = ax2.pie(
+            dist_vals, labels=list(dist.keys()), colors=dist_colors,
+            autopct=lambda pct: f'{int(round(pct/100.*dist_total))}개사\n({pct:.0f}%)',
             startangle=90, pctdistance=0.78,
-            wedgeprops=dict(width=0.35, edgecolor='white', linewidth=2)
+            labeldistance=1.15,
+            wedgeprops=dict(width=0.32, edgecolor='white', linewidth=3)
         )
-        for t in texts3: t.set_fontproperties(font_prop); t.set_fontsize(8); t.set_color(C_NAVY)
-        for t in autotexts3: t.set_fontproperties(font_prop); t.set_fontsize(8); t.set_fontweight('bold'); t.set_color('white')
-        ax3.text(0, 0, f'{member_count}', ha='center', va='center',
-                 fontproperties=font_prop, fontsize=16, fontweight='bold', color=C_NAVY)
-        ax3.set_title('이익률 분포', fontproperties=font_prop, fontsize=9, fontweight='bold', color=C_NAVY, pad=6, loc='center')
-        fig3.tight_layout()
-        tmp3 = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
-        fig3.savefig(tmp3.name, dpi=160, bbox_inches='tight', facecolor='white')
-        plt.close(fig3)
-        chart_files.append(tmp3.name)
+        for t in texts2: t.set_fontproperties(font_prop); t.set_fontsize(12); t.set_color(C_NAVY); t.set_fontweight('bold')
+        for t in autotexts2: t.set_fontproperties(font_prop); t.set_fontsize(9); t.set_fontweight('bold'); t.set_color('white')
+        ax2.text(0, 0.04, f'{member_count}개사', ha='center', va='center',
+                 fontproperties=font_prop, fontsize=18, fontweight='bold', color=C_NAVY)
+        ax2.text(0, -0.18, '전체 회원사', ha='center', va='center',
+                 fontproperties=font_prop, fontsize=10, color=C_SLATE)
+        ax2.set_title('이익률 분포', fontproperties=font_prop, fontsize=13, fontweight='bold', color=C_NAVY, pad=12, loc='center')
+        fig2.tight_layout()
+        tmp2 = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        fig2.savefig(tmp2.name, dpi=160, bbox_inches='tight', facecolor='white')
+        plt.close(fig2)
+        chart_files.append(tmp2.name)
 
         # ──────────────────────────────────────
         # PDF 생성 (미니멀 기업 보고서)
@@ -4289,33 +4402,28 @@ async def GetProfitReportPdf():
             def header(self):
                 if self.page_no() == 1:
                     return
-                # 상단: 얇은 네이비 라인
-                self.set_draw_color(27, 42, 74)
-                self.set_line_width(0.6)
-                self.line(15, 12, 282, 12)
-                self.set_line_width(0.2)
+                # 상단 인디고 accent line
+                self.set_fill_color(99, 102, 241)
+                self.rect(0, 0, 297, 1.5, 'F')
                 # 좌측: 보고서명
                 self.set_xy(15, 5)
                 self.set_font("Korean", "", 7)
-                self.set_text_color(27, 42, 74)
+                self.set_text_color(100, 116, 139)
                 _now = datetime.now()
-                self.cell(0, 5, f"{_now.strftime('%y')}년 {_now.month}월 회원사 이익내역 보고서", align='L')
-                # 우측: 날짜
+                self.cell(0, 5, f"회원사 이익내역 보고서  |  {_now.strftime('%Y.%m.%d')}", align='L')
+                # 우측: 페이지 번호
                 self.set_xy(15, 5)
-                self.set_text_color(136, 150, 171)
-                self.cell(0, 5, datetime.now().strftime('%Y.%m.%d'), align='R')
-                self.set_y(16)
+                self.set_font("Korean", "B", 7)
+                self.set_text_color(99, 102, 241)
+                self.cell(0, 5, f"P.{self.page_no()}", align='R')
+                self.set_y(14)
 
             def footer(self):
-                self.set_y(-12)
-                self.set_draw_color(27, 42, 74)
-                self.set_line_width(0.3)
-                self.line(15, self.get_y(), 282, self.get_y())
-                self.set_line_width(0.2)
-                self.set_font("Korean", "", 6)
-                self.set_text_color(136, 150, 171)
-                self.cell(0, 8, "NEXTRADE MKNM", align='L')
-                self.cell(0, 8, f"{self.page_no()} / {{nb}}", align='R')
+                self.set_y(-10)
+                self.set_font("Korean", "", 5.5)
+                self.set_text_color(168, 178, 195)
+                self.cell(0, 6, "NEXTRADE MKNM  Network Management System", align='L')
+                self.cell(0, 6, f"{self.page_no()} / {{nb}}", align='R')
 
         pdf = ProfitPDF(orientation='L', unit='mm', format='A4')
         pdf.add_font("Korean", "", font_path, uni=True)
@@ -4323,107 +4431,258 @@ async def GetProfitReportPdf():
         pdf.alias_nb_pages()
         pdf.set_auto_page_break(auto=True, margin=15)
 
-        # ── 1페이지: 표지 (미니멀) ──
+        # 증감 포맷 헬퍼
+        def fmt_compact(v):
+            if v == 0: return '0'
+            s = '+' if v >= 0 else ''
+            if abs(v) >= 100000000: return f"{s}{v / 100000000:.1f}억"
+            if abs(v) >= 10000: return f"{s}{v / 10000:.0f}만"
+            return f"{s}{v:,.0f}"
+
+        # ── 1페이지: 표지 (모던 미니멀) ──
         pdf.add_page()
-        # 전체 흰 배경 + 좌측 네이비 세로 바
-        pdf.set_fill_color(27, 42, 74)
-        pdf.rect(0, 0, 12, 210, 'F')
-
-        # 상단 얇은 수평선
-        pdf.set_draw_color(27, 42, 74)
-        pdf.set_line_width(0.4)
-        pdf.line(20, 30, 280, 30)
-
-        # 타이틀
         now = datetime.now()
         title_date = f"{now.strftime('%y')}년 {now.month}월"
-        pdf.set_xy(20, 38)
-        pdf.set_font("Korean", "B", 28)
-        pdf.set_text_color(27, 42, 74)
-        pdf.cell(0, 14, f"{title_date} 회원사 이익내역")
-        pdf.set_xy(20, 52)
-        pdf.set_font("Korean", "", 28)
-        pdf.set_text_color(136, 150, 171)
-        pdf.cell(0, 14, "보고서")
 
-        # 서브타이틀
-        pdf.set_xy(20, 72)
-        pdf.set_font("Korean", "", 10)
-        pdf.set_text_color(136, 150, 171)
-        pdf.cell(0, 6, "NEXTRADE MKNM  Network Management System")
+        # 상단 그라데이션 바 (얇은 accent line)
+        pdf.set_fill_color(99, 102, 241)
+        pdf.rect(0, 0, 297, 3, 'F')
 
-        # 하단 구분선
-        pdf.set_draw_color(228, 232, 240)
+        # 좌측 상단 브랜드
+        pdf.set_xy(24, 14)
+        pdf.set_font("Korean", "", 8)
+        pdf.set_text_color(148, 163, 184)
+        pdf.cell(0, 5, "NEXTRADE MKNM")
+
+        # 메인 타이틀 영역 (넓은 여백)
+        pdf.set_xy(24, 48)
+        pdf.set_font("Korean", "B", 34)
+        pdf.set_text_color(15, 23, 42)
+        pdf.cell(0, 16, "회원사 이익내역")
+        pdf.set_xy(24, 66)
+        pdf.set_font("Korean", "", 34)
+        pdf.set_text_color(148, 163, 184)
+        pdf.cell(0, 16, "보고서")
+
+        # 날짜 태그
+        pdf.set_xy(24, 90)
+        pdf.set_fill_color(241, 245, 249)
+        pdf.set_font("Korean", "B", 11)
+        pdf.set_text_color(99, 102, 241)
+        pdf.cell(55, 8, f"  {title_date}", fill=True)
+
+        # 구분선
+        pdf.set_draw_color(226, 232, 240)
         pdf.set_line_width(0.2)
-        pdf.line(20, 85, 280, 85)
+        pdf.line(24, 108, 273, 108)
 
-        # KPI 요약 (4개 수치 - 수평 배치, 최소한의 장식)
-        kpi_y = 95
+        # KPI 카드 영역 (4개 수치 + 증감)
+        kpi_y = 115
+        kpi_diff_texts = ['', '', '', '']
+        if base_line_data:
+            b_rev = base_line_data['revenue']
+            b_pur = base_line_data['purchase']
+            b_pf = base_line_data['profit']
+            r_diff = total_revenue - b_rev
+            p_diff = total_purchase - b_pur
+            pf_diff = total_profit - b_pf
+            r_pct = f"{(r_diff / b_rev * 100):.1f}" if b_rev > 0 else '0.0'
+            p_pct = f"{(p_diff / b_pur * 100):.1f}" if b_pur > 0 else '0.0'
+            pf_pct = f"{(pf_diff / abs(b_pf) * 100):.1f}" if b_pf != 0 else '0.0'
+            kpi_diff_texts[1] = f"{fmt_compact(r_diff)} ({'+' if r_diff >= 0 else ''}{r_pct}%)"
+            kpi_diff_texts[2] = f"{fmt_compact(p_diff)} ({'+' if p_diff >= 0 else ''}{p_pct}%)"
+            kpi_diff_texts[3] = f"{fmt_compact(pf_diff)} ({'+' if pf_diff >= 0 else ''}{pf_pct}%)"
+
         kpi_data = [
             ("전체 회원사", f"{member_count}개사", "회선계약 기준"),
             ("총 매출", f"{total_revenue:,.0f}원", f"ORD {total_ord:,.0f} + MPR {total_mpr:,.0f}"),
             ("총 매입", f"{total_purchase:,.0f}원", "매입계약 기준"),
             ("총 이익", f"{total_profit:,.0f}원", f"이익률 {profit_rate_total}%"),
         ]
-        kpi_w = 65
-        kpi_start = 20
+        kpi_w = 62
+        kpi_start = 24
+        dot_colors = [(99, 102, 241), (16, 185, 129), (239, 68, 68), (245, 158, 11)]
+
         for i, (label, value, sub) in enumerate(kpi_data):
             x = kpi_start + i * kpi_w
+
+            # 카드 배경 (라운드 효과 - 직사각형)
+            pdf.set_fill_color(249, 250, 251)
+            pdf.rect(x, kpi_y, kpi_w - 4, 38, 'F')
+
+            # 컬러 탑 라인
+            dc = dot_colors[i]
+            pdf.set_fill_color(dc[0], dc[1], dc[2])
+            pdf.rect(x, kpi_y, kpi_w - 4, 1.5, 'F')
+
             # 라벨
-            pdf.set_xy(x, kpi_y)
+            pdf.set_xy(x + 6, kpi_y + 5)
             pdf.set_font("Korean", "", 7.5)
-            pdf.set_text_color(136, 150, 171)
-            pdf.cell(kpi_w, 4, label)
+            pdf.set_text_color(100, 116, 139)
+            pdf.cell(kpi_w - 10, 4, label)
+
             # 값
-            pdf.set_xy(x, kpi_y + 6)
-            pdf.set_font("Korean", "B", 16)
-            pdf.set_text_color(27, 42, 74)
-            pdf.cell(kpi_w, 9, value)
+            pdf.set_xy(x + 6, kpi_y + 12)
+            pdf.set_font("Korean", "B", 15)
+            pdf.set_text_color(15, 23, 42)
+            pdf.cell(kpi_w - 10, 9, value)
+
             # 보조
-            pdf.set_xy(x, kpi_y + 17)
-            pdf.set_font("Korean", "", 6.5)
-            pdf.set_text_color(168, 178, 195)
-            pdf.cell(kpi_w, 4, sub)
-            # 세로 구분선 (마지막 제외)
-            if i < 3:
-                pdf.set_draw_color(228, 232, 240)
-                pdf.line(x + kpi_w - 1, kpi_y, x + kpi_w - 1, kpi_y + 22)
+            pdf.set_xy(x + 6, kpi_y + 23)
+            pdf.set_font("Korean", "", 6)
+            pdf.set_text_color(148, 163, 184)
+            pdf.cell(kpi_w - 10, 3.5, sub)
 
-        # 하단 구분선
-        pdf.set_draw_color(228, 232, 240)
-        pdf.line(20, kpi_y + 28, 280, kpi_y + 28)
+            # 증감 표시
+            if kpi_diff_texts[i]:
+                pdf.set_xy(x + 6, kpi_y + 28)
+                pdf.set_font("Korean", "B", 6)
+                diff_val = [0, total_revenue - (base_line_data['revenue'] if base_line_data else 0),
+                            total_purchase - (base_line_data['purchase'] if base_line_data else 0),
+                            total_profit - (base_line_data['profit'] if base_line_data else 0)][i]
+                if diff_val >= 0:
+                    pdf.set_text_color(220, 38, 38)
+                    pdf.cell(kpi_w - 10, 3.5, f"▲ {kpi_diff_texts[i]}")
+                else:
+                    pdf.set_text_color(37, 99, 235)
+                    pdf.cell(kpi_w - 10, 3.5, f"▼ {kpi_diff_texts[i]}")
 
-        # 생성 정보
-        pdf.set_xy(20, 170)
-        pdf.set_font("Korean", "", 8)
+        # 증감 설명
+        pdf.set_xy(24, kpi_y + 42)
+        pdf.set_font("Korean", "", 5.5)
         pdf.set_text_color(168, 178, 195)
-        pdf.cell(0, 5, f"Report generated  {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        pdf.cell(0, 3, "* 전년 12월 대비 증감")
 
-        # 하단 네이비 바
-        pdf.set_fill_color(27, 42, 74)
-        pdf.rect(0, 198, 297, 12, 'F')
+        # 하단 생성 정보
+        pdf.set_xy(24, 178)
+        pdf.set_font("Korean", "", 7.5)
+        pdf.set_text_color(168, 178, 195)
+        pdf.cell(0, 5, f"Generated  {datetime.now().strftime('%Y-%m-%d %H:%M')}  |  Network Management System")
 
-        # ── 2페이지: 월별 추이 + 요약 ──
+        # ── 2페이지: 월별 추이 차트 + 추이 테이블 ──
         pdf.add_page()
 
         def section_heading(text, num):
-            """섹션 제목 (넘버링 + 밑줄)"""
-            pdf.set_font("Korean", "B", 14)
-            pdf.set_text_color(27, 42, 74)
-            pdf.cell(0, 9, f"{num}.  {text}", ln=True)
-            pdf.set_draw_color(27, 42, 74)
-            pdf.set_line_width(0.5)
-            pdf.line(15, pdf.get_y(), 70, pdf.get_y())
+            y = pdf.get_y()
+            # 인디고 넘버 태그
+            pdf.set_fill_color(99, 102, 241)
+            pdf.set_xy(15, y)
+            pdf.set_font("Korean", "B", 9)
+            pdf.set_text_color(255, 255, 255)
+            pdf.cell(14, 7, num, fill=True, align='C')
+            # 제목 텍스트
+            pdf.set_xy(32, y)
+            pdf.set_font("Korean", "B", 13)
+            pdf.set_text_color(15, 23, 42)
+            pdf.cell(0, 7, text)
+            pdf.ln(10)
+            # 얇은 구분선
+            pdf.set_draw_color(226, 232, 240)
             pdf.set_line_width(0.2)
-            pdf.ln(4)
+            pdf.line(15, pdf.get_y(), 282, pdf.get_y())
+            pdf.ln(5)
 
-        section_heading("월별 추이 분석", "01")
+        section_heading("월별 이익 추이", "01")
+
+        # 차트: 풀 가로 배치
         chart0_y = pdf.get_y()
         pdf.image(chart_files[0], x=15, y=chart0_y, w=267)
+        pdf.set_y(chart0_y + 58)
+        pdf.ln(3)
 
-        # ── 3페이지: 요약 ──
+        # 테이블: 차트 아래 풀 가로 배치
+        tbl_x = 15
+        pdf.set_xy(tbl_x, pdf.get_y())
+        pdf.set_font("Korean", "B", 9)
+        pdf.set_text_color(27, 42, 74)
+        pdf.cell(100, 7, "최근 월별 이익 추이", ln=False)
+        pdf.set_font("Korean", "", 6)
+        pdf.set_text_color(148, 163, 184)
+        pdf.cell(0, 7, "  전월 대비 증감")
+        pdf.ln()
+
+        # 테이블 헤더 (가로로 넓게)
+        trend_col_w = [22, 50, 50, 50, 50, 45]
+        trend_headers = ['월', '매출', '매입', '이익', '이익 증감', '증감률']
+        pdf.set_xy(tbl_x, pdf.get_y() + 1)
+        pdf.set_font("Korean", "B", 7)
+        for ci, (h, w) in enumerate(zip(trend_headers, trend_col_w)):
+            clr = (5, 150, 105) if ci == 3 else (27, 42, 74)
+            pdf.set_text_color(clr[0], clr[1], clr[2])
+            pdf.cell(w, 5.5, h, align='C')
+        pdf.ln()
+        pdf.set_draw_color(27, 42, 74)
+        pdf.set_line_width(0.3)
+        pdf.line(tbl_x, pdf.get_y(), tbl_x + sum(trend_col_w), pdf.get_y())
+        pdf.set_line_width(0.2)
+        pdf.ln(0.5)
+
+        # 테이블 데이터 (최신 순)
+        rev_data = list(reversed(monthly_data))
+        for ri, d in enumerate(rev_data):
+            if pdf.get_y() > 178:
+                break
+            ry = pdf.get_y()
+            rv = d['revenue']
+            pu = d['purchase']
+            pf = d['profit']
+            has_prev = ri < len(rev_data) - 1
+            prev_pf = rev_data[ri + 1]['profit'] if has_prev else 0
+            pf_diff = pf - prev_pf if has_prev else 0
+            pf_pct_str = ''
+            if has_prev and prev_pf != 0:
+                pf_pct = (pf_diff / abs(prev_pf)) * 100
+                arrow = '▲' if pf_diff >= 0 else '▼'
+                pf_pct_str = f"{arrow} {'+' if pf_diff >= 0 else ''}{pf_pct:.1f}%"
+
+            # 짝수행 배경
+            if ri % 2 == 0:
+                pdf.set_fill_color(248, 250, 252)
+                pdf.rect(tbl_x, ry, sum(trend_col_w), 6.5, 'F')
+
+            pdf.set_xy(tbl_x, ry)
+            pdf.set_font("Korean", "B", 7)
+            pdf.set_text_color(71, 85, 105)
+            pdf.cell(trend_col_w[0], 6.5, d['month'][2:].replace('-', '.'), align='C')
+
+            # 매출
+            pdf.set_font("Korean", "", 7)
+            pdf.set_text_color(30, 41, 59)
+            pdf.cell(trend_col_w[1], 6.5, f"{rv:,.0f}원", align='R')
+
+            # 매입
+            pdf.set_text_color(99, 102, 241)
+            pdf.cell(trend_col_w[2], 6.5, f"{pu:,.0f}원", align='R')
+
+            # 이익
+            pdf.set_font("Korean", "B", 7)
+            pdf.set_text_color(5, 150, 105)
+            pdf.cell(trend_col_w[3], 6.5, f"{pf:,.0f}원", align='R')
+
+            # 이익 증감값
+            pdf.set_font("Korean", "", 6.5)
+            if has_prev and pf_diff != 0:
+                pdf.set_text_color(220, 38, 38) if pf_diff >= 0 else pdf.set_text_color(37, 99, 235)
+                pdf.cell(trend_col_w[4], 6.5, fmt_compact(pf_diff), align='R')
+            else:
+                pdf.set_text_color(148, 163, 184)
+                pdf.cell(trend_col_w[4], 6.5, '-', align='C')
+
+            # 증감률
+            pdf.set_font("Korean", "B", 7)
+            if pf_pct_str:
+                pdf.set_text_color(220, 38, 38) if pf_diff >= 0 else pdf.set_text_color(37, 99, 235)
+            else:
+                pdf.set_text_color(148, 163, 184)
+            pdf.cell(trend_col_w[5], 6.5, pf_pct_str or '-', align='C')
+            pdf.ln()
+
+            pdf.set_draw_color(240, 242, 245)
+            pdf.line(tbl_x, pdf.get_y(), tbl_x + sum(trend_col_w), pdf.get_y())
+
+        # ── 3페이지: 요약 + 이익 TOP 10 리스트 + 도넛 차트 ──
         pdf.add_page()
-        section_heading("요약", "02")
+        section_heading("요약 분석", "02")
 
         # 추가 지표 산출
         member_list_sorted = sorted(member_agg.values(), key=lambda x: x['profit'], reverse=True)
@@ -4441,44 +4700,32 @@ async def GetProfitReportPdf():
         profit_under_50 = sum(1 for m in member_agg.values() if m['revenue_total'] > 0 and (m['profit'] / m['revenue_total'] * 100) < 50)
 
         # 표 그리기 함수
-        def draw_summary_table(title, rows, start_y):
-            """rows: [(label, value), ...]"""
-            pdf.set_xy(15, start_y)
-            # 소제목
+        def draw_summary_table(title, rows, start_y, table_x=15, col_label_w=55, col_value_w=75):
+            pdf.set_xy(table_x, start_y)
             pdf.set_font("Korean", "B", 9)
             pdf.set_text_color(27, 42, 74)
             pdf.cell(0, 7, title, ln=True)
             pdf.ln(1)
-
-            table_x = 15
-            col_label_w = 55
-            col_value_w = 75
             row_h = 7.5
-
             for i, (label, value) in enumerate(rows):
                 ry = pdf.get_y()
-                # 짝수행 배경
                 if i % 2 == 0:
                     pdf.set_fill_color(248, 250, 252)
                     pdf.rect(table_x, ry, col_label_w + col_value_w, row_h, 'F')
-                # 라벨
                 pdf.set_xy(table_x + 4, ry)
                 pdf.set_font("Korean", "", 7.5)
                 pdf.set_text_color(100, 116, 139)
                 pdf.cell(col_label_w - 4, row_h, label)
-                # 값
                 pdf.set_xy(table_x + col_label_w, ry)
                 pdf.set_font("Korean", "B", 8)
                 pdf.set_text_color(27, 42, 74)
                 pdf.cell(col_value_w - 4, row_h, value, align='R')
-                # 하단 선
                 pdf.set_draw_color(236, 239, 243)
                 pdf.line(table_x, ry + row_h, table_x + col_label_w + col_value_w, ry + row_h)
                 pdf.set_y(ry + row_h)
-
             return pdf.get_y()
 
-        # ── 좌측: 매출/매입/이익 요약 ──
+        # 좌측: 매출/매입/이익 요약
         tbl1_rows = [
             ("전체 회원사", f"{member_count}개사"),
             ("총 매출", f"{total_revenue:,.0f}원"),
@@ -4493,7 +4740,7 @@ async def GetProfitReportPdf():
         tbl1_start = pdf.get_y()
         draw_summary_table("매출 / 매입 / 이익 현황", tbl1_rows, tbl1_start)
 
-        # ── 우측: 분석 지표 ──
+        # 우측: 분석 지표
         tbl2_rows = [
             ("이익 최고 회원사", f"{max_profit_m['company_name']}  ({max_profit_m['profit']:,.0f}원)" if max_profit_m else "-"),
             ("이익 최저 회원사", f"{min_profit_m['company_name']}  ({min_profit_m['profit']:,.0f}원)" if min_profit_m else "-"),
@@ -4502,45 +4749,10 @@ async def GetProfitReportPdf():
             ("이익률 90% 이상", f"{profit_over_90}개사"),
             ("이익률 50% 미만", f"{profit_under_50}개사"),
         ]
-        pdf.set_y(tbl1_start)
-        # 우측 테이블은 X 좌표를 이동
-        old_l_margin = pdf.l_margin
-        pdf.l_margin = 150
-        pdf.set_x(150)
-        tbl2_y = tbl1_start
+        draw_summary_table("분석 지표", tbl2_rows, tbl1_start, table_x=150, col_label_w=50, col_value_w=82)
 
-        pdf.set_xy(150, tbl2_y)
-        pdf.set_font("Korean", "B", 9)
-        pdf.set_text_color(27, 42, 74)
-        pdf.cell(0, 7, "분석 지표", ln=True)
-        pdf.ln(1)
-
-        table_x2 = 150
-        col_label_w2 = 50
-        col_value_w2 = 82
-        row_h2 = 7.5
-
-        for i, (label, value) in enumerate(tbl2_rows):
-            ry = pdf.get_y()
-            if i % 2 == 0:
-                pdf.set_fill_color(248, 250, 252)
-                pdf.rect(table_x2, ry, col_label_w2 + col_value_w2, row_h2, 'F')
-            pdf.set_xy(table_x2 + 4, ry)
-            pdf.set_font("Korean", "", 7.5)
-            pdf.set_text_color(100, 116, 139)
-            pdf.cell(col_label_w2 - 4, row_h2, label)
-            pdf.set_xy(table_x2 + col_label_w2, ry)
-            pdf.set_font("Korean", "B", 8)
-            pdf.set_text_color(27, 42, 74)
-            pdf.cell(col_value_w2 - 4, row_h2, value, align='R')
-            pdf.set_draw_color(236, 239, 243)
-            pdf.line(table_x2, ry + row_h2, table_x2 + col_label_w2 + col_value_w2, ry + row_h2)
-            pdf.set_y(ry + row_h2)
-
-        pdf.l_margin = old_l_margin
-
-        # 하단 여백에 이익률 분포 미니 요약 바
-        dist_bar_y = max(tbl1_start + len(tbl1_rows) * 7.5 + 20, pdf.get_y() + 15)
+        # 하단: 이익률 분포 바
+        dist_bar_y = max(tbl1_start + len(tbl1_rows) * 7.5 + 20, pdf.get_y() + 12)
         pdf.set_xy(15, dist_bar_y)
         pdf.set_font("Korean", "B", 9)
         pdf.set_text_color(27, 42, 74)
@@ -4548,30 +4760,25 @@ async def GetProfitReportPdf():
         pdf.ln(2)
 
         dist_cats = [
-            ("90% 이상", profit_over_90, (27, 42, 74)),
-            ("70~90%", sum(1 for m in member_agg.values() if m['revenue_total'] > 0 and 70 <= (m['profit'] / m['revenue_total'] * 100) < 90), (43, 108, 176)),
-            ("50~70%", sum(1 for m in member_agg.values() if m['revenue_total'] > 0 and 50 <= (m['profit'] / m['revenue_total'] * 100) < 70), (136, 150, 171)),
-            ("50% 미만", profit_under_50, (197, 48, 48)),
+            ("90% 이상", profit_over_90, (16, 185, 129)),
+            ("70~90%", sum(1 for m in member_agg.values() if m['revenue_total'] > 0 and 70 <= (m['profit'] / m['revenue_total'] * 100) < 90), (99, 102, 241)),
+            ("50~70%", sum(1 for m in member_agg.values() if m['revenue_total'] > 0 and 50 <= (m['profit'] / m['revenue_total'] * 100) < 70), (245, 158, 11)),
+            ("50% 미만", profit_under_50, (239, 68, 68)),
         ]
         bar_x = 15
         bar_total_w = 267
         bar_h = 10
         bar_y = pdf.get_y()
-
-        # 전체 바 배경
         pdf.set_fill_color(240, 242, 245)
         pdf.rect(bar_x, bar_y, bar_total_w, bar_h, 'F')
 
-        # 각 구간 비율별 바
         offset = 0
         for cat_label, cat_count, (cr, cg, cb) in dist_cats:
-            if member_count == 0:
-                continue
+            if member_count == 0: continue
             seg_w = (cat_count / member_count) * bar_total_w
             if seg_w > 0:
                 pdf.set_fill_color(cr, cg, cb)
                 pdf.rect(bar_x + offset, bar_y, seg_w, bar_h, 'F')
-                # 바 안에 텍스트 (충분한 너비일 때만)
                 if seg_w > 25:
                     pdf.set_xy(bar_x + offset, bar_y + 1)
                     pdf.set_font("Korean", "B", 6.5)
@@ -4582,7 +4789,6 @@ async def GetProfitReportPdf():
                     pdf.cell(seg_w, 4, f"{cat_count}개사 ({cat_count/member_count*100:.0f}%)", align='C')
             offset += seg_w
 
-        # 바 아래 범례
         pdf.set_y(bar_y + bar_h + 4)
         legend_x = 15
         for cat_label, cat_count, (cr, cg, cb) in dist_cats:
@@ -4594,25 +4800,67 @@ async def GetProfitReportPdf():
             pdf.cell(0, 5, f"{cat_label}: {cat_count}개사")
             legend_x += 55
 
-        # ── 4페이지: 차트 ──
+        # ── 4페이지: 이익 TOP 10 리스트 + 도넛 차트 ──
         pdf.add_page()
         section_heading("이익 분석", "03")
-        chart_y = pdf.get_y()
-        pdf.image(chart_files[1], x=15, y=chart_y, w=150)
-        pdf.image(chart_files[2], x=172, y=chart_y, w=55)
-        pdf.image(chart_files[3], x=230, y=chart_y, w=55)
 
-        # ── 5페이지: TOP 10 테이블 ──
-        pdf.add_page()
-        section_heading("이익 상위 10 회원사", "04")
-
+        # 이익 TOP 10 리스트 (화면과 동일한 프로그레스바 스타일)
         top10 = sorted(member_agg.values(), key=lambda x: x['profit'], reverse=True)[:10]
-        max_profit = top10[0]['profit'] if top10 else 1
+        max_profit_val = top10[0]['profit'] if top10 else 1
+
+        pdf.set_font("Korean", "B", 9)
+        pdf.set_text_color(27, 42, 74)
+        pdf.cell(0, 7, "이익 TOP 10", ln=True)
+        pdf.ln(2)
+
+        list_x = 15
+        for idx, m in enumerate(top10):
+            ry = pdf.get_y()
+            bar_pct = m['profit'] / max_profit_val * 100 if max_profit_val > 0 else 0
+            profit_str = f"{m['profit']:,.0f}원"
+
+            # 순위
+            pdf.set_xy(list_x, ry)
+            pdf.set_font("Korean", "B", 7)
+            pdf.set_text_color(148, 163, 184)
+            pdf.cell(10, 7, str(idx + 1), align='R')
+
+            # 회사명
+            pdf.set_xy(list_x + 13, ry)
+            pdf.set_font("Korean", "B", 7.5)
+            pdf.set_text_color(27, 42, 74)
+            pdf.cell(52, 7, str(m['company_name'] or '')[:20])
+
+            # 프로그레스 바
+            prog_x = list_x + 68
+            prog_w = 120
+            prog_h = 4
+            prog_y = ry + 1.8
+            pdf.set_fill_color(245, 245, 245)
+            pdf.rect(prog_x, prog_y, prog_w, prog_h, 'F')
+            pdf.set_fill_color(239, 68, 68)  # 빨강 (이익 색상)
+            pdf.rect(prog_x, prog_y, prog_w * bar_pct / 100, prog_h, 'F')
+
+            # 금액
+            pdf.set_xy(prog_x + prog_w + 3, ry)
+            pdf.set_font("Korean", "B", 7.5)
+            pdf.set_text_color(220, 38, 38)
+            pdf.cell(45, 7, profit_str, align='R')
+
+            pdf.set_y(ry + 8)
+
+        # 도넛 차트들: TOP10 아래에 큰 사이즈로 배치
+        chart_row_y = pdf.get_y() + 6
+        pdf.image(chart_files[1], x=15, y=chart_row_y, w=130)
+        pdf.image(chart_files[2], x=152, y=chart_row_y, w=130)
+
+        # ── 5페이지: TOP 10 상세 테이블 ──
+        pdf.add_page()
+        section_heading("이익 상위 10 회원사 상세", "04")
 
         top_col_w = [10, 18, 55, 38, 38, 38, 22, 45]
         top_headers = ['순위', '회원번호', '회사명', '총매출(원)', '총매입(원)', '이익(원)', '이익률', '점유율']
 
-        # 헤더
         pdf.set_font("Korean", "B", 7)
         pdf.set_text_color(136, 150, 171)
         for i, h in enumerate(top_headers):
@@ -4629,48 +4877,46 @@ async def GetProfitReportPdf():
             row_y = pdf.get_y()
             rate = round((m['profit'] / m['revenue_total'] * 100), 1) if m['revenue_total'] > 0 else 0.0
 
-            # 순위
             pdf.set_font("Korean", "B" if idx <= 3 else "", 7.5)
             pdf.set_text_color(27, 42, 74)
             pdf.cell(top_col_w[0], 7, str(idx), align='C')
-            # 회원번호
             pdf.set_font("Korean", "", 7)
             pdf.set_text_color(136, 150, 171)
             pdf.cell(top_col_w[1], 7, str(m['member_number'] or ''), align='C')
-            # 회사명
             pdf.set_text_color(27, 42, 74)
             pdf.cell(top_col_w[2], 7, str(m['company_name'] or '')[:24])
-            # 매출
-            pdf.set_text_color(74, 85, 104)
+            # 매출 (어두운색)
+            pdf.set_text_color(30, 41, 59)
             pdf.cell(top_col_w[3], 7, f"{m['revenue_total']:,.0f}", align='R')
-            # 매입
+            # 매입 (인디고)
+            pdf.set_text_color(99, 102, 241)
             pdf.cell(top_col_w[4], 7, f"{m['purchase_total']:,.0f}", align='R')
-            # 이익 (볼드)
+            # 이익 (빨강 볼드)
             pdf.set_font("Korean", "B", 7.5)
-            pdf.set_text_color(27, 42, 74)
+            pdf.set_text_color(220, 38, 38)
             pdf.cell(top_col_w[5], 7, f"{m['profit']:,.0f}", align='R')
             # 이익률
             pdf.set_font("Korean", "", 7)
-            pdf.set_text_color(74, 85, 104)
+            rate_color = (5, 150, 105) if rate >= 70 else ((217, 119, 6) if rate >= 50 else (220, 38, 38))
+            pdf.set_text_color(rate_color[0], rate_color[1], rate_color[2])
             pdf.cell(top_col_w[6], 7, f"{rate}%", align='C')
             # 점유율 바
-            bar_x = pdf.get_x() + 1
+            bx = pdf.get_x() + 1
             bar_full_w = top_col_w[7] - 16
-            ratio = m['profit'] / max_profit if max_profit > 0 else 0
-            pdf.set_fill_color(240, 242, 245)
-            pdf.rect(bar_x, row_y + 2.2, bar_full_w, 2.5, 'F')
-            pdf.set_fill_color(27, 42, 74)
-            pdf.rect(bar_x, row_y + 2.2, bar_full_w * ratio, 2.5, 'F')
+            ratio = m['profit'] / max_profit_val if max_profit_val > 0 else 0
+            pdf.set_fill_color(245, 245, 245)
+            pdf.rect(bx, row_y + 2.2, bar_full_w, 2.5, 'F')
+            pdf.set_fill_color(239, 68, 68)
+            pdf.rect(bx, row_y + 2.2, bar_full_w * ratio, 2.5, 'F')
             pct = (m['profit'] / total_profit * 100) if total_profit > 0 else 0
             pdf.set_font("Korean", "", 6.5)
             pdf.set_text_color(136, 150, 171)
             pdf.cell(top_col_w[7], 7, f"{pct:.1f}%", align='R')
             pdf.ln()
-            # 행 구분선
             pdf.set_draw_color(240, 242, 245)
             pdf.line(15, pdf.get_y(), 15 + sum(top_col_w), pdf.get_y())
 
-        # ── 5페이지~: 상세 테이블 ──
+        # ── 6페이지~: 상세 테이블 ──
         pdf.add_page()
         section_heading("회원사별 상세 내역", "05")
 
@@ -4699,7 +4945,6 @@ async def GetProfitReportPdf():
                 draw_detail_header()
 
             row_y = pdf.get_y()
-            # 짝수행 배경
             if idx % 2 == 0:
                 pdf.set_fill_color(250, 251, 252)
                 pdf.rect(15, row_y, sum(col_widths), 6.2, 'F')
@@ -4713,29 +4958,37 @@ async def GetProfitReportPdf():
             pdf.set_text_color(136, 150, 171)
             pdf.cell(col_widths[3], 6.2, str(row['phase'] or ''), align='C')
 
-            # 금액들 - 통일된 색상
-            pdf.set_text_color(74, 85, 104)
+            # ORD/MPR 매출
+            pdf.set_text_color(31, 41, 55)
             pdf.cell(col_widths[4], 6.2, f"{row['ord_total']:,.0f}", align='R')
             pdf.cell(col_widths[5], 6.2, f"{row['mpr_total']:,.0f}", align='R')
-            # 총매출 (볼드)
+            # 총매출 (어두운색 볼드)
             pdf.set_font("Korean", "B", 6.5)
-            pdf.set_text_color(43, 108, 176)
+            pdf.set_text_color(30, 41, 59)
             pdf.cell(col_widths[6], 6.2, f"{row['revenue_total']:,.0f}", align='R')
-            # 총매입
+            # 총매입 (인디고)
             pdf.set_font("Korean", "", 6.5)
-            pdf.set_text_color(74, 85, 104)
+            pdf.set_text_color(99, 102, 241)
             pdf.cell(col_widths[7], 6.2, f"{row['purchase_total']:,.0f}", align='R')
-            # 이익
+            # 이익 (빨강)
             profit_val = row['profit']
             pdf.set_font("Korean", "B", 6.5)
-            pdf.set_text_color(27, 42, 74) if profit_val >= 0 else pdf.set_text_color(197, 48, 48)
+            if profit_val >= 0:
+                pdf.set_text_color(220, 38, 38)
+            else:
+                pdf.set_text_color(148, 163, 184)
             pdf.cell(col_widths[8], 6.2, f"{profit_val:,.0f}", align='R')
             # 이익률
             pdf.set_font("Korean", "", 6.5)
-            pdf.set_text_color(136, 150, 171)
-            pdf.cell(col_widths[9], 6.2, f"{row['profit_rate']}%", align='C')
+            pr = row['profit_rate']
+            if pr >= 70:
+                pdf.set_text_color(5, 150, 105)
+            elif pr >= 50:
+                pdf.set_text_color(217, 119, 6)
+            else:
+                pdf.set_text_color(220, 38, 38)
+            pdf.cell(col_widths[9], 6.2, f"{pr}%", align='C')
             pdf.ln()
-            # 행 구분선
             pdf.set_draw_color(244, 245, 247)
             pdf.line(15, pdf.get_y(), 15 + sum(col_widths), pdf.get_y())
 
@@ -4748,13 +5001,21 @@ async def GetProfitReportPdf():
         pdf.ln(0.5)
 
         pdf.set_font("Korean", "B", 7)
-        pdf.set_fill_color(27, 42, 74)
+        pdf.set_fill_color(30, 41, 59)
         pdf.set_text_color(255, 255, 255)
         pdf.cell(col_widths[0] + col_widths[1] + col_widths[2] + col_widths[3], 7, "TOTAL", fill=True, align='C')
+        # ORD/MPR (밝은 회색)
+        pdf.set_text_color(203, 213, 225)
         pdf.cell(col_widths[4], 7, f"{total_ord:,.0f}", fill=True, align='R')
         pdf.cell(col_widths[5], 7, f"{total_mpr:,.0f}", fill=True, align='R')
+        # 총매출 (흰색)
+        pdf.set_text_color(241, 245, 249)
         pdf.cell(col_widths[6], 7, f"{total_revenue:,.0f}", fill=True, align='R')
+        # 총매입 (연보라)
+        pdf.set_text_color(165, 180, 252)
         pdf.cell(col_widths[7], 7, f"{total_purchase:,.0f}", fill=True, align='R')
+        # 이익 (연빨강)
+        pdf.set_text_color(252, 165, 165)
         pdf.cell(col_widths[8], 7, f"{total_profit:,.0f}", fill=True, align='R')
         pdf.cell(col_widths[9], 7, f"{profit_rate_total}%", fill=True, align='C')
         pdf.ln()
@@ -5416,7 +5677,7 @@ DR_TRAINING_TARGETS = [
     {
         "procedure": "51.02",
         "device_name": "PYD_MKD_L3_01",
-        "ip": "172.28.172.41",
+        "ip": "99.99.1.5",
         "vendor": "arista",
         "label": "RP라우팅 및 BGP Redip Route-Map RP 제거",
         "interfaces": [],
@@ -5438,7 +5699,7 @@ DR_TRAINING_TARGETS = [
     {
         "procedure": "51.02",
         "device_name": "PHQ_MKD_L3_01",
-        "ip": "192.168.254.44",
+        "ip": "99.99.1.6",
         "vendor": "arista",
         "label": "RP라우팅 및 BGP Redip Route-Map RP 제거",
         "interfaces": [],
@@ -5631,6 +5892,128 @@ async def collect_dr_training_status():
                     None, error_msg, False, False, now
                 ))
 
+        # 이전 값 조회 → 변경 감지 → Slack 알림
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT procedure_code, device_name, item_no, item_name, main_ok, dr_ok
+                    FROM dr_training_result
+                    WHERE checked_at = (SELECT MAX(checked_at) FROM dr_training_result)
+                """)
+                prev_map = {}
+                for r in cur.fetchall():
+                    key = f"{r['procedure_code']}_{r['device_name']}_{r['item_no']}"
+                    prev_map[key] = (r['main_ok'], r['dr_ok'], r['item_name'])
+
+        # 변경된 항목 Slack 전송
+        if prev_map and rows:
+            import threading
+            from utils.slack_client import send_alert
+            changed = []
+            unreachable_alerted = set()
+
+            # 이전에 접속 가능했던 장비 목록
+            prev_reachable = set()
+            with get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute("""
+                        SELECT DISTINCT procedure_code, device_name, ip
+                        FROM dr_training_result
+                        WHERE checked_at = (SELECT MAX(checked_at) FROM dr_training_result)
+                          AND reachable = true
+                    """)
+                    for r in cur.fetchall():
+                        prev_reachable.add(f"{r['procedure_code']}_{r['device_name']}")
+
+            for row in rows:
+                # row: (procedure, device_name, ip, label, reachable, error, item_no, item_type, item_name, ...)
+                proc, dev, ip, label = row[0], row[1], row[2], row[3]
+                reachable, error_msg = row[4], row[5]
+                item_no, item_type, item_name = row[6], row[7], row[8]
+                new_main, new_dr = row[17], row[18]
+                dev_key = f"{proc}_{dev}"
+
+                # 접속 불가: 이전에 접속 가능했으면 통신불가 알림 (장비당 1회)
+                if not reachable or item_type == "error":
+                    if dev_key in prev_reachable and dev_key not in unreachable_alerted:
+                        unreachable_alerted.add(dev_key)
+                        changed.append({
+                            "proc": proc, "dev": dev, "ip": ip, "label": label,
+                            "item_no": 0, "item_name": "통신불가", "item_type": "unreachable",
+                            "old_main": None, "new_main": None,
+                            "old_dr": None, "new_dr": None,
+                            "error": error_msg
+                        })
+                    continue
+
+                key = f"{proc}_{dev}_{item_no}"
+                if key in prev_map:
+                    old_main, old_dr, _ = prev_map[key]
+                    if old_main != new_main or old_dr != new_dr:
+                        changed.append({
+                            "proc": proc, "dev": dev, "ip": ip, "label": label,
+                            "item_no": item_no, "item_name": item_name, "item_type": item_type,
+                            "old_main": old_main, "new_main": new_main,
+                            "old_dr": old_dr, "new_dr": new_dr
+                        })
+
+            if changed:
+                # 전체 전환율 계산
+                total_items = len(rows)
+                total_main_ok = sum(1 for r in rows if r[17])
+                total_dr_ok = sum(1 for r in rows if r[18])
+                main_pct = round(total_main_ok / max(total_items, 1) * 100)
+                dr_pct = round(total_dr_ok / max(total_items, 1) * 100)
+                rate_summary = f"가동전환율 {main_pct}% ({total_main_ok}/{total_items}) | DR전환율 {dr_pct}% ({total_dr_ok}/{total_items})"
+
+                def _send_dr_alerts(items, summary):
+                    for c in items:
+                        # 통신불가 알림
+                        if c.get("item_type") == "unreachable":
+                            fields = [
+                                {"title": "절차", "value": c["proc"], "short": True},
+                                {"title": "장비", "value": f"*{c['dev']}* ({c['ip']})", "short": True},
+                                {"title": "상태", "value": ":x: 통신불가", "short": True},
+                            ]
+                            if c.get("error"):
+                                fields.append({"title": "오류", "value": f"`{c['error']}`", "short": False})
+                            if c.get("label"):
+                                fields.append({"title": "설명", "value": c["label"], "short": False})
+                            send_alert(
+                                channel="#network-alert-dr훈련",
+                                title=f":warning: DR훈련 장비 통신불가 >> {c['dev']}",
+                                message="",
+                                color="#dc2626",
+                                fields=fields
+                            )
+                            continue
+
+                        main_chg = f"{'OK' if c['old_main'] else 'Not OK'} → {'OK' if c['new_main'] else 'Not OK'}" if c['old_main'] != c['new_main'] else ""
+                        dr_chg = f"{'OK' if c['old_dr'] else 'Not OK'} → {'OK' if c['new_dr'] else 'Not OK'}" if c['old_dr'] != c['new_dr'] else ""
+                        fields = [
+                            {"title": "절차", "value": c["proc"], "short": True},
+                            {"title": "장비", "value": f"*{c['dev']}* ({c['ip']})", "short": True},
+                            {"title": "항목", "value": f"[{c['item_no']}] {c['item_name']}", "short": False},
+                        ]
+                        if main_chg:
+                            fields.append({"title": "가동상태 변경", "value": main_chg, "short": True})
+                        if dr_chg:
+                            fields.append({"title": "DR상태 변경", "value": dr_chg, "short": True})
+                        if c.get("label"):
+                            fields.append({"title": "설명", "value": c["label"], "short": False})
+                        fields.append({"title": "전체 전환율", "value": f"`{summary}`", "short": False})
+
+                        send_alert(
+                            channel="#network-alert-dr훈련",
+                            title=f":rotating_light: DR훈련 상태 변경 >> {c['dev']}",
+                            message="",
+                            color="#ff9900",
+                            fields=fields
+                        )
+                    logger.info(f"DR 훈련 상태 변경 알림 {len(items)}건 전송")
+
+                threading.Thread(target=_send_dr_alerts, args=(changed, rate_summary), daemon=True).start()
+
         # DB 저장 (신규 INSERT + 1일 이전 데이터 정리)
         with get_connection() as conn:
             with conn.cursor() as cur:
@@ -5768,4 +6151,165 @@ async def get_system_metrics():
             return json.load(f)
     except Exception as e:
         logger.error(f"시스템 메트릭 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── 멀티캐스트 상태 DB 저장/조회 ──
+
+@router.post("/multicast/collect")
+async def collect_multicast_status(request: Request):
+    """멀티캐스트 상태 수집 결과를 DB에 저장"""
+    try:
+        data = await request.json()
+        market_type = data.get("market_type", "")
+        items = data.get("data", [])
+        now = datetime.now()
+
+        if not items:
+            return {"success": True, "count": 0}
+
+        rows = []
+        for item in items:
+            if not item or not item.get("device_name"):
+                continue
+            products = item.get("products", [])
+            products_str = ",".join(products) if isinstance(products, list) else str(products or "")
+            rp_list = item.get("pim_rp") or item.get("rp_addresses", [])
+            pim_rp = rp_list[0] if isinstance(rp_list, list) and rp_list else (str(rp_list) if rp_list else "")
+
+            received = item.get("received_products", [])
+            received_str = ",".join(received) if isinstance(received, list) else str(received or "")
+
+            rows.append((
+                market_type,
+                item.get("member_code", ""),
+                item.get("member_name", ""),
+                str(item.get("member_no", "")),
+                item.get("device_name", ""),
+                item.get("device_os", ""),
+                products_str,
+                pim_rp,
+                item.get("product_cnt", 0) or 0,
+                item.get("mroute_cnt", 0) or 0,
+                item.get("oif_cnt", 0) or 0,
+                item.get("connected_server_cnt", 0) or 0,
+                str(item.get("min_update", "") or ""),
+                item.get("check_result", ""),
+                item.get("alarm", False),
+                received_str,
+                now
+            ))
+
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM multicast_status WHERE checked_at < NOW() - INTERVAL '2 days'")
+                if rows:
+                    from psycopg2.extras import execute_values
+                    execute_values(cur, """
+                        INSERT INTO multicast_status
+                            (market_type, member_code, member_name, member_no, device_name, device_os,
+                             products, pim_rp, product_cnt, mroute_cnt, oif_cnt, connected_server_cnt,
+                             min_update, check_result, alarm, received_products, checked_at)
+                        VALUES %s
+                    """, rows)
+            conn.commit()
+
+        logger.info(f"멀티캐스트 상태 수집 완료: market={market_type}, {len(rows)}건")
+        return {"success": True, "count": len(rows), "market_type": market_type}
+
+    except Exception as e:
+        logger.error(f"멀티캐스트 상태 수집 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/multicast/status")
+async def get_multicast_status(market_type: str = Query(...)):
+    """멀티캐스트 상태 조회 (DB에서 최신 데이터)"""
+    try:
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT market_type, member_code, member_name, member_no, device_name, device_os,
+                           products, pim_rp, product_cnt, mroute_cnt, oif_cnt, connected_server_cnt,
+                           min_update, check_result, alarm, received_products, checked_at
+                    FROM multicast_status
+                    WHERE market_type = %s
+                      AND checked_at = (SELECT MAX(checked_at) FROM multicast_status WHERE market_type = %s)
+                    ORDER BY member_no::int ASC
+                """, (market_type, market_type))
+                rows = cur.fetchall()
+
+        if not rows:
+            return {"data": [], "_meta": {"collected_at": "-", "status": "no_data"}}
+
+        timestamp = rows[0]["checked_at"].strftime("%Y-%m-%d %H:%M:%S")
+        data = []
+        for r in rows:
+            products = r["products"].split(",") if r["products"] else []
+            received_products = r["received_products"].split(",") if r.get("received_products") else []
+            check_result = r["check_result"] or ""
+            badge_type = "success" if check_result == "정상확인" else ("primary" if check_result == "회원사연결서버없음" else ("warning" if check_result == "정상그룹개수초과" else "danger"))
+            badge_icon = "fas fa-check" if badge_type == "success" else ("fas fa-info-circle" if badge_type == "primary" else "fas fa-exclamation-triangle")
+
+            data.append({
+                "updated_time": timestamp,
+                "member_no": r["member_no"],
+                "member_code": r["member_code"],
+                "member_name": r["member_name"],
+                "device_name": r["device_name"],
+                "device_os": r["device_os"],
+                "products": products,
+                "received_products": received_products,
+                "pim_rp": r["pim_rp"],
+                "product_cnt": r["product_cnt"],
+                "mroute_cnt": r["mroute_cnt"],
+                "oif_cnt": r["oif_cnt"],
+                "min_update": r["min_update"],
+                "checked_at": r["checked_at"].strftime("%Y-%m-%d %H:%M") if r["checked_at"] else "-",
+                "connected_server_cnt": r["connected_server_cnt"],
+                "alarm": r["alarm"],
+                "alarm_icon": "fa-bell" if r["alarm"] else "fa-bell-slash",
+                "check_result": check_result,
+                "check_result_badge": {"type": badge_type, "icon": badge_icon}
+            })
+
+        return {
+            "data": data,
+            "_meta": {"collected_at": timestamp, "status": "success", "total_devices": len(data)}
+        }
+
+    except Exception as e:
+        logger.error(f"멀티캐스트 상태 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/multicast/sise_mapping")
+async def get_sise_mapping():
+    """수신_시세상품 판정용 product → {source_ips, group_ips} 매핑 반환.
+    sise_products.operation_ip1/ip2 를 소스 IP, sise_channels.multicast_group_ip 를 그룹 IP로 사용."""
+    try:
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT p.product_name, p.operation_ip1, p.operation_ip2,
+                           array_remove(array_agg(DISTINCT c.multicast_group_ip), NULL) AS group_ips
+                    FROM sise_products p
+                    LEFT JOIN sise_channels c ON c.product_id = p.id
+                    GROUP BY p.id, p.product_name, p.operation_ip1, p.operation_ip2
+                    ORDER BY p.product_name
+                """)
+                rows = cur.fetchall()
+
+        mapping = {}
+        for r in rows:
+            sources = [ip for ip in [r.get("operation_ip1"), r.get("operation_ip2")] if ip]
+            groups = [g for g in (r.get("group_ips") or []) if g]
+            mapping[r["product_name"]] = {
+                "source_ips": sources,
+                "group_ips": groups
+            }
+        return {"success": True, "data": mapping}
+
+    except Exception as e:
+        logger.error(f"시세상품 매핑 조회 실패: {e}")
         raise HTTPException(status_code=500, detail=str(e))
