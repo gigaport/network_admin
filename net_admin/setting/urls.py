@@ -31,6 +31,7 @@ urlpatterns = [
     path('delete_info_fee_schedule', views.delete_info_fee_schedule, name='delete_info_fee_schedule'),
     path('get_revenue_summary', views.get_revenue_summary, name='get_revenue_summary'),
     path('get_revenue_monthly', views.get_revenue_monthly, name='get_revenue_monthly'),
+    path('get_revenue_monthly_diff', views.get_revenue_monthly_diff, name='get_revenue_monthly_diff'),
     path('download_revenue_pdf', views.download_revenue_pdf, name='download_revenue_pdf'),
     path('get_circuits', views.get_circuits, name='get_circuits'),
     path('create_circuit', views.create_circuit, name='create_circuit'),

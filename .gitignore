@@ -22,6 +22,8 @@ env/
 
 # Project specific
 fastapi/data/multicast_alarm_state.json
+fastapi/data/system_metrics.json
+fastapi/data/arista_mroute/
 /data
 /logs
 batch.log

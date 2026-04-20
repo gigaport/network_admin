@@ -925,6 +925,20 @@ def get_revenue_monthly(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
+def get_revenue_monthly_diff(request):
+    """월별 회선 변동 내역 조회"""
+    try:
+        year_month = request.GET.get('year_month', '')
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/revenue_monthly_diff?year_month={year_month}"
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        else:
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
 def download_revenue_pdf(request):
     """월별 매출 보고서 PDF 다운로드 (FastAPI 호출)"""
     try:
