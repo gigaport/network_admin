@@ -302,17 +302,17 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
     missing_products = [p for p in applied_products if p not in received_products]
 
     ## 멀티캐스트 시세 정상 확인
-    ## 우선순위: 누락상품 있음(확인필요) > 연결서버 없음 > 카운트초과 > 카운트 일치(정상확인)
+    ## 우선순위: 연결서버 없음(=mroute 없는게 정상) > 누락상품 > 카운트초과 > 카운트 일치(정상확인)
     mroute_c = multicast_info.get('valid_group_sources_count', 0)
     oif_c = multicast_info.get('oif_count', 0)
-    if missing_products:
-        check_result = '확인필요'
-        type = "danger"
-        icon = "fas fa-x-square"
-    elif multicast_info.get('connected_server_cnt', 0) == 0:
+    if multicast_info.get('connected_server_cnt', 0) == 0:
         check_result = '회원사연결서버없음'
         type = "primary"
         icon = "fas fa-check"
+    elif missing_products:
+        check_result = '확인필요'
+        type = "danger"
+        icon = "fas fa-x-square"
     elif mroute_c > product_cnt:
         check_result = '정상그룹개수초과'
         type = "warning"
