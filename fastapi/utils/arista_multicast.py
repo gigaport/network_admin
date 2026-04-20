@@ -272,14 +272,14 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
     else:
         alarm_icon = "fa-bell-slash"
 
-    # device_info에서 custom안에 join_products 정보를 가져와서
-    # pr_mpr_multicast_info에서 join_products와 동일한 정보를 찾아서 multicast_group_count 개수를 가져옴
+    # 장비별 신청 상품은 pr_information_mkd.json 의 custom.join_products 를 신청_시세상품(products)으로 사용
+    # (information_info.json 의 member_products 는 회원사 레벨 정보로만 참고)
     product_cnt = 0
     device_info[1]['custom'] = device_info[1].get('custom', {})
     member_name = member_info.get('member_name', "N/A")
     logger.debug(f'!!!!!!!!! {member_name}')
-    products = member_info.get('member_products', [])
     join_products = device_info[1]['custom'].get('join_products', [])
+    products = join_products or member_info.get('member_products', [])
     rp_address = multicast_info.get('rp_address', "N/A")
     mroute_cnt = multicast_info.get('valid_group_sources_count', 0)
     oif_cnt = multicast_info.get('oif_count', 0)
@@ -298,7 +298,7 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
 
     # 수신_시세상품 산출: sise_products(operation_ip1/ip2) × sise_channels(multicast_group_ip) AND 매칭
     received_products = _compute_arista_received_products(multicast_info.get('valid_sg_pairs') or set())
-    applied_products = member_info.get('member_products', []) or []
+    applied_products = products or []
     missing_products = [p for p in applied_products if p not in received_products]
 
     ## 멀티캐스트 시세 정상 확인
@@ -333,7 +333,7 @@ def AddMemberInfoToAristaMulticastInfo(device_info, multicast_info):
         "member_name": member_info.get('member_name', "N/A"),
         "device_name": device_hostname,
         "device_os": device_info[1]['os'],
-        "products": member_info.get('member_products', []),
+        "products": products,
         "received_products": received_products,
         "pim_rp": multicast_info.get('rp_address', "N/A"),
         "product_cnt": product_cnt,
