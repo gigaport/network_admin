@@ -282,6 +282,7 @@ def GetCiscoCommonInfo(device_info, device_name):
             "device_os": device_info.os,
             "device_ip": str(device_info.connections.default.ip),
             "device_join_products": device_info.custom.get('join_products', []),
+            "device_client_vlan": str(device_info.custom.get('client_vlan', 1100)),
             "cmd_response_list": [],
             "error": f"Connection timeout: {str(e)}"
         }
@@ -354,6 +355,7 @@ def GetCiscoCommonInfo(device_info, device_name):
         "device_os": device_info.os,
         "device_ip": device_info.connections.default.ip,
         "device_join_products": device_info.custom.get('join_products', []),
+        "device_client_vlan": str(device_info.custom.get('client_vlan', 1100)),
         "cmd_response_list": cmd_response_list
     }
 

@@ -2177,29 +2177,34 @@ async def get_dashboard():
             purchase_grand_total = float(purchase_total_row['purchase_total'] or 0)
 
             # 12. 회원사별 이익 (전체)
+            # 회사 단위 합산: 동일 회사가 복수 member_code 로 등록된 경우(예: 대신증권 DA/DS,
+            # IM증권 HI/IM)에 매출/매입 코드가 분리되어도 회사명 기준으로 합쳐 표시한다.
             cur.execute("""
                 WITH rev AS (
-                    SELECT sc.member_code, sc.company_name,
+                    SELECT sc.company_name,
+                           MIN(sc.member_code) AS member_code,
                            COALESCE(SUM(mfs.price), 0) AS revenue_total
                     FROM circuit c
                     JOIN subscriber_codes sc ON c.member_code = sc.member_code
                     LEFT JOIN member_fee_schedule mfs ON c.fee_code = mfs.fee_code
                     WHERE c.usage IN ('ORD', 'MPR')
-                    GROUP BY sc.member_code, sc.company_name
+                    GROUP BY sc.company_name
                 ),
                 pur AS (
-                    SELECT pc.member_code,
+                    SELECT sc.company_name,
                            COALESCE(SUM(nc.cost_price), 0) AS purchase_total
                     FROM purchase_contract pc
+                    JOIN subscriber_codes sc ON pc.member_code = sc.member_code
                     LEFT JOIN network_cost nc ON pc.cost_code = nc.code
-                    GROUP BY pc.member_code
+                    GROUP BY sc.company_name
                 )
-                SELECT rev.member_code, rev.company_name,
-                       rev.revenue_total,
+                SELECT COALESCE(rev.company_name, pur.company_name) AS company_name,
+                       rev.member_code,
+                       COALESCE(rev.revenue_total, 0) AS revenue_total,
                        COALESCE(pur.purchase_total, 0) AS purchase_total,
-                       rev.revenue_total - COALESCE(pur.purchase_total, 0) AS profit
+                       COALESCE(rev.revenue_total, 0) - COALESCE(pur.purchase_total, 0) AS profit
                 FROM rev
-                LEFT JOIN pur ON rev.member_code = pur.member_code
+                FULL OUTER JOIN pur ON rev.company_name = pur.company_name
                 ORDER BY profit DESC
             """)
             all_profit_members = [dict(row) for row in cur.fetchall()]
@@ -5991,6 +5996,10 @@ async def collect_dr_training_status():
                     # AND 2개 이전 배치(prev2)의 상태와는 달라야 "상태 변경"으로 판정
                     if old_main == new_main and old_dr == new_dr and key in prev2_map:
                         prev2_main, prev2_dr, _ = prev2_map[key]
+                        # prev2 가 NX-API 일시 오류(reachable=false)였다면
+                        # 해당 스냅샷은 신뢰할 수 없으므로 상태 변경 판정에서 제외 (오탐 방지)
+                        if prev2_reachable_map.get(dev_key) is False:
+                            continue
                         if prev2_main != new_main or prev2_dr != new_dr:
                             changed.append({
                                 "proc": proc, "dev": dev, "ip": ip, "label": label,

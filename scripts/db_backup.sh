@@ -17,7 +17,12 @@ DB_HOST="localhost"
 DB_PORT="5432"
 BACKUP_DIR="/home/sysmon/backups/database"
 DATE=$(date +"%Y%m%d_%H%M%S")
-RETENTION_DAYS=7  # 7일 이상된 백업 자동 삭제
+RETENTION_DAYS=7              # 로컬 보관 기간 (일)
+
+# rclone 원격 업로드 설정 (Google Drive)
+RCLONE_REMOTE="gdrive:nextrade-db-backup"
+RCLONE_RETENTION_DAYS=30      # 원격 보관 기간 (일, 로컬보다 길게 유지)
+RCLONE_BIN="$(command -v rclone || echo /usr/bin/rclone)"
 
 # 비밀번호 설정
 export PGPASSWORD='Sprtmxm1@3'
@@ -146,6 +151,39 @@ cleanup_old_backups() {
     log "✓ 정리 완료"
 }
 
+# 구글드라이브 업로드 (rclone)
+# - 새 파일만 copy (기존 동일 파일은 스킵, 부분 다운/업 손상 방지)
+# - 원격에서 ${RCLONE_RETENTION_DAYS}일 이상 지난 백업은 삭제
+# - 실패해도 종료 코드 0 반환 (백업 자체는 성공으로 간주)
+upload_to_gdrive() {
+    if [ ! -x "$RCLONE_BIN" ]; then
+        log "⚠ rclone 미설치 - 원격 업로드 스킵"
+        return 0
+    fi
+
+    log "Google Drive 업로드 시작 ($RCLONE_REMOTE)..."
+
+    # 로컬 신규 파일을 원격으로 copy. 압축본만 대상
+    if "$RCLONE_BIN" copy "$BACKUP_DIR" "$RCLONE_REMOTE" \
+        --include "*.sql.gz" --include "*.tar.gz" \
+        --transfers=2 --checkers=2 \
+        --log-level INFO 2>&1 | sed 's/^/  /'; then
+        log "✓ Google Drive 업로드 완료"
+    else
+        log "⚠ Google Drive 업로드 실패 (백업은 정상 보관됨)"
+        return 0
+    fi
+
+    log "원격 ${RCLONE_RETENTION_DAYS}일 이상 백업 정리 중..."
+    if "$RCLONE_BIN" delete "$RCLONE_REMOTE" \
+        --min-age "${RCLONE_RETENTION_DAYS}d" \
+        --include "*.sql.gz" --include "*.tar.gz" 2>&1 | sed 's/^/  /'; then
+        log "✓ 원격 정리 완료"
+    else
+        log "⚠ 원격 정리 실패 (다음 주기에 재시도됨)"
+    fi
+}
+
 # 백업 목록 표시
 list_backups() {
     log "백업 목록:"
@@ -157,18 +195,22 @@ case "${1:-}" in
     -f|--full)
         full_backup
         cleanup_old_backups
+        upload_to_gdrive
         ;;
     -d|--data)
         data_only_backup
         cleanup_old_backups
+        upload_to_gdrive
         ;;
     -s|--schema)
         schema_only_backup
         cleanup_old_backups
+        upload_to_gdrive
         ;;
     -t|--tables)
         table_backup
         cleanup_old_backups
+        upload_to_gdrive
         ;;
     -l|--list)
         list_backups
@@ -191,6 +233,7 @@ case "${1:-}" in
         # 기본값: 전체 백업
         full_backup
         cleanup_old_backups
+        upload_to_gdrive
         ;;
 esac
 

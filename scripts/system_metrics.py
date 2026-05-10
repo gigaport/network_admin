@@ -150,7 +150,9 @@ if __name__ == '__main__':
         'backups': get_backup_info()
     }
 
-    out_path = '/home/sysmon/network_admin/fastapi/data/system_metrics.json'
+    # FastAPI 컨테이너 마운트 경로: /home/sysmon/network_admin/data -> /app/data
+    # 컨테이너가 읽는 파일이 이 경로에 있어야 backups/containers 가 대시보드에 노출됨.
+    out_path = '/home/sysmon/network_admin/data/system_metrics.json'
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
     # 컨테이너 정보가 비어있으면 이전 파일의 컨테이너 정보 유지

@@ -13,7 +13,12 @@ NXAPI_TIMEOUT = 15
 
 
 def query_interfaces(ip: str, interfaces: list) -> dict:
-    """NX-API로 특정 인터페이스 상태 조회"""
+    """NX-API로 특정 인터페이스 상태 조회
+
+    HTTP 4xx/5xx (인증/권한 실패 등) 응답이 하나라도 발생하면 success=False로 반환하여
+    상위에서 reachable=False 처리되도록 한다. 부분 실패 데이터를 정상으로 오인하여
+    오탐 알림(예: HTTP 401 → 모든 oper_state=unknown → DR 전환 오탐)을 막기 위함.
+    """
     result = {"success": False, "interfaces": [], "error": None}
 
     try:
@@ -21,6 +26,7 @@ def query_interfaces(ip: str, interfaces: list) -> dict:
         headers = {"Content-Type": "application/json"}
         auth = (NXAPI_USERNAME, NXAPI_PASSWORD)
 
+        any_http_error = False
         for intf in interfaces:
             payload = {
                 "ins_api": {
@@ -36,6 +42,10 @@ def query_interfaces(ip: str, interfaces: list) -> dict:
             resp = requests.post(url, json=payload, headers=headers, auth=auth, timeout=NXAPI_TIMEOUT)
 
             if resp.status_code != 200:
+                any_http_error = True
+                if not result["error"]:
+                    result["error"] = f"HTTP {resp.status_code} ({ip})"
+                logger.error(f"NX-API HTTP {resp.status_code}: {ip} {intf}")
                 result["interfaces"].append({
                     "name": intf,
                     "admin_state": "-",
@@ -65,7 +75,8 @@ def query_interfaces(ip: str, interfaces: list) -> dict:
                 "last_link_flapped": row.get("eth_link_flapped", "-")
             })
 
-        result["success"] = True
+        # 모든 호출이 HTTP 200 이었을 때만 success=True
+        result["success"] = not any_http_error
 
     except requests.exceptions.ConnectTimeout:
         result["error"] = f"연결 타임아웃 ({ip})"
@@ -81,7 +92,11 @@ def query_interfaces(ip: str, interfaces: list) -> dict:
 
 
 def query_config_checks(ip: str, checks: list) -> dict:
-    """NX-API로 설정(route, prefix-list 등) 존재 여부 확인"""
+    """NX-API로 설정(route, prefix-list 등) 존재 여부 확인
+
+    HTTP 4xx/5xx 가 발생한 경우 success=False 로 반환하여 상위에서 reachable=False
+    처리되도록 한다 (HTTP 401 → config_found=False → DR 전환 오탐 방지).
+    """
     result = {"success": False, "checks": [], "error": None}
 
     try:
@@ -89,6 +104,7 @@ def query_config_checks(ip: str, checks: list) -> dict:
         headers = {"Content-Type": "application/json"}
         auth = (NXAPI_USERNAME, NXAPI_PASSWORD)
 
+        any_http_error = False
         for check in checks:
             payload = {
                 "ins_api": {
@@ -113,6 +129,10 @@ def query_config_checks(ip: str, checks: list) -> dict:
                 resp = requests.post(url, json=payload, headers=headers, auth=auth, timeout=NXAPI_TIMEOUT)
 
                 if resp.status_code != 200:
+                    any_http_error = True
+                    if not result["error"]:
+                        result["error"] = f"HTTP {resp.status_code} ({ip})"
+                    logger.error(f"NX-API HTTP {resp.status_code}: {ip} config check")
                     check_result["detail"] = f"HTTP {resp.status_code}"
                     result["checks"].append(check_result)
                     continue
@@ -142,7 +162,8 @@ def query_config_checks(ip: str, checks: list) -> dict:
 
             result["checks"].append(check_result)
 
-        result["success"] = True
+        # 모든 config check 가 HTTP 200 이었을 때만 success=True
+        result["success"] = not any_http_error
 
     except requests.exceptions.ConnectTimeout:
         result["error"] = f"연결 타임아웃 ({ip})"

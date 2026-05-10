@@ -166,6 +166,8 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["NXTA-10", "NXTA-COM"]
+      # 회원사 연결서버 측 VLAN 이 1100 이 아닌 140 으로 운영 중 (예외)
+      client_vlan: 140
   nh_1_px_ydkt_n_mpr_01:
     os: nxos
     type: switch

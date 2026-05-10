@@ -4,17 +4,19 @@
 
 var chartInstances = {};
 
-// 컬러 팔레트 (Clean & Minimal)
+// 컬러 팔레트 (Green & Red Balance)
+// 의미: 초록계 = 매출/정상/긍정, 붉은계 = 비용/주의/대조, 호박/청록 = 보조 강조
+// 기존 키 이름을 유지하되 값을 새 팔레트로 매핑하여 호출부 변경 최소화
 var C = {
-    blue: '#059669',
-    green: '#10b981',
-    orange: '#0d9488',
-    purple: '#047857',
-    red: '#34d399',
-    cyan: '#065f46',
-    pink: '#6ee7b7',
-    teal: '#0f766e',
-    multi: ['#059669', '#10b981', '#0d9488', '#047857', '#34d399', '#065f46', '#6ee7b7', '#0f766e']
+    blue: '#10b981',     // 메인 초록 (매출 메인, top members)
+    green: '#059669',    // 깊은 초록 (ORD 매출, 환경 통계)
+    orange: '#f59e0b',   // 호박 (이익/강조 보조)
+    purple: '#dc2626',   // 깊은 붉은 (MKD 매출, 강조)
+    red: '#ef4444',      // 메인 붉은 (비용/이상치)
+    cyan: '#0d9488',     // 청록 (보조 중립)
+    pink: '#fca5a5',     // 연한 붉은
+    teal: '#6ee7b7',     // 연한 초록
+    multi: ['#10b981', '#ef4444', '#059669', '#f59e0b', '#0d9488', '#dc2626', '#6ee7b7', '#fca5a5']
 };
 
 // 다크 테마 감지
@@ -132,7 +134,7 @@ function renderTopProfitChart(members) {
         },
         series: [{
             type: 'bar', data: profits, barWidth: 14,
-            itemStyle: { borderRadius: [0, 6, 6, 0], color: '#6ee7b7' },
+            itemStyle: { borderRadius: [0, 6, 6, 0], color: C.orange },
             label: { show: true, position: 'right', fontSize: 14, fontWeight: 700, color: T('#1a1a2e', '#e2e8f0'), formatter: function(p) { return fmtWon(p.value); } }
         }]
     });
@@ -167,7 +169,7 @@ function renderProfitMemberTable(members) {
         '<td class="py-2" style="font-weight:700;">합계</td>' +
         '<td class="text-end py-2" style="font-weight:700;">' + fmtWon(sumRev) + '</td>' +
         '<td class="text-end py-2" style="font-weight:700;color:#ef4444;">' + fmtWon(sumPur) + '</td>' +
-        '<td class="text-end py-2" style="font-weight:700;color:#10b981;">' + fmtWon(sumProfit) + '</td>' +
+        '<td class="text-end py-2" style="font-weight:700;color:#f59e0b;">' + fmtWon(sumProfit) + '</td>' +
         '<td class="text-end py-2" style="font-weight:700;">' + totalRate + '%</td></tr>';
     tbody.innerHTML = html;
 }
@@ -584,7 +586,8 @@ function renderNetboxSummary(data) {
     setText('stat_nb_idle', fmtNum(idle));
 
     // 역할별 그리드
-    var roleColors = { 'PRD': '#059669', 'TST': '#0d9488', 'DR': '#047857', 'DEV': '#10b981' };
+    // PRD=운영(초록 메인), TST=테스트(호박/주의), DR=재해복구(붉은 강조), DEV=개발(청록 보조)
+    var roleColors = { 'PRD': '#10b981', 'TST': '#f59e0b', 'DR': '#ef4444', 'DEV': '#0d9488' };
     var gridEl = document.getElementById('statGridNetbox');
     if (gridEl) {
         var html = '<div style="font-size:0.72rem;font-weight:600;color:' + T('#8c8c8c', '#64748b') + ';margin-bottom:6px;">역할별</div>';

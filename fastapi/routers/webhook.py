@@ -720,6 +720,177 @@ async def send_zabbix_webhook_to_slack(request: Request):
         )
 
 
+@router.post("/zabbix_problem")
+async def receive_zabbix_problem(request: Request):
+    """Zabbix Problem 웹훅 처리 - 수신 내용을 #통합모니터링_zabbix 채널로 전송
+
+    /zabbix 엔드포인트와 달리 필수 필드 검증을 완화하여 어떤 Zabbix 매크로 셋이 와도
+    수신/전달되도록 처리. 페이로드 구조 파악을 위해 raw body 도 로깅.
+    """
+    raw_body = b""
+    try:
+        raw_body = await request.body()
+        try:
+            data = json.loads(raw_body.decode("utf-8")) if raw_body else {}
+        except Exception as parse_error:
+            # JSON 이 아닐 경우 form/text 로 처리
+            logger.warning(f"zabbix_problem: JSON 파싱 실패, raw 로 처리: {parse_error}")
+            data = {"raw": raw_body.decode("utf-8", errors="replace")}
+
+        logger.info(f"zabbix_problem 웹훅 수신: {data}")
+
+        # 중복 이벤트 체크 (event_id 또는 eventid 키 모두 수용)
+        event_id = str(data.get("event_id") or data.get("eventid") or "")
+        event_value = str(data.get("event_value") or data.get("recovery") or "")
+        if event_id and _zabbix_is_duplicate(event_id, event_value):
+            logger.info(f"zabbix_problem 중복 이벤트 스킵: event_id={event_id}, event_value={event_value}")
+            return JSONResponse(
+                content={"result": True, "response": {"code": 200, "message": "[OK]duplicate event skipped."}},
+                headers={"Content-Type": "application/json; charset=utf-8"}
+            )
+
+        # 슬랙 전송 (백그라운드)
+        threading.Thread(
+            target=_send_zabbix_problem_to_slack,
+            args=("#통합모니터링_zabbix", data),
+            daemon=True,
+        ).start()
+
+        return JSONResponse(
+            content={"result": True, "response": {"code": 200, "message": "[OK]received."}},
+            headers={"Content-Type": "application/json; charset=utf-8"}
+        )
+
+    except Exception as e:
+        logger.error(f"zabbix_problem 웹훅 처리 오류: {e} / raw={raw_body[:500]!r}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"result": False, "error": "Internal server error", "detail": str(e)}
+        )
+
+
+def _send_zabbix_problem_to_slack(channel: str, data: Dict):
+    """zabbix_problem 페이로드를 슬랙으로 전송. 알 수 있는 필드는 구조화, 그 외는 raw 첨부."""
+    try:
+        from datetime import datetime
+
+        # ── 호스트 정보 (Zabbix 는 hosts 배열로 전달) ──
+        hosts_list = data.get("hosts") if isinstance(data.get("hosts"), list) else []
+        first_host = hosts_list[0] if hosts_list else {}
+        host_visible = first_host.get("name") if isinstance(first_host, dict) else None
+        host_technical = first_host.get("host") if isinstance(first_host, dict) else None
+        hostname = (
+            host_visible or host_technical
+            or data.get("hostname") or data.get("host") or data.get("HOST.NAME") or "Unknown"
+        )
+
+        # ── 이벤트 정보 ──
+        event_name = (
+            data.get("name") or data.get("event_name")
+            or data.get("trigger_name") or data.get("TRIGGER.NAME") or "Unknown Event"
+        )
+        severity = data.get("severity_name") or data.get("severity") or data.get("EVENT.SEVERITY") or "Unknown"
+        host_group = data.get("host_group") or data.get("HOST.GROUP") or ""
+        event_duration = data.get("event_duration") or data.get("EVENT.DURATION") or ""
+
+        # ── opdata / trigger_description: {HOST.NAME} 등 매크로 치환 ──
+        opdata = (
+            data.get("opdata") or data.get("EVENT.OPDATA")
+            or data.get("trigger_description") or ""
+        )
+        if opdata:
+            opdata = (
+                opdata
+                .replace("{HOST.NAME}", host_visible or hostname)
+                .replace("{HOST.HOST}", host_technical or hostname)
+                .replace("{HOST.DNS}", host_technical or hostname)
+            )
+
+        # ── 발생일시: occurred_at(ISO) 우선, 없으면 clock(unix) → KST 변환 ──
+        event_date = ""
+        event_time = ""
+        occurred_at = data.get("occurred_at") or ""
+        if occurred_at:
+            iso = occurred_at.replace("T", " ").strip()
+            if " " in iso:
+                event_date, _, event_time = iso.partition(" ")
+            else:
+                event_date = iso
+        elif data.get("clock"):
+            try:
+                dt = datetime.fromtimestamp(int(data["clock"]))
+                event_date = dt.strftime("%Y-%m-%d")
+                event_time = dt.strftime("%H:%M:%S")
+            except Exception:
+                event_date = str(data.get("clock"))
+        else:
+            event_date = data.get("event_date") or data.get("EVENT.DATE") or ""
+            event_time = data.get("event_time") or data.get("EVENT.TIME") or ""
+
+        # ── 해결 여부 판정 ──
+        is_resolved = (
+            str(data.get("event_value", "")) == "0"
+            or str(data.get("event_status", "")).lower() in ("resolved", "ok")
+            or str(data.get("status", "")).lower() in ("resolved", "ok")
+            or str(data.get("recovery", "")).lower() in ("true", "1", "yes")
+        )
+
+        if is_resolved:
+            title = f":green-check-mark: {hostname} >> {event_name}"
+            color = "#3bc95c"
+        else:
+            title = f":critical: {hostname} >> {event_name}"
+            color = "#e71c1c"
+
+        fields = [
+            {"title": "대상장비", "value": f"`{hostname}`", "short": True},
+            {"title": "LEVEL", "value": f"`{severity}`", "short": True},
+        ]
+        if host_group:
+            fields.append({"title": "대상그룹", "value": f"`{host_group}`", "short": True})
+        if event_date or event_time:
+            fields.append({"title": "발생일시", "value": f"{event_date} {event_time}".strip(), "short": True})
+        if event_duration:
+            fields.append({"title": "경과시간", "value": f"`{event_duration}`", "short": False})
+        if data.get("eventid") or data.get("event_id"):
+            fields.append({"title": "EventID", "value": f"`{data.get('eventid') or data.get('event_id')}`", "short": True})
+        if data.get("acknowledged") is not None:
+            fields.append({"title": "확인", "value": "Y" if data.get("acknowledged") else "N", "short": True})
+
+        sections = [{"fields": fields}]
+        if event_name and event_name != "Unknown Event":
+            sections.append({"title": "발생내용", "text": f"```{event_name}```", "color": color})
+        if opdata:
+            sections.append({"title": "현재상태", "text": f"```{opdata}```", "color": color})
+
+        # 매핑되지 않은 키가 있으면 raw payload 도 함께 표시 (페이로드 분석용)
+        known_keys = {
+            "hostname", "host", "HOST.NAME", "hosts",
+            "name", "event_name", "trigger_name", "TRIGGER.NAME", "trigger_description", "triggerid",
+            "event_value", "severity", "severity_name", "EVENT.SEVERITY",
+            "host_group", "HOST.GROUP",
+            "event_date", "EVENT.DATE", "event_time", "EVENT.TIME",
+            "occurred_at", "clock",
+            "opdata", "EVENT.OPDATA", "event_duration", "EVENT.DURATION",
+            "event_id", "eventid", "event_status", "status", "recovery", "acknowledged",
+        }
+        extra = {k: v for k, v in data.items() if k not in known_keys}
+        if extra:
+            try:
+                extra_text = json.dumps(extra, ensure_ascii=False, indent=2)
+            except Exception:
+                extra_text = str(extra)
+            if len(extra_text) > 2500:
+                extra_text = extra_text[:2500] + "\n... (truncated)"
+            sections.append({"title": "추가데이터", "text": f"```{extra_text}```", "color": color})
+
+        result = send_structured(channel=channel, title=title, sections=sections, color=color)
+        logger.info(f"zabbix_problem 메시지 전송 완료: {result}")
+
+    except Exception as e:
+        logger.error(f"zabbix_problem 메시지 전송 오류: {e}")
+
+
 def _send_syslog_to_slack(channel: str, message_info: Dict):
     """Syslog 메시지를 Slack으로 직접 전송 (최적화된 통합 함수)"""
     try:

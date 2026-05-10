@@ -61,6 +61,8 @@ def ProcessMulticastInfo(data:dict, market_gubn:str):
         device_os = item['device_os']
         device_ip = item['device_ip']
         device_join_products = item['device_join_products']
+        # 장비별 회원사 연결서버 VLAN (기본 1100, 예외 장비는 yaml custom.client_vlan 으로 override)
+        device_client_vlan = str(item.get('device_client_vlan', '1100'))
         cmd_response_list = item['cmd_response_list']
 
 
@@ -94,11 +96,11 @@ def ProcessMulticastInfo(data:dict, market_gubn:str):
                 if data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']:
                     multicast_group = data['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']
 
-                    ## 유요한 (S,G) 및 VLAN 1100 개수를 계산하여 기존 데이터에 삽입
+                    ## 유요한 (S,G) 및 회원사 연결 VLAN OIF 개수를 계산하여 기존 데이터에 삽입
                     valid_source_address_count = CountValidSourceAddress(multicast_group, device_os)
 
                     #####################==>> RP Address os별 삽입 기준 정리 해야됨!!!!!
-                    valid_multicast_data = CountValidOifAndGetMinUptime(multicast_group, device_os)
+                    valid_multicast_data = CountValidOifAndGetMinUptime(multicast_group, device_os, device_client_vlan)
 
                     ## 유효한 멀티캐스트 데이터가 있는지 확인
                     if not valid_multicast_data:
@@ -124,7 +126,7 @@ def ProcessMulticastInfo(data:dict, market_gubn:str):
             elif data['cmd'] in ('show_interface_status', 'show_interfaces_status'):
                 # nxos: show_interface_status / iosxe: show_interfaces_status
                 # 두 OS 모두 parsed_output 구조: {interfaces: {<name>: {vlan, status, ...}}}
-                # VLAN 1100 + connected 인터페이스 = 회원사 연결서버 수
+                # 회원사 연결 VLAN(기본 1100, 장비별 override 가능) + connected 인터페이스 = 회원사 연결서버 수
                 print("[SHOW INTERFACE(S) STATUS]\n")
 
                 for interface, details in (data.get('parsed_output', {}).get('interfaces', {}) or {}).items():
@@ -133,8 +135,8 @@ def ProcessMulticastInfo(data:dict, market_gubn:str):
                     access_vlan = str(details.get('vlan', '')).strip()
                     oper_status = str(details.get('status', '')).strip().lower()
 
-                    # access_vlan 이 '1100' 이고 상태가 connected/up 이면 연결서버로 카운트
-                    if access_vlan == '1100' and oper_status in ('connected', 'up'):
+                    # access_vlan 이 device_client_vlan 과 일치하고 상태가 connected/up 이면 연결서버로 카운트
+                    if access_vlan == device_client_vlan and oper_status in ('connected', 'up'):
                         connected_server_count += 1
 
         # print(f"device_info_join_products >> {device_join_products}")
@@ -180,12 +182,17 @@ def CountValidSourceAddress(data, device_os:str='iosxe'):
 
     return count
 
-def CountValidOifAndGetMinUptime(data, device_os:str):
+def CountValidOifAndGetMinUptime(data, device_os:str, client_vlan:str='1100'):
+    """회원사 연결 측 VLAN(client_vlan, 기본 1100) 으로 OIF 카운트.
+
+    예: me_2_px_ydkt_n_mpr_01 처럼 client_vlan=140 인 장비는 'Vlan140' OIF 를 카운트.
+    """
     valid_oif_count = 0
     uptimes = []
     rp_addresses = []
     rpf_nbrs = []
     vaild_check = False
+    oif_vlan_key = f"Vlan{client_vlan}"
 
     for ip, ip_info in data.items():
         ## 멀티캐스트그룹 239.29.30.x 대역 필터링
@@ -239,17 +246,17 @@ def CountValidOifAndGetMinUptime(data, device_os:str):
                         rpf_nbrs.append(first_value['rpf_nbr'])
                 
                 outgoing_interface = addr_info.get("outgoing_interface_list", {})
-                ## OIF가 Vlan1100일 때 (정상수신)
-                if "Vlan1100" in outgoing_interface:
+                ## OIF가 회원사 연결 VLAN (기본 Vlan1100, 장비별 override) 일 때 (정상수신)
+                if oif_vlan_key in outgoing_interface:
                     ## 특정 멀티캐스트그룹IP : uptime 값 가져오기
                     if device_os == 'iosxe':
-                        uptimes.append(outgoing_interface['Vlan1100']['uptime'])
+                        uptimes.append(outgoing_interface[oif_vlan_key]['uptime'])
                     elif device_os == 'nxos':
-                        uptimes.append(outgoing_interface['Vlan1100']['oil_uptime'])
+                        uptimes.append(outgoing_interface[oif_vlan_key]['oil_uptime'])
                     # print(f"addr_info: {addr_info}")
 
                     # print(f"total_uptime_days: {total_uptime_days}")
-                    valid_oif_count += 1 
+                    valid_oif_count += 1
 
 
     if vaild_check:
