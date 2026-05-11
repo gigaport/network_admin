@@ -58,6 +58,9 @@ docs/.pdca-status.json
 docs/.pdca-snapshots/
 docs/.bkit-memory.json
 .claude/agent-memory/
+.claude/settings.local.json
+.claude/auto-commit.sh
+.claude/auto-commit.log
 
 # IDE
 .vscode/
