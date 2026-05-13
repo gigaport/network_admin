@@ -722,7 +722,7 @@ async def send_zabbix_webhook_to_slack(request: Request):
 
 @router.post("/zabbix_problem")
 async def receive_zabbix_problem(request: Request):
-    """Zabbix Problem 웹훅 처리 - 수신 내용을 #통합모니터링_zabbix 채널로 전송
+    """Zabbix Problem 웹훅 처리 - 수신 내용을 #통합모니터링_장애내역 채널로 전송
 
     /zabbix 엔드포인트와 달리 필수 필드 검증을 완화하여 어떤 Zabbix 매크로 셋이 와도
     수신/전달되도록 처리. 페이로드 구조 파악을 위해 raw body 도 로깅.
@@ -752,7 +752,7 @@ async def receive_zabbix_problem(request: Request):
         # 슬랙 전송 (백그라운드)
         threading.Thread(
             target=_send_zabbix_problem_to_slack,
-            args=("#통합모니터링_zabbix", data),
+            args=("#통합모니터링_장애내역", data),
             daemon=True,
         ).start()
 
