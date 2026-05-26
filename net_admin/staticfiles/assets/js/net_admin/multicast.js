@@ -14,6 +14,7 @@
 
         var collectedAt = meta.collected_at;
         var status = meta.status;
+        var ageMin = (typeof meta.age_minutes === 'number') ? meta.age_minutes : null;
         var successDevices = meta.success_devices || 0;
         var totalDevices = meta.total_devices || 0;
         var preservedFrom = meta.preserved_from;
@@ -23,7 +24,7 @@
         var icon = '';
         if (collectedAt) {
             var collected = new Date(collectedAt.replace(' ', 'T'));
-            var diffMin = Math.round((new Date() - collected) / 60000);
+            var diffMin = (ageMin !== null) ? ageMin : Math.round((new Date() - collected) / 60000);
             if (diffMin < 1) ageText = '방금 전';
             else if (diffMin < 60) ageText = diffMin + '분 전';
             else if (diffMin < 1440) ageText = Math.floor(diffMin / 60) + '시간 전';
@@ -35,8 +36,8 @@
         else { bgColor = '#dc2626'; icon = 'fa-times-circle'; }
 
         var label = '<i class="fas ' + icon + ' me-1"></i>';
-        if (status === 'failed' && preservedFrom) {
-            label += '수집실패 · 과거 데이터 유지 (' + preservedFrom + ')';
+        if (status === 'failed') {
+            label += '수집 중단 · 마지막: ' + (collectedAt || '-') + ' (' + ageText + ')';
         } else {
             label += '수집: ' + ageText + ' (' + successDevices + '/' + totalDevices + '대)';
         }
@@ -45,12 +46,34 @@
         el.className = 'badge';
         el.style.cssText = 'font-size:0.7rem; font-weight:500; padding:3px 10px; border-radius:6px; color:#fff; background:' + bgColor + ';';
 
-        if (collectedAt) {
-            var diffMin2 = Math.round((new Date() - new Date(collectedAt.replace(' ', 'T'))) / 60000);
-            if (diffMin2 > 5 && status !== 'failed') {
-                el.style.background = '#d97706';
-                el.innerHTML = '<i class="fas fa-clock me-1"></i>수집: ' + ageText + ' (' + successDevices + '/' + totalDevices + '대)';
-            }
+        // 수집 중단 또는 5분 초과 시 페이지 상단에 큰 경고 배너 표시 (운영자가 즉시 인지)
+        showStaleBanner(status, collectedAt, ageText, preservedFrom);
+    }
+
+    function showStaleBanner(status, collectedAt, ageText, preservedFrom) {
+        var existing = document.getElementById('multicastStaleBanner');
+        if (status === 'success') {
+            if (existing) existing.remove();
+            return;
+        }
+        var isFailed = (status === 'failed');
+        var bg = isFailed ? '#fee2e2' : '#fef3c7';
+        var border = isFailed ? '#dc2626' : '#d97706';
+        var fg = isFailed ? '#991b1b' : '#92400e';
+        var iconClass = isFailed ? 'fa-times-circle' : 'fa-exclamation-triangle';
+        var title = isFailed ? '⚠️ 멀티캐스트 수집이 중단되어 있습니다' : '⚠️ 멀티캐스트 수집이 지연되고 있습니다';
+        var subtitle = '현재 화면에 보이는 데이터는 마지막 수집 시점(' + (collectedAt || '-') + ', ' + (ageText || '-') + ')의 과거 상태입니다. ' +
+            (isFailed ? '실제 장비 상태와 다를 수 있으니 즉시 배치(network-admin-batch) 상태 점검이 필요합니다.' : '잠시 후 자동 복구되지 않으면 배치 점검이 필요합니다.');
+        var html = '<div id="multicastStaleBanner" style="margin: 0 0 12px 0; padding: 12px 16px; ' +
+            'background:' + bg + '; border-left:4px solid ' + border + '; border-radius:4px; color:' + fg + ';">' +
+            '<div style="font-weight:700; font-size:0.95rem;"><i class="fas ' + iconClass + ' me-2"></i>' + title + '</div>' +
+            '<div style="font-size:0.82rem; margin-top:4px;">' + subtitle + '</div></div>';
+        if (existing) {
+            existing.outerHTML = html;
+        } else {
+            // 테이블 또는 카드 컨테이너 상단에 prepend
+            var container = document.querySelector('.card-body') || document.querySelector('main') || document.body;
+            container.insertAdjacentHTML('afterbegin', html);
         }
     }
 

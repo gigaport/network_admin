@@ -152,11 +152,18 @@ def main():
                 )
 
                 # ## 확인필요 결과가 있을경우 슬랙으로 메세지 전송
-                check_multicast_info(data["market_gubn"], cisco_multicast_info)
+                # check_multicast_info 가 예외로 죽으면 DB 저장까지 못 가서 알람·화면 모두 침묵하게 되므로 격리한다.
+                try:
+                    check_multicast_info(data["market_gubn"], cisco_multicast_info)
+                except Exception as alarm_err:
+                    logger.error("check_multicast_info 실패 (DB 저장은 계속): %s", alarm_err, exc_info=True)
 
-                # DB에 멀티캐스트 상태 저장
-                mcast_data_list = cisco_multicast_info.get('data', []) if isinstance(cisco_multicast_info, dict) else cisco_multicast_info
-                save_multicast_to_db(data["market_gubn"], mcast_data_list)
+                # DB에 멀티캐스트 상태 저장 (알람 처리 실패와 무관하게 항상 수행)
+                try:
+                    mcast_data_list = cisco_multicast_info.get('data', []) if isinstance(cisco_multicast_info, dict) else cisco_multicast_info
+                    save_multicast_to_db(data["market_gubn"], mcast_data_list)
+                except Exception as save_err:
+                    logger.error("save_multicast_to_db 실패: %s", save_err, exc_info=True)
 
             except ValueError as e:
                 logger.error("⚠️ JSON 디코딩 실패: %s", e)
@@ -300,7 +307,10 @@ def create_member_sise_info(members_mroute:list, members_info:Dict, market_gubn:
         products = device['products']
         product_cnt = device['multicast_group_count']
         connected_server_cnt = device['connected_server_count']
-        org_output = device['mroute'][0]['org_output'] ## ip mroute 정보만 표기하기 위함 show ip pim neighbor는 X
+        # mroute 가 비어있는 경우(장비 SSH 실패 또는 mroute 테이블 비정상) IndexError 가 발생하면
+        # 그 뒤의 알람/DB 저장이 모두 막혀 알람 시스템 전체가 침묵하게 된다. 빈 문자열로 fallback.
+        mroute_list = device.get('mroute') or []
+        org_output = mroute_list[0].get('org_output', '') if mroute_list else ''
 
         # print(f"[multicast_group] : {device['mroute']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']}")
         # multicast_group = device['mroute']['parsed_output']['vrf'][device_os_key]['address_family']['ipv4']['multicast_group']

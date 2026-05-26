@@ -6340,9 +6340,26 @@ async def get_multicast_status(market_type: str = Query(...)):
                 "check_result_badge": {"type": badge_type, "icon": badge_icon}
             })
 
+        # 수집 신선도 판정: DB 최신 행 시각과 현재 시각의 차이로 판단
+        # batch (cron 1분 주기) 가 죽거나 DB 저장이 실패해도 페이지에서 즉시 인지 가능하도록 stale 표시
+        latest_dt = rows[0]["checked_at"]
+        age_minutes = int((datetime.now() - latest_dt).total_seconds() // 60) if latest_dt else 99999
+        if age_minutes <= 5:
+            collection_status = "success"        # 정상 (1분 cron 가정)
+        elif age_minutes <= 30:
+            collection_status = "partial"        # 일시 지연 (주의)
+        else:
+            collection_status = "failed"         # 수집 중단 (배치 장애 추정)
+
         return {
             "data": data,
-            "_meta": {"collected_at": timestamp, "status": "success", "total_devices": len(data)}
+            "_meta": {
+                "collected_at": timestamp,
+                "status": collection_status,
+                "age_minutes": age_minutes,
+                "total_devices": len(data),
+                "success_devices": len(data),
+            },
         }
 
     except Exception as e:
