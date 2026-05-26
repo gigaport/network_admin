@@ -1317,6 +1317,94 @@ async def check_multicast_alarm_state(request: Request):
                 recoveries_sent += 1
                 logger.info(f"[ALARM SENT] 복구 알람: {market_gubn}:{device_name}")
 
+            elif action == "send_failure_alert":
+                # 수집실패 지속 알람 - 임계 시간(기본 10분) 이상 연속 수집실패 시 1회 발송
+                failure_first_at = result.get("failure_first_at", "")
+                elapsed_minutes = result.get("elapsed_minutes", 0)
+                member_name = device.get("member_name", "N/A")
+                title = f":warning: *({market_name}) {member_name} 멀티캐스트 수집 지속 실패* :warning:"
+
+                fields = [
+                    {"title": "대상회원사", "value": f"`{member_name}`", "short": True},
+                    {"title": "장비이름", "value": f"*{device_name}*", "short": True},
+                    {"title": "최초실패시각", "value": f"*{failure_first_at}*", "short": True},
+                    {"title": "지속시간", "value": f"*{elapsed_minutes}분*", "short": True},
+                    {"title": "장비IP", "value": f"`{device.get('mgmt_ip','N/A')}`", "short": True},
+                    {"title": "참고", "value": "NX-API/SSH 접속 또는 장비 자체 점검 필요 (실제 멀티캐스트 상태 미상)", "short": False},
+                ]
+
+                threading.Thread(target=send_alert, kwargs={"channel": channel, "title": title, "message": "", "color": "warning", "fields": fields}, daemon=True).start()
+                alerts_sent += 1
+                logger.info(f"[ALARM SENT] 수집실패 지속 알람: {market_gubn}:{device_name} ({elapsed_minutes}분)")
+
+            elif action == "send_failure_recovery":
+                # 수집실패 복구 알람 - send_failure_alert 발송 후 수집이 다시 정상화된 경우
+                failure_first_at = result.get("failure_first_at", "")
+                recovery_time = result.get("recovery_time", "")
+                member_name = device.get("member_name", "N/A")
+                title = f":arrows_counterclockwise: *({market_name}) {member_name} 멀티캐스트 수집 복구* :arrows_counterclockwise:"
+
+                fields = [
+                    {"title": "대상회원사", "value": f"`{member_name}`", "short": True},
+                    {"title": "장비이름", "value": f"*{device_name}*", "short": True},
+                    {"title": "최초실패시각", "value": f"*{failure_first_at}*", "short": True},
+                    {"title": "복구시각", "value": f"*{recovery_time}*", "short": True},
+                ]
+
+                threading.Thread(target=send_alert, kwargs={"channel": channel, "title": title, "message": "", "color": "good", "fields": fields}, daemon=True).start()
+                recoveries_sent += 1
+                logger.info(f"[ALARM SENT] 수집실패 복구 알람: {market_gubn}:{device_name}")
+
+            elif action == "send_alert_with_failure_recovery":
+                # 수집실패 지속 알람 발송 후, 정상이 아니라 곧장 확인필요로 전환된 케이스.
+                # 장애 알람 + 수집실패 복구 알람을 함께 발송.
+                alert_time = result.get("alert_time", "")
+                failure_first_at = result.get("failure_first_at", "")
+                recovery_time = result.get("recovery_time", "")
+                member_name = device.get("member_name", "N/A")
+
+                # 1) 수집실패 복구 알람
+                recov_title = f":arrows_counterclockwise: *({market_name}) {member_name} 멀티캐스트 수집 복구* :arrows_counterclockwise:"
+                recov_fields = [
+                    {"title": "대상회원사", "value": f"`{member_name}`", "short": True},
+                    {"title": "장비이름", "value": f"*{device_name}*", "short": True},
+                    {"title": "최초실패시각", "value": f"*{failure_first_at}*", "short": True},
+                    {"title": "복구시각", "value": f"*{recovery_time}*", "short": True},
+                ]
+                threading.Thread(target=send_alert, kwargs={"channel": channel, "title": recov_title, "message": "", "color": "good", "fields": recov_fields}, daemon=True).start()
+                recoveries_sent += 1
+
+                # 2) 곧이은 장애 알람 (확인필요)
+                applied_list = device.get("products") or []
+                if isinstance(applied_list, str):
+                    applied_list = [p.strip() for p in applied_list.split(",") if p.strip()]
+                received_list = device.get("received_products") or []
+                if isinstance(received_list, str):
+                    received_list = [p.strip() for p in received_list.split(",") if p.strip()]
+                missing_list = device.get("missing_products")
+                if missing_list is None:
+                    missing_list = [p for p in applied_list if p not in received_list]
+                elif isinstance(missing_list, str):
+                    missing_list = [p.strip() for p in missing_list.split(",") if p.strip()]
+                missing_text = ", ".join(missing_list) if missing_list else "없음"
+
+                title = f":rotating_light: *({market_name}) {member_name} 시세수신 이상* :rotating_light:"
+                fields = [
+                    {"title": "대상회원사", "value": f"`{member_name}`", "short": True},
+                    {"title": "장비이름", "value": f"*{device_name}*", "short": True},
+                    {"title": "가입상품", "value": f"`{device.get('products', 'N/A')}`", "short": True},
+                    {"title": "누락상품", "value": f"`{missing_text}`", "short": True},
+                    {"title": "PIM_RP", "value": f"{device.get('pim_rp', 'N/A')}", "short": True},
+                    {"title": "기준 mroute", "value": f"{device.get('product_cnt', 0)}", "short": True},
+                    {"title": "현재 mroute", "value": f"{device.get('mroute_cnt', 0)}", "short": True},
+                    {"title": "현재 oif_cnt", "value": f"{device.get('oif_cnt', 0)}", "short": True},
+                    {"title": "RPF_NBR", "value": f"`{device.get('rpf_nbr', 'N/A')}`", "short": True},
+                    {"title": "발생시간", "value": f"*{alert_time}*", "short": True},
+                ]
+                threading.Thread(target=send_alert, kwargs={"channel": channel, "title": title, "message": "", "color": "danger", "fields": fields}, daemon=True).start()
+                alerts_sent += 1
+                logger.info(f"[ALARM SENT] 수집실패 복구+장애 알람: {market_gubn}:{device_name}")
+
             else:
                 skipped += 1
 

@@ -24,8 +24,10 @@ STATE_FILE = Path("/app/data/multicast_alarm_state.json")
 # 알람 대상 check_result 값
 ALERT_RESULTS = {"확인필요"}
 NORMAL_RESULTS = {"정상확인", "회원사연결서버없음", "정상그룹개수초과"}
-# 수집실패는 알람/복구 전환에서 제외 (일시적 수집 오류로 오탐 방지)
+# 수집실패는 1회성 일시 오류일 가능성이 높아 즉시 알람은 보류.
+# 단 PERSISTENT_FAILURE_THRESHOLD_MINUTES 이상 연속 지속되면 1회 알람 발송 (사각지대 방지).
 SKIP_RESULTS = {"수집실패"}
+PERSISTENT_FAILURE_THRESHOLD_MINUTES = 10
 
 
 def _read_state() -> dict:
@@ -68,9 +70,11 @@ def check_transition(market_gubn: str, device_name: str, check_result: str, deta
 
     Returns:
         dict with keys:
-            "action": "send_alert" | "send_recovery" | "skip"
+            "action": "send_alert" | "send_recovery" | "send_failure_alert" | "send_failure_recovery" | "skip"
             "alert_time": 장애 발생 시간 (send_alert, send_recovery 시)
-            "recovery_time": 복구 시간 (send_recovery 시)
+            "recovery_time": 복구 시간 (send_recovery, send_failure_recovery 시)
+            "failure_first_at": 수집실패 첫 발생 시각 (send_failure_alert, send_failure_recovery 시)
+            "elapsed_minutes": 수집실패 지속 분 (send_failure_alert 시)
     """
     key = f"{market_gubn}:{device_name}"
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -85,15 +89,58 @@ def check_transition(market_gubn: str, device_name: str, check_result: str, deta
             state = _read_state()
             prev = state.get(key)
             prev_status = prev["status"] if prev else "normal"
+            prev_failure_first_at = prev.get("failure_first_at") if prev else None
+            prev_failure_alerted = bool(prev.get("failure_alerted")) if prev else False
 
-            # 수집실패는 상태 전환에서 제외 (일시적 오류로 오탐 방지)
-            # 직전 상태와 마지막 체크 시각만 유지 업데이트
+            # ── 수집실패 처리 (지속 시 1회 알람) ──
+            # 첫 수집실패는 일시 오류일 수 있어 SKIP. 그러나 PERSISTENT_FAILURE_THRESHOLD_MINUTES
+            # 이상 연속되면 운영 사각지대 방지 목적으로 1회 알람 발송.
             if check_result in SKIP_RESULTS:
-                if key in state:
-                    state[key]["last_checked_at"] = now
+                base = dict(prev) if prev else {}
+                base["last_checked_at"] = now
+                base["check_result"] = check_result
+
+                if not prev_failure_first_at:
+                    # 수집실패 첫 발생 - 시작 시각만 기록하고 SKIP
+                    base["failure_first_at"] = now
+                    base["failure_alerted"] = False
+                    state[key] = base
                     _write_state(state)
-                logger.debug(f"[ALARM] 수집실패 - 상태 전환 제외: {key}")
+                    logger.info(f"[ALARM] 수집실패 첫 발생 (SKIP): {key}")
+                    return {"action": "skip"}
+
+                # 수집실패 지속 중 - 임계 시간 초과 + 아직 알람 안 보냈으면 발송
+                try:
+                    elapsed = (datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+                               - datetime.strptime(prev_failure_first_at, "%Y-%m-%d %H:%M:%S")
+                               ).total_seconds() / 60.0
+                except Exception:
+                    elapsed = 0
+
+                if not prev_failure_alerted and elapsed >= PERSISTENT_FAILURE_THRESHOLD_MINUTES:
+                    base["failure_alerted"] = True
+                    base["details"] = _sanitize_details(details)
+                    state[key] = base
+                    _write_state(state)
+                    logger.warning(
+                        f"[ALARM] 수집실패 지속 알람 발송: {key} (지속 {int(elapsed)}분, "
+                        f"시작 {prev_failure_first_at})"
+                    )
+                    return {
+                        "action": "send_failure_alert",
+                        "failure_first_at": prev_failure_first_at,
+                        "elapsed_minutes": int(elapsed),
+                    }
+
+                # 임계 미만이거나 이미 알람 보낸 상태 - SKIP
+                state[key] = base
+                _write_state(state)
                 return {"action": "skip"}
+
+            # ── 수집실패 → 정상/확인필요 전환: 수집실패 복구 알람 발송 ──
+            # (이전에 send_failure_alert 까지 도달했던 경우만 복구 알람 의미가 있음)
+            failure_recovered = prev_failure_alerted
+            failure_first_at_snapshot = prev_failure_first_at
 
             if is_alert and prev_status == "normal":
                 # 정상 → 확인필요: 장애 알람 발송
@@ -106,12 +153,22 @@ def check_transition(market_gubn: str, device_name: str, check_result: str, deta
                 }
                 _write_state(state)
                 logger.info(f"[ALARM] 장애 발생: {key} ({check_result})")
+                # 수집실패 알람 보낸 적 있으면 복구 알람도 같이 발송하도록 alert 와 별개로 signal
+                if failure_recovered:
+                    return {
+                        "action": "send_alert_with_failure_recovery",
+                        "alert_time": now,
+                        "failure_first_at": failure_first_at_snapshot,
+                        "recovery_time": now,
+                    }
                 return {"action": "send_alert", "alert_time": now}
 
             elif is_alert and prev_status == "alert":
                 # 확인필요 → 확인필요: SKIP
                 state[key]["last_checked_at"] = now
                 state[key]["details"] = _sanitize_details(details)
+                state[key].pop("failure_first_at", None)
+                state[key].pop("failure_alerted", None)
                 _write_state(state)
                 logger.debug(f"[ALARM] 장애 지속 (SKIP): {key}")
                 return {"action": "skip"}
@@ -130,10 +187,24 @@ def check_transition(market_gubn: str, device_name: str, check_result: str, deta
                 return {"action": "send_recovery", "alert_time": alert_time, "recovery_time": now}
 
             else:
-                # 정상 → 정상: SKIP
-                if key in state:
-                    state[key]["last_checked_at"] = now
-                    _write_state(state)
+                # 정상 → 정상: SKIP. 단 직전 수집실패 알람이 발송된 적 있다면 수집실패 복구 알람 발송.
+                new_entry = dict(prev) if prev else {"status": "normal"}
+                new_entry["last_checked_at"] = now
+                new_entry["check_result"] = check_result
+                new_entry.pop("failure_first_at", None)
+                new_entry.pop("failure_alerted", None)
+                state[key] = new_entry
+                _write_state(state)
+
+                if failure_recovered:
+                    logger.info(
+                        f"[ALARM] 수집실패 복구 알람 발송: {key} (시작 {failure_first_at_snapshot}, 복구 {now})"
+                    )
+                    return {
+                        "action": "send_failure_recovery",
+                        "failure_first_at": failure_first_at_snapshot,
+                        "recovery_time": now,
+                    }
                 return {"action": "skip"}
         finally:
             fcntl.flock(lock_fd, fcntl.LOCK_UN)
