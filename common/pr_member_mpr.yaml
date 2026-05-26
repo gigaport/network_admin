@@ -488,7 +488,7 @@ devices:
     custom:
       groups: ["product"]
       join_products: ["NXTA-10", "NXTA-COM"]
-  ts_r_px_yslg_n_mpr_01:
+  ts_r_px_nhlg_n_mpr_01:
     os: nxos
     type: switch
     connections:
