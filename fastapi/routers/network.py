@@ -5937,8 +5937,11 @@ async def collect_dr_training_status():
         if prev_map and rows:
             import threading
             from utils.slack_client import send_alert
+            from utils.alarm_state import dr_load_unreachable_alerted, dr_save_unreachable_alerted
             changed = []
-            unreachable_alerted = set()
+            # 파일 기반 영구 상태 - cron 사이클 간 유지되어 복구 알람 트리거 가능
+            # key=f"{proc}_{dev}", value={"proc","dev","ip","label","alerted_at","error"}
+            unreachable_alerted = dr_load_unreachable_alerted()
 
             # 직전 배치에서 접속 가능했던 장비 목록
             prev_reachable = set()
@@ -5979,7 +5982,11 @@ async def collect_dr_training_status():
                     # 이전 배치가 unreachable 이었고(연속 2회 확인), 이번에도 unreachable → 알림
                     # 또는 첫 발생인데 이전 배치가 없는 경우엔 skip (다음 배치에서 confirm 되면 알림)
                     if not prev_was_reachable and prev_was_unreachable and dev_key not in unreachable_alerted:
-                        unreachable_alerted.add(dev_key)
+                        alerted_at_now = now.strftime("%Y-%m-%d %H:%M:%S")
+                        unreachable_alerted[dev_key] = {
+                            "proc": proc, "dev": dev, "ip": ip, "label": label or "",
+                            "alerted_at": alerted_at_now, "error": error_msg or "",
+                        }
                         changed.append({
                             "proc": proc, "dev": dev, "ip": ip, "label": label,
                             "item_no": 0, "item_name": "통신불가", "item_type": "unreachable",
@@ -6008,6 +6015,29 @@ async def collect_dr_training_status():
                                 "old_dr": prev2_dr, "new_dr": new_dr
                             })
 
+            # ── 통신복구 알람 판정 ──
+            # 이전에 통신불가 알람이 발송된 장비가 현재 배치에서 reachable=True 로 복귀했다면 복구 알람 발송.
+            # 1회만 reachable 이어도 복구로 간주 (전환이 빠를수록 운영자가 즉시 인지하는 게 우선).
+            currently_reachable_devs = set()
+            for row in rows:
+                if row[4]:  # reachable=True
+                    currently_reachable_devs.add(f"{row[0]}_{row[1]}")
+
+            for dev_key in list(unreachable_alerted.keys()):
+                if dev_key in currently_reachable_devs:
+                    info = unreachable_alerted.pop(dev_key)
+                    changed.append({
+                        "proc": info.get("proc", ""), "dev": info.get("dev", ""),
+                        "ip": info.get("ip", ""), "label": info.get("label", ""),
+                        "item_no": 0, "item_name": "통신복구", "item_type": "recovery",
+                        "alerted_at": info.get("alerted_at", ""),
+                        "old_main": None, "new_main": None,
+                        "old_dr": None, "new_dr": None,
+                    })
+
+            # 통신불가/복구 상태를 영구 저장 (다음 cron 사이클까지 유지)
+            dr_save_unreachable_alerted(unreachable_alerted)
+
             if changed:
                 # 전체 전환율 계산
                 total_items = len(rows)
@@ -6019,6 +6049,26 @@ async def collect_dr_training_status():
 
                 def _send_dr_alerts(items, summary):
                     for c in items:
+                        # 통신복구 알림 (unreachable → reachable 전환)
+                        if c.get("item_type") == "recovery":
+                            fields = [
+                                {"title": "절차", "value": c["proc"], "short": True},
+                                {"title": "장비", "value": f"*{c['dev']}* ({c['ip']})", "short": True},
+                                {"title": "상태", "value": ":white_check_mark: 통신복구", "short": True},
+                            ]
+                            if c.get("alerted_at"):
+                                fields.append({"title": "통신불가 발생", "value": f"`{c['alerted_at']}`", "short": True})
+                            if c.get("label"):
+                                fields.append({"title": "설명", "value": c["label"], "short": False})
+                            send_alert(
+                                channel="#network-alert-dr훈련",
+                                title=f":white_check_mark: DR훈련 장비 통신복구 >> {c['dev']}",
+                                message="",
+                                color="#10b981",
+                                fields=fields
+                            )
+                            continue
+
                         # 통신불가 알림
                         if c.get("item_type") == "unreachable":
                             fields = [

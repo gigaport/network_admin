@@ -233,3 +233,54 @@ def _sanitize_details(details: dict) -> dict:
                   "rpf_nbr", "connected_server_cnt", "check_result", "market_gubn"):
             safe[k] = v
     return safe
+
+
+# ── DR 훈련 통신불가 알람 상태 ──────────────────────────────────────────
+# 통신불가 알람을 발송한 장비를 영구 추적하여 reachable 복귀 시 복구 알람을 발송할 수 있게 한다.
+# key: f"{procedure_code}_{device_name}", value: {"proc":..., "dev":..., "ip":..., "label":..., "alerted_at":..., "error":...}
+DR_UNREACHABLE_STATE_FILE = Path("/app/data/dr_training_alarm_state.json")
+
+
+def _read_dr_unreachable_state() -> dict:
+    """DR 훈련 통신불가 알람 상태를 파일에서 읽기. 손상/빈 파일은 빈 dict 로 fallback."""
+    try:
+        if DR_UNREACHABLE_STATE_FILE.exists():
+            with open(DR_UNREACHABLE_STATE_FILE, "r", encoding="utf-8") as f:
+                content = f.read()
+            if not content.strip():
+                return {}
+            return json.loads(content)
+    except json.JSONDecodeError as e:
+        logger.warning(f"DR 알람 상태 파일 손상 - 빈 dict fallback: {e}")
+    except Exception as e:
+        logger.error(f"DR 알람 상태 파일 로드 실패: {e}")
+    return {}
+
+
+def _write_dr_unreachable_state(state: dict):
+    """DR 훈련 통신불가 알람 상태를 파일에 원자적으로 저장."""
+    try:
+        import os as _os
+        DR_UNREACHABLE_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = DR_UNREACHABLE_STATE_FILE.with_suffix(DR_UNREACHABLE_STATE_FILE.suffix + ".tmp")
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
+            f.flush()
+            _os.fsync(f.fileno())
+        _os.replace(tmp_path, DR_UNREACHABLE_STATE_FILE)
+    except Exception as e:
+        logger.error(f"DR 알람 상태 파일 저장 실패: {e}")
+
+
+def dr_load_unreachable_alerted() -> dict:
+    """DR 훈련에서 통신불가 알람을 이미 발송한 장비 dict 반환.
+
+    Returns:
+        { "proc_dev_key": {"proc":..., "dev":..., "ip":..., "label":..., "alerted_at":..., "error":...}, ... }
+    """
+    return _read_dr_unreachable_state()
+
+
+def dr_save_unreachable_alerted(state: dict):
+    """DR 훈련 통신불가 알람 상태 영구 저장."""
+    _write_dr_unreachable_state(state)
