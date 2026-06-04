@@ -116,6 +116,29 @@ def _count_valid_source_address(routes: list) -> int:
     return count
 
 
+def _extract_valid_sg_pairs(routes: list) -> list:
+    """배치 후처리(_compute_received_products) 입력용 (source, group) 페어 리스트 추출.
+
+    구조는 [(src_ip_without_mask, group_ip_without_mask), ...].
+    예외 IP / source='*' / IIF Null 은 제외 — _count_valid_source_address 와 동일 정책.
+    """
+    pairs = []
+    for r in routes:
+        group_full = r.get("group", "")
+        source = r.get("source", "")
+        if source == "*":
+            continue
+        if _is_excepted_group(group_full):
+            continue
+        if r.get("iif", "Null") == "Null":
+            continue
+        # "239.29.30.81/32" → "239.29.30.81", "177.21.180.18/32" → "177.21.180.18"
+        g = group_full.split("/")[0]
+        s = source.split("/")[0]
+        pairs.append([s, g])
+    return pairs
+
+
 def _calc_valid_oif_and_min_uptime(routes: list, client_vlan: str) -> dict:
     """239.29.30.x 대역 (S,G) 중 OIF=Vlan{client_vlan} 인 항목 카운트 + 최소 uptime + rpf_nbr 집계.
 
@@ -283,6 +306,7 @@ def collect_device_multicast_via_api(device_name: str, device_ip: str, device_os
     oif_data = _calc_valid_oif_and_min_uptime(routes, client_vlan)
     rps = _parse_pim_rp(nxapi.get("pim_rp_body"))
     conn_srv_cnt = _count_connected_servers(nxapi.get("intf_status_body"), client_vlan)
+    sg_pairs = _extract_valid_sg_pairs(routes)
 
     return {
         "device_name": device_name,
@@ -297,6 +321,9 @@ def collect_device_multicast_via_api(device_name: str, device_ip: str, device_os
         "rpf_nbrs": oif_data["rpf_nbrs"],
         "connected_server_count": conn_srv_cnt,
         "mroute": [{"cmd": "show_ip_mroute", "parsed_output": nxapi.get("mroute_body")}],
+        # batch._extract_valid_sg_pairs() 가 Genie 형식만 파싱하므로, NX-API 결과를
+        # 그쪽에서 다시 파싱 못함 → 우리가 미리 계산한 결과를 우선 사용하도록 키로 동봉
+        "valid_sg_pairs": sg_pairs,
         "_collect_status": "ok",
     }
 

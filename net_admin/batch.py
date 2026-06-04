@@ -448,7 +448,19 @@ def OpenJsonFile(path):
 FASTAPI_API_URL = "http://fastapi:8000/api/v1/network"
 
 def _extract_valid_sg_pairs(device):
-    """장비의 raw mroute 파싱 결과에서 Incoming interface가 Null이 아닌 유효 (source, group) 페어 집합 추출."""
+    """장비의 raw mroute 파싱 결과에서 Incoming interface가 Null이 아닌 유효 (source, group) 페어 집합 추출.
+
+    NX-API 기반 수집(cisco_multicast_api)은 Genie 형식이 아닌 NX-API JSON 을 반환하므로
+    device 에 미리 계산된 'valid_sg_pairs' 가 들어있으면 그것을 우선 사용한다.
+    """
+    pre = device.get("valid_sg_pairs")
+    if isinstance(pre, (list, tuple)) and pre:
+        pairs = set()
+        for item in pre:
+            if isinstance(item, (list, tuple)) and len(item) == 2:
+                pairs.add((item[0], item[1]))
+        return pairs
+
     pairs = set()
     device_os = device.get("device_os", "")
     os_key = "default" if device_os == "nxos" else ""
