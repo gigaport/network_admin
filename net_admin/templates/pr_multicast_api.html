@@ -1,0 +1,174 @@
+{% extends 'components/base.html' %}
+{% load static %}
+
+{% block content %}
+  <!-- 로딩 오버레이 -->
+  <div id="pageLoadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9998; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.3); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 0.4s ease;">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div style="font-size: 0.85rem; color: #475569; font-weight: 500;">데이터를 불러오는 중...</div>
+    </div>
+  </div>
+  <div class="content">
+    <nav class="mb-3" aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="#!">네트워크 모니터링</a></li>
+        <li class="breadcrumb-item"><a href="#!">멀티캐스트 시세수신체크</a></li>
+        <li class="breadcrumb-item active">회원사-운영시세 (API)</li>
+      </ol>
+    </nav>
+    <div class="mb-9">
+      <div class="row g-3 mb-4" style="margin: 0 auto;">
+        <div class="col-auto">
+          <h2 id="contents_title" class="mb-0">회원사-운영시세 (API)</h2>
+        </div>
+        <div class="col-auto ms-auto d-flex align-items-center gap-2">
+          <span id="updatedTime" class="badge bg-light text-muted" style="font-size: 0.7rem;"></span>
+          <button class="btn btn-sm btn-primary" onclick="refreshTable()">
+            <i class="fas fa-sync-alt me-1"></i>새로고침
+          </button>
+        </div>
+      </div>
+
+      <!-- 요약 통계 -->
+      <div class="mb-3" id="summaryCards" style="display:flex; align-items:center; gap:28px; padding:16px 24px; background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(99,102,241,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">총 회원사</span>
+          <span id="stat_total" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
+        </div>
+        <div style="width:1px; height:24px; background:var(--phoenix-border-color, #e2e8f0);"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(16,185,129,0.6); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">정상확인</span>
+          <span id="stat_normal" style="font-size:1.25rem; font-weight:700; color:#059669;">-</span>
+        </div>
+        <div style="width:1px; height:24px; background:var(--phoenix-border-color, #e2e8f0);"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(239,68,68,0.5); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">확인필요</span>
+          <span id="stat_alert" style="font-size:1.25rem; font-weight:700; color:#dc2626;">-</span>
+        </div>
+        <div style="width:1px; height:24px; background:var(--phoenix-border-color, #e2e8f0);"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(14,165,233,0.5); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">자동 새로고침</span>
+          <span id="stat_countdown" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">60초</span>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm bg-body-emphasis" style="margin: 0 auto;">
+        <div class="card-body" style="padding: 2rem 1rem !important; min-height: 400px;">
+          <div class="table-responsive scrollbar">
+            <table class="table table-hover table-sm mb-0" id="multicast_table" style="width: 100% !important; font-size: 0.85rem !important;">
+              <thead>
+                <tr>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:4%;">회원사NO</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:5%;">회원사코드</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:7%;">회원사명</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:6%;">장비명</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:5%;">장비OS</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:10%;">신청_시세상품</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:10%;">수신_시세상품</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:8%;">PIM-RP</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:4%;">정상그룹</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:4%;">MROUTE</th>
+                  <th class="sort align-middle text-center" scope="col" style="width:4%;">OIF</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:6%;">MIN UPTIME</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:8%;">체크시간</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:4%;">연결서버</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:4%;">명령어결과</th>
+                  <th class="sort white-space-nowrap align-middle text-center" scope="col" style="width:5%;">체크결과</th>
+                </tr>
+              </thead>
+              <tfoot style="display: table-header-group">
+                <tr>
+                  <th class="text-center">NO</th>
+                  <th class="text-center">코드</th>
+                  <th class="text-center">회원사명</th>
+                  <th class="text-center">장비명</th>
+                  <th class="text-center">장비OS</th>
+                  <th class="text-center">신청_시세상품</th>
+                  <th class="text-center">수신_시세상품</th>
+                  <th class="text-center">PIM-RP</th>
+                  <th class="text-center">정상그룹</th>
+                  <th class="text-center">MROUTE</th>
+                  <th class="text-center">OIF</th>
+                  <th class="text-center">UPTIME</th>
+                  <th class="text-center">체크시간</th>
+                  <th class="text-center">서버</th>
+                  <th class="text-center">명령어</th>
+                  <th class="text-center">체크</th>
+                </tr>
+              </tfoot>
+              <tbody class="list" id="order-table-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer position-absolute">
+      <div class="row g-0 justify-content-between align-items-center h-100">
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 mt-2 mt-sm-0 text-body">Nextrade Network Admin<span class="d-none d-sm-inline-block"></span><span class="d-none d-sm-inline-block mx-1">|</span><br class="d-sm-none" />2025 &copy;<a class="mx-1" href="">RWS</a></p>
+        </div>
+        <div class="col-12 col-sm-auto text-center">
+          <p class="mb-0 text-body-tertiary text-opacity-85">v1.22.0</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <!-- mroute 상세 모달 -->
+  <div class="modal fade" id="modal_mroute" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-xl">
+      <div class="modal-content" style="border: none; border-radius: 12px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.3);">
+        <div class="modal-header border-0 d-flex align-items-center" style="background: linear-gradient(135deg, #1e293b, #334155); padding: 16px 20px;">
+          <div class="d-flex align-items-center gap-3">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(99,102,241,0.3); display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-terminal" style="color: #a5b4fc; font-size: 0.9rem;"></i>
+            </div>
+            <div>
+              <h6 class="modal-title mb-0" id="modal_title" style="color: #fff; font-size: 0.95rem; font-weight: 600;"></h6>
+              <div id="modal_subtitle" style="font-size: 0.7rem; color: rgba(255,255,255,0.5); margin-top: 2px;"></div>
+            </div>
+          </div>
+          <div class="ms-auto d-flex align-items-center gap-2">
+            <button class="btn btn-sm" id="btn_copy_output" style="background: rgba(255,255,255,0.08); color: #a5b4fc; border: 1px solid rgba(255,255,255,0.12); font-size: 0.7rem; padding: 4px 12px; border-radius: 6px; transition: all 0.2s;">
+              <i class="fas fa-copy me-1"></i>복사
+            </button>
+            <button class="btn-close btn-close-white" type="button" data-bs-dismiss="modal" aria-label="Close" style="font-size: 0.55rem; opacity: 0.5;"></button>
+          </div>
+        </div>
+        <div class="modal-body p-0" style="background: #0f172a;">
+          <pre id="modal_output" style="color: #ffffff; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 0.95rem; line-height: 1.7; padding: 20px 24px; margin: 0; white-space: pre-wrap; word-break: break-all; max-height: 65vh;"></pre>
+        </div>
+        <div class="modal-footer border-0 d-flex justify-content-between align-items-center" style="background: #1e293b; padding: 10px 20px;">
+          <span style="font-size: 0.65rem; color: rgba(255,255,255,0.35);"><i class="fas fa-info-circle me-1"></i>mroute command output</span>
+          <button class="btn btn-sm" type="button" data-bs-dismiss="modal" style="background: linear-gradient(135deg, #6366f1, #818cf8); color: #fff; font-size: 0.75rem; padding: 5px 20px; border-radius: 6px; border: none;">닫기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="back_data" data-submenu="{{ sub_menu|escapejs }}"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'assets/js/datatables.min.js' %}"></script>
+<script src="{% static 'assets/js/jszip.min.js' %}"></script>
+<script src="{% static 'assets/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'assets/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'vendors/popper/popper.min.js' %}"></script>
+<script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
+<script src="{% static 'vendors/is/is.min.js' %}"></script>
+<script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
+<script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
+<script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
+<script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
+<script src="{% static 'assets/js/phoenix.js' %}"></script>
+<script src="{% static 'assets/js/net_admin/multicast.js' %}"></script>
+{% endblock %}

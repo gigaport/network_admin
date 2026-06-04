@@ -278,3 +278,84 @@ def query_pim_sparse_check(ip: str, groups: list) -> dict:
         logger.error(f"NX-API PIM check 오류 ({ip}): {e}")
 
     return result
+
+
+def query_multicast_info(ip: str) -> dict:
+    """NX-API 로 회원사-운영시세(API) 메뉴용 멀티캐스트 정보 일괄 조회.
+
+    한 번의 HTTP 호출로 다음 3개 명령을 cli_show 묶음 실행:
+      - show ip mroute
+      - show ip pim rp
+      - show interface status
+
+    반환 구조:
+      {
+        "success": True/False,
+        "error": "..." (실패 시),
+        "mroute_body": <NX-API outputs.body for mroute>,
+        "pim_rp_body": <... for pim rp>,
+        "intf_status_body": <... for interface status>,
+      }
+    """
+    result = {
+        "success": False, "error": None,
+        "mroute_body": None, "pim_rp_body": None, "intf_status_body": None,
+    }
+
+    cmds = ["show ip mroute", "show ip pim rp", "show interface status"]
+
+    try:
+        url = f"http://{ip}/ins"
+        headers = {"Content-Type": "application/json"}
+        auth = (NXAPI_USERNAME, NXAPI_PASSWORD)
+        payload = {
+            "ins_api": {
+                "version": "1.0",
+                "type": "cli_show",
+                "chunk": "0",
+                "sid": "1",
+                "input": " ; ".join(cmds),
+                "output_format": "json",
+            }
+        }
+
+        resp = requests.post(url, json=payload, headers=headers, auth=auth, timeout=NXAPI_TIMEOUT)
+        if resp.status_code != 200:
+            result["error"] = f"HTTP {resp.status_code} ({ip})"
+            logger.error(f"NX-API multicast HTTP {resp.status_code}: {ip}")
+            return result
+
+        data = resp.json()
+        outputs = data.get("ins_api", {}).get("outputs", {}).get("output", [])
+        if isinstance(outputs, dict):
+            outputs = [outputs]
+
+        bodies = []
+        for out in outputs:
+            code = out.get("code", "")
+            if code and str(code) != "200":
+                bodies.append(None)
+            else:
+                bodies.append(out.get("body"))
+
+        # 명령 순서 보장: cmds 순서대로 응답이 옴
+        if len(bodies) >= 1:
+            result["mroute_body"] = bodies[0]
+        if len(bodies) >= 2:
+            result["pim_rp_body"] = bodies[1]
+        if len(bodies) >= 3:
+            result["intf_status_body"] = bodies[2]
+
+        result["success"] = True
+
+    except requests.exceptions.ConnectTimeout:
+        result["error"] = f"연결 타임아웃 ({ip})"
+        logger.error(f"NX-API multicast 연결 타임아웃: {ip}")
+    except requests.exceptions.ConnectionError:
+        result["error"] = f"연결 실패 ({ip})"
+        logger.error(f"NX-API multicast 연결 실패: {ip}")
+    except Exception as e:
+        result["error"] = str(e)
+        logger.error(f"NX-API multicast 오류 ({ip}): {e}")
+
+    return result

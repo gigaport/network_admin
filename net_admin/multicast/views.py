@@ -46,6 +46,9 @@ def init(request):
         market_gubn = "ts_members"
     elif sub_menu == "pr_info_multicast":
         market_gubn = "pr_information"
+    elif sub_menu == "pr_multicast_api":
+        # NX-API 기반 신규 회원사-운영시세(API) 메뉴
+        market_gubn = "pr_members_api"
 
     logger.info(f"[SUB_MENU] : {sub_menu}, [MARKET_GUBN] : {market_gubn}")
 

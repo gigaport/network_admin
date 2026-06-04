@@ -90,6 +90,42 @@ async def CollectCisco(target: str):
     return results_dict
 
 
+@router.get("/collect/multicast/cisco_api/{target}")
+async def CollectCiscoMulticastAPI(target: str):
+    """Cisco NX-API 기반 멀티캐스트 수집 엔드포인트.
+
+    기존 SSH(pyATS) 방식과 병행 운영용. cisco_multicast_api.collect_all_devices_via_api()
+    를 호출하여 mroute/pim-rp/interface-status 를 NX-API 한 번 호출로 수집한다.
+
+    응답은 batch 의 cisco_multicast.ProcessMulticastInfo() 결과 (data list) 와 호환되는 구조.
+    """
+    from utils.cisco_multicast_api import collect_all_devices_via_api
+
+    logger.info(f"[NXAPI] Cisco 멀티캐스트 정보 수집 시작: target={target}")
+
+    if target == "pr":
+        targets = CISCO_PR_DEVICES
+    elif target == "ts":
+        targets = CISCO_TS_DEVICES
+    else:
+        logger.error(f"[NXAPI] 알 수 없는 대상: {target}")
+        return JSONResponse(content={"error": "알 수 없는 대상"}, status_code=404)
+
+    device_count = len(targets.devices)
+    logger.info(f"[NXAPI] 총 {device_count}개 장비에서 NX-API 멀티캐스트 정보 수집 시작")
+
+    # ThreadPoolExecutor (cisco_multicast_api 내부 ProcessPool)
+    loop = asyncio.get_event_loop()
+    results = await loop.run_in_executor(
+        executor, collect_all_devices_via_api, targets.devices, 20
+    )
+
+    success_cnt = sum(1 for r in results if r and r.get("_collect_status") == "ok")
+    logger.info(f"[NXAPI] Cisco 멀티캐스트 수집 완료: {success_cnt}/{len(results)} 성공")
+
+    return {"data": [r for r in results if r is not None]}
+
+
 @router.get("/collect/multicast/arista/{target}")
 async def CollectAristaMulticast(target: str):
     # 멀티캐스트 정보를 수집하는 앤드포인트

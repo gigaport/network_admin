@@ -10,6 +10,9 @@
 # 정보사 Arista 멀티캐스트 수집 (1분 주기)
 * * * * * cd /app && /usr/local/bin/python3 arista_multicast_collect.py >> /app/logs/arista_collect.log 2>&1
 
+# 회원사 운영시세(API) Cisco NX-API 멀티캐스트 수집 (1분 주기) - 알람 OFF, 비교 검증용
+* * * * * cd /app && /usr/local/bin/python3 cisco_multicast_api_collect.py >> /app/logs/cisco_api_collect.log 2>&1
+
 # 매일 자정에 로그 파일 정리 (30일 이상 된 로그 파일 삭제)
 0 0 * * * find /app/logs -name "*.log" -type f -mtime +30 -delete
 

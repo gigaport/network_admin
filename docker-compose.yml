@@ -90,6 +90,7 @@ services:
       - ./fastapi/utils:/app/utils:Z
       - ./scripts/dr_collect.py:/app/dr_collect.py:Z
       - ./scripts/arista_multicast_collect.py:/app/arista_multicast_collect.py:Z
+      - ./scripts/cisco_multicast_api_collect.py:/app/cisco_multicast_api_collect.py:Z
     depends_on:
       - fastapi
       - postgres-db

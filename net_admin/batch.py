@@ -507,10 +507,16 @@ def _fetch_sise_mapping(market_type: str = "pr_members"):
 
 
 def save_multicast_to_db(market_gubn, cisco_multicast_info, members_mroute_data=None):
-    """멀티캐스트 상태를 DB에 저장 (JSON 저장과 병행)"""
+    """멀티캐스트 상태를 DB에 저장 (JSON 저장과 병행)
+
+    market_gubn:
+      "pr" / "pr_members"      → multicast_status.market_type = 'pr_members'
+      "ts" / "ts_members"      → multicast_status.market_type = 'ts_members'
+      "pr_api" / "pr_members_api" → multicast_status.market_type = 'pr_members_api'
+                                  (NX-API 기반 신규 회원사-운영시세(API) 메뉴 전용)
+    """
     try:
         # members_info, mpr_multicast_info 로드하여 최종 결과 생성
-        # market_gubn이 "pr" 또는 "ts"로 올 수 있으므로 정규화
         if market_gubn in ("pr", "pr_members"):
             market_gubn = "pr_members"
             members_path = "/app/common/members_info.json"
@@ -519,6 +525,10 @@ def save_multicast_to_db(market_gubn, cisco_multicast_info, members_mroute_data=
             market_gubn = "ts_members"
             members_path = "/app/common/members_info.json"
             mpr_path = "/app/common/ts_mpr_multicast_info.json"
+        elif market_gubn in ("pr_api", "pr_members_api"):
+            market_gubn = "pr_members_api"
+            members_path = "/app/common/members_info.json"
+            mpr_path = "/app/common/pr_mpr_multicast_info.json"
         else:
             return
 
