@@ -329,41 +329,51 @@ def collect_device_multicast_via_api(device_name: str, device_ip: str, device_os
 
 
 def collect_all_devices_via_api(testbed_devices: dict, max_workers: int = 20) -> list:
-    """testbed.devices 딕셔너리(yaml 로드 결과) → 전체 장비 결과 list 반환 (병렬).
+    """testbed.devices 딕셔너리(yaml 로드 결과) → NXOS 장비만 NX-API 수집 후 결과 list 반환 (병렬).
+
+    IOS-XE 등 NX-API 미지원 OS 는 본 함수에서 **수집 대상에서 제외** (결과 리스트에 포함 안 됨).
+    회원사-운영시세(API) 메뉴는 NX-API 수집 가능 장비만 노출하는 정책.
 
     testbed_devices 구조 (genie.testbed.load 결과의 devices):
       { "device_name": <Device object with .os, .connections.default.ip, .custom>, ... }
     """
-    futures = {}
-    results = [None] * len(testbed_devices)
-    name_order = list(testbed_devices.keys())
+    # NX-API 호출 대상 장비만 미리 선별 (IOS-XE 등 제외)
+    target_list = []  # [(name, ip, os, products, vlan), ...]
+    for name in testbed_devices.keys():
+        dev = testbed_devices[name]
+        try:
+            os_name = str(dev.os)
+        except Exception as e:
+            logger.error(f"[NXAPI] device {name} 정의 파싱 실패: {e}")
+            continue
+        if os_name != "nxos":
+            # IOS-XE 등 NX-API 미지원 OS 는 본 메뉴 수집 대상에서 제외
+            continue
+        try:
+            ip = str(dev.connections.default.ip)
+            join_products = dev.custom.get("join_products", []) if hasattr(dev, "custom") else []
+            client_vlan = str(dev.custom.get("client_vlan", 1100)) if hasattr(dev, "custom") else "1100"
+        except Exception as e:
+            logger.error(f"[NXAPI] device {name} 정의 파싱 실패: {e}")
+            continue
+        target_list.append((name, ip, os_name, join_products, client_vlan))
+
+    results = [None] * len(target_list)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        for idx, name in enumerate(name_order):
-            dev = testbed_devices[name]
-            try:
-                ip = str(dev.connections.default.ip)
-                os_name = str(dev.os)
-                join_products = dev.custom.get("join_products", []) if hasattr(dev, "custom") else []
-                client_vlan = str(dev.custom.get("client_vlan", 1100)) if hasattr(dev, "custom") else "1100"
-            except Exception as e:
-                logger.error(f"[NXAPI] device {name} 정의 파싱 실패: {e}")
-                results[idx] = {
-                    "device_name": name, "_collect_status": "definition_error", "_error": str(e),
-                }
-                continue
-            futures[executor.submit(collect_device_multicast_via_api,
-                                    name, ip, os_name, join_products, client_vlan)] = idx
-
+        futures = {
+            executor.submit(collect_device_multicast_via_api, name, ip, os_name, products, vlan): idx
+            for idx, (name, ip, os_name, products, vlan) in enumerate(target_list)
+        }
         for fut in as_completed(futures):
             idx = futures[fut]
             try:
                 results[idx] = fut.result(timeout=30)
             except Exception as e:
                 results[idx] = {
-                    "device_name": name_order[idx],
+                    "device_name": target_list[idx][0],
                     "_collect_status": "exception",
                     "_error": str(e),
                 }
 
-    return results
+    return [r for r in results if r is not None]

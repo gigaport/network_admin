@@ -2,16 +2,17 @@
 # Dockerfile.batch 에서 각 라인에 root 사용자 필드를 자동 삽입함
 
 # 매분마다 batch.py 실행 (Cisco 회원사 pr/ts 멀티캐스트 수집)
-* * * * * cd /app && /usr/local/bin/python3 batch.py >> /app/logs/batch.log 2>&1
+# flock -n: 이전 인스턴스가 진행 중이면 즉시 skip 하여 중복 실행/누적 방지
+* * * * * cd /app && /usr/bin/flock -n /tmp/batch.lock /usr/local/bin/python3 batch.py >> /app/logs/batch.log 2>&1
 
 # DR 훈련 모니터링 상태 수집 (1분 주기)
-* * * * * cd /app && /usr/local/bin/python3 dr_collect.py >> /app/logs/dr_collect.log 2>&1
+* * * * * cd /app && /usr/bin/flock -n /tmp/dr_collect.lock /usr/local/bin/python3 dr_collect.py >> /app/logs/dr_collect.log 2>&1
 
 # 정보사 Arista 멀티캐스트 수집 (1분 주기)
-* * * * * cd /app && /usr/local/bin/python3 arista_multicast_collect.py >> /app/logs/arista_collect.log 2>&1
+* * * * * cd /app && /usr/bin/flock -n /tmp/arista_collect.lock /usr/local/bin/python3 arista_multicast_collect.py >> /app/logs/arista_collect.log 2>&1
 
 # 회원사 운영시세(API) Cisco NX-API 멀티캐스트 수집 (1분 주기) - 알람 OFF, 비교 검증용
-* * * * * cd /app && /usr/local/bin/python3 cisco_multicast_api_collect.py >> /app/logs/cisco_api_collect.log 2>&1
+* * * * * cd /app && /usr/bin/flock -n /tmp/cisco_api.lock /usr/local/bin/python3 cisco_multicast_api_collect.py >> /app/logs/cisco_api_collect.log 2>&1
 
 # 매일 자정에 로그 파일 정리 (30일 이상 된 로그 파일 삭제)
 0 0 * * * find /app/logs -name "*.log" -type f -mtime +30 -delete
