@@ -26,6 +26,9 @@
         </div>
         <div class="col-auto ms-auto d-flex align-items-center gap-2">
           <span id="updatedTime" class="badge bg-light text-muted" style="font-size: 0.7rem;"></span>
+          <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#targetDevicesModal">
+            <i class="fas fa-cog me-1"></i>대상장비 관리
+          </button>
           <button class="btn btn-sm btn-primary" onclick="refreshTable()">
             <i class="fas fa-sync-alt me-1"></i>새로고침
           </button>
@@ -153,6 +156,100 @@
     </div>
   </div>
   <div id="back_data" data-submenu="{{ sub_menu|escapejs }}"></div>
+
+  <!-- ──────────── 대상장비 관리 모달 (회원사-운영시세(API) 전용) ──────────── -->
+  <div class="modal fade" id="targetDevicesModal" tabindex="-1" aria-labelledby="targetDevicesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="targetDevicesModalLabel">멀티캐스트 대상장비 관리 (회원사-운영시세 API)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <small class="text-muted">DB(<code>multicast_target_devices</code>) 기반. 변경 후 다음 1분 수집 사이클부터 즉시 반영됩니다.</small>
+            <button type="button" class="btn btn-sm btn-primary" id="btnAddDevice">
+              <i class="fas fa-plus me-1"></i>장비 추가
+            </button>
+          </div>
+
+          <!-- 추가/수정 폼 (인라인) -->
+          <div id="deviceFormBox" class="card mb-3" style="display:none;">
+            <div class="card-body py-3">
+              <div class="row g-2">
+                <input type="hidden" id="f_id">
+                <div class="col-md-4">
+                  <label class="form-label form-label-sm mb-1">장비명 *</label>
+                  <input type="text" class="form-control form-control-sm" id="f_device_name" placeholder="예: me_3_px_ydkt_n_mpr_01">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label form-label-sm mb-1">IP *</label>
+                  <input type="text" class="form-control form-control-sm" id="f_ip" placeholder="예: 50.10.3.21">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label form-label-sm mb-1">OS</label>
+                  <select class="form-select form-select-sm" id="f_os">
+                    <option value="nxos" selected>nxos</option>
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label form-label-sm mb-1">Client VLAN</label>
+                  <input type="number" class="form-control form-control-sm" id="f_client_vlan" value="1100">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="f_enabled" checked>
+                    <label class="form-check-label" for="f_enabled" style="font-size:0.85rem;">활성</label>
+                  </div>
+                </div>
+                <div class="col-md-8">
+                  <label class="form-label form-label-sm mb-1">시세상품 (쉼표 구분)</label>
+                  <input type="text" class="form-control form-control-sm" id="f_join_products" placeholder="예: NXTA-10,NXTA-COM">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label form-label-sm mb-1">Groups</label>
+                  <input type="text" class="form-control form-control-sm" id="f_groups" placeholder="예: product">
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label form-label-sm mb-1">설명 (선택)</label>
+                  <input type="text" class="form-control form-control-sm" id="f_description">
+                </div>
+              </div>
+              <div class="mt-2 d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-sm btn-light" id="btnCancelForm">취소</button>
+                <button type="button" class="btn btn-sm btn-primary" id="btnSaveForm">저장</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 장비 목록 테이블 -->
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle" id="targetDevicesTable">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:35px;">#</th>
+                  <th>장비명</th>
+                  <th>IP</th>
+                  <th>OS</th>
+                  <th>시세상품</th>
+                  <th style="width:80px;">VLAN</th>
+                  <th>Groups</th>
+                  <th style="width:70px;">활성</th>
+                  <th style="width:120px;text-align:center;">조작</th>
+                </tr>
+              </thead>
+              <tbody id="targetDevicesTbody">
+                <tr><td colspan="9" class="text-center text-muted py-3">로딩 중...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">닫기</button>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block scripts %}
@@ -171,4 +268,5 @@
 <script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
 <script src="{% static 'assets/js/phoenix.js' %}"></script>
 <script src="{% static 'assets/js/net_admin/multicast.js' %}"></script>
+<script src="{% static 'assets/js/net_admin/target_devices_modal.js' %}?v={% now 'YmdHis' %}"></script>
 {% endblock %}

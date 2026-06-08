@@ -20,6 +20,7 @@ from utils.arista_ptp import GetAristaPtpInfo
 from utils.cisco_common import GetCiscoCommonInfo
 from utils.librenms import GetLibrenmsLldp, GetLibrenmsVlanIps
 from utils.database import get_connection
+import psycopg2
 from psycopg2.extras import RealDictCursor
 
 router = APIRouter(prefix="/network", tags=["Network"])
@@ -94,36 +95,30 @@ async def CollectCisco(target: str):
 async def CollectCiscoMulticastAPI(target: str):
     """Cisco NX-API 기반 멀티캐스트 수집 엔드포인트.
 
-    기존 SSH(pyATS) 방식과 병행 운영용. cisco_multicast_api.collect_all_devices_via_api()
-    를 호출하여 mroute/pim-rp/interface-status 를 NX-API 한 번 호출로 수집한다.
+    대상 장비는 DB(multicast_target_devices) 테이블에서 조회하므로 매 호출마다 최신 목록 사용
+    (yaml 캐시 미사용). UI 에서 추가/수정/삭제 후 다음 1분 cron 사이클부터 즉시 반영.
 
-    응답은 batch 의 cisco_multicast.ProcessMulticastInfo() 결과 (data list) 와 호환되는 구조.
+    target='pr' → market_type='pr_members_api' (현재는 단일 시장)
     """
-    from utils.cisco_multicast_api import collect_all_devices_via_api
-
-    logger.info(f"[NXAPI] Cisco 멀티캐스트 정보 수집 시작: target={target}")
+    from utils.cisco_multicast_api import collect_all_devices_from_db
 
     if target == "pr":
-        targets = CISCO_PR_DEVICES
-    elif target == "ts":
-        targets = CISCO_TS_DEVICES
+        market_type = "pr_members_api"
     else:
         logger.error(f"[NXAPI] 알 수 없는 대상: {target}")
         return JSONResponse(content={"error": "알 수 없는 대상"}, status_code=404)
 
-    device_count = len(targets.devices)
-    logger.info(f"[NXAPI] 총 {device_count}개 장비에서 NX-API 멀티캐스트 정보 수집 시작")
+    logger.info(f"[NXAPI] Cisco 멀티캐스트 정보 수집 시작 (DB 기반): market_type={market_type}")
 
-    # ThreadPoolExecutor (cisco_multicast_api 내부 ProcessPool)
     loop = asyncio.get_event_loop()
     results = await loop.run_in_executor(
-        executor, collect_all_devices_via_api, targets.devices, 20
+        executor, collect_all_devices_from_db, market_type, 20
     )
 
     success_cnt = sum(1 for r in results if r and r.get("_collect_status") == "ok")
     logger.info(f"[NXAPI] Cisco 멀티캐스트 수집 완료: {success_cnt}/{len(results)} 성공")
 
-    return {"data": [r for r in results if r is not None]}
+    return {"data": results}
 
 
 @router.get("/collect/multicast/arista/{target}")
@@ -6489,4 +6484,131 @@ async def get_sise_mapping(market_type: str = Query("pr_members")):
 
     except Exception as e:
         logger.error(f"시세상품 매핑 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 멀티캐스트 대상 장비 CRUD (회원사-운영시세(API) 메뉴 전용 - market_type='pr_members_api')
+# yaml/json 대신 DB(multicast_target_devices) 로 관리.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@router.get("/multicast-devices")
+async def list_multicast_devices(market_type: str = Query("pr_members_api")):
+    """대상 장비 목록 조회."""
+    try:
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT id, market_type, device_name, ip, os,
+                           join_products, client_vlan, groups, description, enabled,
+                           created_at, updated_at
+                    FROM multicast_target_devices
+                    WHERE market_type = %s
+                    ORDER BY device_name
+                """, (market_type,))
+                rows = cur.fetchall()
+        for r in rows:
+            r["created_at"] = r["created_at"].strftime("%Y-%m-%d %H:%M:%S") if r.get("created_at") else None
+            r["updated_at"] = r["updated_at"].strftime("%Y-%m-%d %H:%M:%S") if r.get("updated_at") else None
+        return {"success": True, "data": rows}
+    except Exception as e:
+        logger.error(f"multicast-devices list 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/multicast-devices")
+async def create_multicast_device(request: Request):
+    """대상 장비 신규 등록."""
+    try:
+        data = await request.json()
+        market_type = data.get("market_type", "pr_members_api")
+        device_name = (data.get("device_name") or "").strip()
+        ip = (data.get("ip") or "").strip()
+        os_name = (data.get("os") or "nxos").strip()
+        join_products = (data.get("join_products") or "").strip()
+        client_vlan = int(data.get("client_vlan") or 1100)
+        groups = (data.get("groups") or "").strip()
+        description = (data.get("description") or "").strip()
+        enabled = bool(data.get("enabled", True))
+
+        if not device_name or not ip:
+            raise HTTPException(status_code=400, detail="device_name 과 ip 는 필수입니다.")
+
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO multicast_target_devices
+                        (market_type, device_name, ip, os, join_products, client_vlan, groups, description, enabled)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id
+                """, (market_type, device_name, ip, os_name, join_products, client_vlan, groups, description, enabled))
+                new_id = cur.fetchone()[0]
+            conn.commit()
+        return {"success": True, "id": new_id}
+    except HTTPException:
+        raise
+    except psycopg2.errors.UniqueViolation:
+        raise HTTPException(status_code=409, detail="동일 market_type 내에 같은 device_name 이 이미 존재합니다.")
+    except Exception as e:
+        logger.error(f"multicast-devices 등록 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/multicast-devices/{device_id}")
+async def update_multicast_device(device_id: int, request: Request):
+    """대상 장비 수정."""
+    try:
+        data = await request.json()
+        fields = []
+        values = []
+        for col in ("device_name", "ip", "os", "join_products", "groups", "description"):
+            if col in data:
+                fields.append(f"{col}=%s")
+                values.append((data.get(col) or "").strip())
+        if "client_vlan" in data:
+            fields.append("client_vlan=%s")
+            values.append(int(data["client_vlan"] or 1100))
+        if "enabled" in data:
+            fields.append("enabled=%s")
+            values.append(bool(data["enabled"]))
+        if not fields:
+            raise HTTPException(status_code=400, detail="수정할 필드가 없습니다.")
+
+        fields.append("updated_at=NOW()")
+        values.append(device_id)
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    f"UPDATE multicast_target_devices SET {', '.join(fields)} WHERE id=%s",
+                    tuple(values),
+                )
+                if cur.rowcount == 0:
+                    raise HTTPException(status_code=404, detail="해당 ID 의 장비가 없습니다.")
+            conn.commit()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except psycopg2.errors.UniqueViolation:
+        raise HTTPException(status_code=409, detail="동일 market_type 내에 같은 device_name 이 이미 존재합니다.")
+    except Exception as e:
+        logger.error(f"multicast-devices 수정 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/multicast-devices/{device_id}")
+async def delete_multicast_device(device_id: int):
+    """대상 장비 삭제."""
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM multicast_target_devices WHERE id=%s", (device_id,))
+                if cur.rowcount == 0:
+                    raise HTTPException(status_code=404, detail="해당 ID 의 장비가 없습니다.")
+            conn.commit()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"multicast-devices 삭제 실패: {e}")
         raise HTTPException(status_code=500, detail=str(e))

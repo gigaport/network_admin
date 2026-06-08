@@ -16,6 +16,8 @@ from typing import Dict, List, Optional
 
 from utils.nxapi_client import query_multicast_info
 from utils.cisco_multicast import EXCEPTION_MULTICAST_IP, ParseUptime
+from utils.database import get_connection
+from psycopg2.extras import RealDictCursor
 
 logger = logging.getLogger(__name__)
 
@@ -376,4 +378,54 @@ def collect_all_devices_via_api(testbed_devices: dict, max_workers: int = 20) ->
                     "_error": str(e),
                 }
 
+    return [r for r in results if r is not None]
+
+
+def collect_all_devices_from_db(market_type: str = "pr_members_api", max_workers: int = 20) -> list:
+    """DB multicast_target_devices 테이블에서 대상 장비를 조회 후 NX-API 병렬 수집.
+
+    yaml 캐시 미사용 — 매 호출마다 DB 최신 목록 조회 → 추가/수정/삭제가 즉시 다음 사이클에 반영됨.
+    NX-API 미지원 OS(IOS-XE 등) 는 enabled=true 라도 자동 제외 (회원사-운영시세(API) 메뉴 정책).
+    """
+    target_list = []
+    try:
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    """
+                    SELECT device_name, ip, os, join_products, client_vlan
+                    FROM multicast_target_devices
+                    WHERE market_type = %s AND enabled = TRUE
+                    ORDER BY device_name
+                    """,
+                    (market_type,),
+                )
+                for r in cur.fetchall():
+                    if r["os"] != "nxos":
+                        continue  # NX-API 미지원 OS 제외
+                    products = [p.strip() for p in (r["join_products"] or "").split(",") if p.strip()]
+                    target_list.append((
+                        r["device_name"], str(r["ip"]), r["os"],
+                        products, str(r["client_vlan"]),
+                    ))
+    except Exception as e:
+        logger.error(f"[NXAPI] DB 대상장비 조회 실패: {e}")
+        return []
+
+    results = [None] * len(target_list)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(collect_device_multicast_via_api, name, ip, os_name, products, vlan): idx
+            for idx, (name, ip, os_name, products, vlan) in enumerate(target_list)
+        }
+        for fut in as_completed(futures):
+            idx = futures[fut]
+            try:
+                results[idx] = fut.result(timeout=30)
+            except Exception as e:
+                results[idx] = {
+                    "device_name": target_list[idx][0],
+                    "_collect_status": "exception",
+                    "_error": str(e),
+                }
     return [r for r in results if r is not None]

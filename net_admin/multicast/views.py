@@ -158,6 +158,60 @@ def mroute_output(request):
         return JsonResponse({"success": False, "error": str(e), "output": ""}, status=500)
 
 
+# ─── 멀티캐스트 대상 장비 CRUD 프록시 (회원사-운영시세(API) 메뉴 전용) ────────
+@csrf_exempt
+def target_devices_list(request):
+    market_type = request.GET.get("market_type", "pr_members_api")
+    try:
+        r = requests.get(f"{FASTAPI_BASE_URL}/api/v1/network/multicast-devices",
+                         params={"market_type": market_type}, timeout=10)
+        return JsonResponse(r.json(), status=r.status_code, safe=False)
+    except Exception as e:
+        logger.error(f"target_devices_list 실패: {e}")
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@csrf_exempt
+def target_devices_create(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "method not allowed"}, status=405)
+    try:
+        body = json.loads(request.body or b"{}")
+        r = requests.post(f"{FASTAPI_BASE_URL}/api/v1/network/multicast-devices",
+                          json=body, timeout=10)
+        return JsonResponse(r.json(), status=r.status_code, safe=False)
+    except Exception as e:
+        logger.error(f"target_devices_create 실패: {e}")
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@csrf_exempt
+def target_devices_update(request, device_id):
+    if request.method != "POST":  # 프론트는 POST 로 보내고 여기서 PUT 변환
+        return JsonResponse({"success": False, "error": "method not allowed"}, status=405)
+    try:
+        body = json.loads(request.body or b"{}")
+        r = requests.put(f"{FASTAPI_BASE_URL}/api/v1/network/multicast-devices/{device_id}",
+                         json=body, timeout=10)
+        return JsonResponse(r.json(), status=r.status_code, safe=False)
+    except Exception as e:
+        logger.error(f"target_devices_update 실패: {e}")
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@csrf_exempt
+def target_devices_delete(request, device_id):
+    if request.method != "POST":  # 프론트는 POST 로 보내고 여기서 DELETE 변환
+        return JsonResponse({"success": False, "error": "method not allowed"}, status=405)
+    try:
+        r = requests.delete(f"{FASTAPI_BASE_URL}/api/v1/network/multicast-devices/{device_id}",
+                            timeout=10)
+        return JsonResponse(r.json(), status=r.status_code, safe=False)
+    except Exception as e:
+        logger.error(f"target_devices_delete 실패: {e}")
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
 def openJsonFile(path):
     data = {}
     try:
