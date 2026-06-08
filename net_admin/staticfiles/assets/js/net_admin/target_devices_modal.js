@@ -11,6 +11,9 @@
   var $tbody = null;
   var $form = null;
 
+  // 현재 화면에 표시된 장비 list (클로저 보관) — id 로 안전하게 lookup
+  var loadedDevices = [];
+
   function escHtml(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -18,6 +21,11 @@
   }
 
   function showForm(device) {
+    if (device) {
+      $('#formTitle').html('<i class="fas fa-pen me-1 text-success"></i>장비 수정 - <code>' + escHtml(device.device_name) + '</code>');
+    } else {
+      $('#formTitle').html('<i class="fas fa-plus me-1 text-success"></i>장비 추가');
+    }
     $('#f_id').val(device ? device.id : '');
     $('#f_device_name').val(device ? device.device_name : '').prop('readonly', !!device);
     $('#f_ip').val(device ? device.ip : '');
@@ -27,47 +35,56 @@
     $('#f_groups').val(device ? device.groups : 'product');
     $('#f_description').val(device ? (device.description || '') : '');
     $('#f_enabled').prop('checked', device ? !!device.enabled : true);
-    $form.show();
-    $('#f_device_name').focus();
+    $form.slideDown(150);
+    setTimeout(function () { $('#f_device_name').focus(); }, 160);
   }
 
   function hideForm() {
-    $form.hide();
+    $form.slideUp(150);
   }
 
   function renderRows(rows) {
-    if (!rows || rows.length === 0) {
-      $tbody.html('<tr><td colspan="9" class="text-center text-muted py-3">등록된 대상 장비가 없습니다.</td></tr>');
+    loadedDevices = rows || [];
+    var count = loadedDevices.length;
+    $('#mctdRowCount').text(count > 0 ? '총 ' + count + ' 대' : '');
+
+    if (count === 0) {
+      $tbody.html(
+        '<tr><td colspan="9" class="empty-state">' +
+          '<i class="fas fa-box-open"></i>' +
+          '등록된 대상 장비가 없습니다.<br>' +
+          '<small>우측 상단의 <b>장비 추가</b> 버튼으로 새 장비를 등록하세요.</small>' +
+        '</td></tr>'
+      );
       return;
     }
+
     var html = '';
-    rows.forEach(function (r, idx) {
-      var row = escHtml(JSON.stringify(r));
+    loadedDevices.forEach(function (r, idx) {
       html += '<tr data-id="' + r.id + '">'
-        + '<td>' + (idx + 1) + '</td>'
+        + '<td style="color:#9ca3af;">' + (idx + 1) + '</td>'
         + '<td><code>' + escHtml(r.device_name) + '</code></td>'
-        + '<td>' + escHtml(r.ip) + '</td>'
-        + '<td>' + escHtml(r.os) + '</td>'
+        + '<td><span style="font-family:ui-monospace,monospace; color:#475569;">' + escHtml(r.ip) + '</span></td>'
+        + '<td><span class="badge bg-secondary-subtle text-secondary" style="font-size:0.7rem;">' + escHtml(r.os) + '</span></td>'
         + '<td style="font-size:0.78rem; max-width:280px;" class="text-truncate" title="' + escHtml(r.join_products || '') + '">' + escHtml(r.join_products || '-') + '</td>'
-        + '<td class="text-center">' + escHtml(r.client_vlan) + '</td>'
-        + '<td>' + escHtml(r.groups || '-') + '</td>'
+        + '<td class="text-center"><span style="font-weight:600; color:' + (parseInt(r.client_vlan,10) !== 1100 ? '#ef4444' : '#475569') + ';">' + escHtml(r.client_vlan) + '</span></td>'
+        + '<td><small style="color:#6b7280;">' + escHtml(r.groups || '-') + '</small></td>'
         + '<td class="text-center">'
         +   (r.enabled
-              ? '<span class="badge bg-success-subtle text-success">ON</span>'
-              : '<span class="badge bg-secondary-subtle text-secondary">OFF</span>')
+              ? '<span class="badge-on">ON</span>'
+              : '<span class="badge-off">OFF</span>')
         + '</td>'
         + '<td class="text-center">'
-        +   '<button class="btn btn-sm btn-link p-0 me-2 btn-edit" title="수정"><i class="fas fa-edit"></i></button>'
-        +   '<button class="btn btn-sm btn-link p-0 text-danger btn-del" title="삭제"><i class="fas fa-trash"></i></button>'
+        +   '<button class="row-action-btn btn-edit" title="수정"><i class="fas fa-pen"></i></button>'
+        +   '<button class="row-action-btn btn-del" title="삭제"><i class="fas fa-trash"></i></button>'
         + '</td>'
-        + '</tr>'
-        + '<tr style="display:none" data-raw="true"><td><script type="application/json">' + row + '</' + 'script></td></tr>';
+        + '</tr>';
     });
     $tbody.html(html);
   }
 
   function loadList() {
-    $tbody.html('<tr><td colspan="9" class="text-center text-muted py-3">로딩 중...</td></tr>');
+    $tbody.html('<tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-spin"></i>로딩 중...</td></tr>');
     $.ajax({
       url: '/pr_multicast_api/target_devices',
       method: 'GET',
@@ -76,10 +93,10 @@
       if (resp && resp.success) {
         renderRows(resp.data || []);
       } else {
-        $tbody.html('<tr><td colspan="9" class="text-center text-danger py-3">로드 실패: ' + escHtml((resp && resp.error) || 'unknown') + '</td></tr>');
+        $tbody.html('<tr><td colspan="9" class="empty-state text-danger">로드 실패: ' + escHtml((resp && resp.error) || 'unknown') + '</td></tr>');
       }
     }).fail(function (xhr) {
-      $tbody.html('<tr><td colspan="9" class="text-center text-danger py-3">로드 실패 (HTTP ' + xhr.status + ')</td></tr>');
+      $tbody.html('<tr><td colspan="9" class="empty-state text-danger">로드 실패 (HTTP ' + xhr.status + ')</td></tr>');
     });
   }
 
@@ -158,21 +175,24 @@
     $('#btnCancelForm').on('click', hideForm);
     $('#btnSaveForm').on('click', saveForm);
 
+    // 수정: 클로저의 loadedDevices 에서 id 로 찾음 (안전)
     $tbody.on('click', '.btn-edit', function () {
-      var $tr = $(this).closest('tr');
-      // 다음 hidden row 에서 JSON 추출
-      var raw = $tr.next('[data-raw=true]').find('script').text();
-      try { showForm(JSON.parse(raw)); } catch (e) { alert('수정 데이터 파싱 실패'); }
+      var id = parseInt($(this).closest('tr').data('id'), 10);
+      var dev = loadedDevices.find(function (d) { return d.id === id; });
+      if (dev) {
+        showForm(dev);
+      } else {
+        alert('수정할 장비를 찾을 수 없습니다 (id=' + id + ')');
+      }
     });
 
     $tbody.on('click', '.btn-del', function () {
-      var $tr = $(this).closest('tr');
-      var id = $tr.data('id');
-      var deviceName = $tr.find('code').text();
-      deleteRow(id, deviceName);
+      var id = parseInt($(this).closest('tr').data('id'), 10);
+      var dev = loadedDevices.find(function (d) { return d.id === id; });
+      deleteRow(id, dev ? dev.device_name : '?');
     });
 
     // 모달 닫힐 때 폼 숨김
-    $modal.on('hidden.bs.modal', hideForm);
+    $modal.on('hidden.bs.modal', function () { $form.hide(); });
   });
 })();

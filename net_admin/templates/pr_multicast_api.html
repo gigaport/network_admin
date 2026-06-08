@@ -158,93 +158,231 @@
   <div id="back_data" data-submenu="{{ sub_menu|escapejs }}"></div>
 
   <!-- ──────────── 대상장비 관리 모달 (회원사-운영시세(API) 전용) ──────────── -->
+  <style>
+    #targetDevicesModal .modal-content {
+      border: 0;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    }
+    #targetDevicesModal .modal-header {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: #fff;
+      border: 0;
+      padding: 18px 24px;
+    }
+    #targetDevicesModal .modal-header .modal-title { font-weight: 600; letter-spacing:-0.01em; }
+    #targetDevicesModal .modal-header .btn-close {
+      filter: brightness(0) invert(1);
+      opacity: 0.85;
+    }
+    #targetDevicesModal .modal-body { background: #f9fafb; padding: 20px 24px; }
+    #targetDevicesModal .modal-footer { border-top: 1px solid #e5e7eb; padding: 12px 24px; }
+
+    #targetDevicesModal .mctd-toolbar {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom: 14px;
+    }
+    #targetDevicesModal .mctd-toolbar .mctd-help { color:#6b7280; font-size:0.78rem; }
+    #targetDevicesModal .mctd-toolbar .mctd-help code {
+      background: #eef2ff; color: #4338ca; padding: 1px 6px; border-radius: 4px; font-size: 0.78rem;
+    }
+    #targetDevicesModal .btn-add-device {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff; border: 0;
+      padding: 8px 14px; font-weight: 600; font-size: 0.84rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(16,185,129,0.30);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    #targetDevicesModal .btn-add-device:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16,185,129,0.40);
+    }
+
+    /* form card */
+    #targetDevicesModal #deviceFormBox {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    #targetDevicesModal #deviceFormBox .form-label {
+      font-size: 0.74rem; font-weight: 600; color: #6b7280;
+      margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    #targetDevicesModal #deviceFormBox .form-label .required { color: #ef4444; margin-left: 2px; }
+    #targetDevicesModal #deviceFormBox .form-control,
+    #targetDevicesModal #deviceFormBox .form-select {
+      border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.86rem;
+    }
+    #targetDevicesModal #deviceFormBox .form-control:focus,
+    #targetDevicesModal #deviceFormBox .form-select:focus {
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    #targetDevicesModal #deviceFormBox .form-switch .form-check-input {
+      width: 2.4em; height: 1.3em; cursor: pointer;
+    }
+    #targetDevicesModal #deviceFormBox .form-switch .form-check-input:checked {
+      background-color: #10b981; border-color: #10b981;
+    }
+
+    /* table */
+    #targetDevicesModal .mctd-table-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    #targetDevicesModal #targetDevicesTable {
+      margin: 0; font-size: 0.84rem;
+    }
+    #targetDevicesModal #targetDevicesTable thead th {
+      background: #f3f4f6; color: #374151;
+      font-size: 0.74rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 10px 12px;
+    }
+    #targetDevicesModal #targetDevicesTable tbody td {
+      padding: 10px 12px;
+      vertical-align: middle;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    #targetDevicesModal #targetDevicesTable tbody tr:last-child td { border-bottom: 0; }
+    #targetDevicesModal #targetDevicesTable tbody tr { transition: background 0.12s; }
+    #targetDevicesModal #targetDevicesTable tbody tr:hover { background: #f9fafb; }
+    #targetDevicesModal #targetDevicesTable code {
+      background: transparent; color: #0f172a; font-weight: 600; font-size: 0.83rem;
+    }
+
+    #targetDevicesModal .badge-on  { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    #targetDevicesModal .badge-off { background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+    #targetDevicesModal .badge-on,
+    #targetDevicesModal .badge-off {
+      padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 600;
+    }
+
+    #targetDevicesModal .row-action-btn {
+      width: 32px; height: 32px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 0; background: transparent; color: #6b7280;
+      border-radius: 8px;
+      transition: background 0.12s, color 0.12s;
+    }
+    #targetDevicesModal .row-action-btn:hover { background: #f3f4f6; color: #111827; }
+    #targetDevicesModal .row-action-btn.btn-del:hover { background: #fef2f2; color: #dc2626; }
+    #targetDevicesModal .row-action-btn.btn-edit:hover { background: #ecfdf5; color: #059669; }
+
+    #targetDevicesModal .empty-state {
+      padding: 40px 16px; text-align: center; color: #9ca3af;
+    }
+    #targetDevicesModal .empty-state i { font-size: 2rem; margin-bottom: 10px; display: block; color: #d1d5db; }
+  </style>
+
   <div class="modal fade" id="targetDevicesModal" tabindex="-1" aria-labelledby="targetDevicesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="targetDevicesModalLabel">멀티캐스트 대상장비 관리 (회원사-운영시세 API)</h5>
+          <div>
+            <h5 class="modal-title mb-0" id="targetDevicesModalLabel">
+              <i class="fas fa-server me-2"></i>멀티캐스트 대상장비 관리
+            </h5>
+            <small style="opacity:0.85; font-size:0.74rem;">회원사-운영시세 (API) · NXOS NX-API 수집 대상</small>
+          </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <small class="text-muted">DB(<code>multicast_target_devices</code>) 기반. 변경 후 다음 1분 수집 사이클부터 즉시 반영됩니다.</small>
-            <button type="button" class="btn btn-sm btn-primary" id="btnAddDevice">
+          <div class="mctd-toolbar">
+            <span class="mctd-help">
+              DB <code>multicast_target_devices</code> 기반 · 변경 즉시 다음 수집 사이클부터 반영
+            </span>
+            <button type="button" class="btn-add-device" id="btnAddDevice">
               <i class="fas fa-plus me-1"></i>장비 추가
             </button>
           </div>
 
-          <!-- 추가/수정 폼 (인라인) -->
-          <div id="deviceFormBox" class="card mb-3" style="display:none;">
-            <div class="card-body py-3">
-              <div class="row g-2">
-                <input type="hidden" id="f_id">
-                <div class="col-md-4">
-                  <label class="form-label form-label-sm mb-1">장비명 *</label>
-                  <input type="text" class="form-control form-control-sm" id="f_device_name" placeholder="예: me_3_px_ydkt_n_mpr_01">
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label form-label-sm mb-1">IP *</label>
-                  <input type="text" class="form-control form-control-sm" id="f_ip" placeholder="예: 50.10.3.21">
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label form-label-sm mb-1">OS</label>
-                  <select class="form-select form-select-sm" id="f_os">
-                    <option value="nxos" selected>nxos</option>
-                  </select>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label form-label-sm mb-1">Client VLAN</label>
-                  <input type="number" class="form-control form-control-sm" id="f_client_vlan" value="1100">
-                </div>
-                <div class="col-md-1 d-flex align-items-end">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="f_enabled" checked>
-                    <label class="form-check-label" for="f_enabled" style="font-size:0.85rem;">활성</label>
-                  </div>
-                </div>
-                <div class="col-md-8">
-                  <label class="form-label form-label-sm mb-1">시세상품 (쉼표 구분)</label>
-                  <input type="text" class="form-control form-control-sm" id="f_join_products" placeholder="예: NXTA-10,NXTA-COM">
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label form-label-sm mb-1">Groups</label>
-                  <input type="text" class="form-control form-control-sm" id="f_groups" placeholder="예: product">
-                </div>
-                <div class="col-md-12">
-                  <label class="form-label form-label-sm mb-1">설명 (선택)</label>
-                  <input type="text" class="form-control form-control-sm" id="f_description">
+          <!-- 추가/수정 폼 -->
+          <div id="deviceFormBox" style="display:none;">
+            <div class="d-flex align-items-center mb-3">
+              <h6 id="formTitle" class="mb-0" style="font-weight:600; color:#111827;">
+                <i class="fas fa-pen me-1 text-success"></i>장비 추가
+              </h6>
+            </div>
+            <input type="hidden" id="f_id">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">장비명 <span class="required">*</span></label>
+                <input type="text" class="form-control" id="f_device_name" placeholder="예: me_3_px_ydkt_n_mpr_01" autocomplete="off">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">IP <span class="required">*</span></label>
+                <input type="text" class="form-control" id="f_ip" placeholder="예: 50.10.3.21" autocomplete="off">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">OS</label>
+                <select class="form-select" id="f_os">
+                  <option value="nxos" selected>nxos</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Client VLAN</label>
+                <input type="number" class="form-control" id="f_client_vlan" value="1100">
+              </div>
+              <div class="col-md-1 d-flex align-items-end justify-content-center">
+                <div class="form-check form-switch mb-1">
+                  <input class="form-check-input" type="checkbox" id="f_enabled" checked>
                 </div>
               </div>
-              <div class="mt-2 d-flex gap-2 justify-content-end">
-                <button type="button" class="btn btn-sm btn-light" id="btnCancelForm">취소</button>
-                <button type="button" class="btn btn-sm btn-primary" id="btnSaveForm">저장</button>
+              <div class="col-md-8">
+                <label class="form-label">시세상품 (쉼표 구분)</label>
+                <input type="text" class="form-control" id="f_join_products" placeholder="예: NXTA-10,NXTA-COM">
               </div>
+              <div class="col-md-4">
+                <label class="form-label">Groups</label>
+                <input type="text" class="form-control" id="f_groups" placeholder="예: product">
+              </div>
+              <div class="col-12">
+                <label class="form-label">설명 (선택)</label>
+                <input type="text" class="form-control" id="f_description" placeholder="장비 위치, 비고 등">
+              </div>
+            </div>
+            <div class="mt-3 d-flex gap-2 justify-content-end">
+              <button type="button" class="btn btn-light" id="btnCancelForm">취소</button>
+              <button type="button" class="btn btn-add-device" id="btnSaveForm">
+                <i class="fas fa-check me-1"></i>저장
+              </button>
             </div>
           </div>
 
           <!-- 장비 목록 테이블 -->
-          <div class="table-responsive">
-            <table class="table table-sm table-hover align-middle" id="targetDevicesTable">
-              <thead class="table-light">
+          <div class="mctd-table-card">
+            <table class="table align-middle" id="targetDevicesTable">
+              <thead>
                 <tr>
-                  <th style="width:35px;">#</th>
+                  <th style="width:40px;">#</th>
                   <th>장비명</th>
-                  <th>IP</th>
-                  <th>OS</th>
+                  <th style="width:120px;">IP</th>
+                  <th style="width:70px;">OS</th>
                   <th>시세상품</th>
-                  <th style="width:80px;">VLAN</th>
-                  <th>Groups</th>
-                  <th style="width:70px;">활성</th>
-                  <th style="width:120px;text-align:center;">조작</th>
+                  <th style="width:80px;text-align:center;">VLAN</th>
+                  <th style="width:100px;">Groups</th>
+                  <th style="width:70px;text-align:center;">상태</th>
+                  <th style="width:90px;text-align:center;">조작</th>
                 </tr>
               </thead>
               <tbody id="targetDevicesTbody">
-                <tr><td colspan="9" class="text-center text-muted py-3">로딩 중...</td></tr>
+                <tr><td colspan="9" class="empty-state"><i class="fas fa-spinner fa-spin"></i>로딩 중...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
         <div class="modal-footer">
+          <span id="mctdRowCount" style="font-size:0.78rem; color:#6b7280; margin-right:auto;"></span>
           <button type="button" class="btn btn-light" data-bs-dismiss="modal">닫기</button>
         </div>
       </div>
