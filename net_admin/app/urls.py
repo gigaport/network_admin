@@ -20,4 +20,6 @@ urlpatterns = [
     path('create_netbox_device', views.create_netbox_device, name='create_netbox_device'),
     path('update_netbox_device/<int:device_id>', views.update_netbox_device, name='update_netbox_device'),
     path('delete_netbox_device/<int:device_id>', views.delete_netbox_device, name='delete_netbox_device'),
+    path('set_netbox_device_additional_info/<int:device_id>', views.set_netbox_device_additional_info, name='set_netbox_device_additional_info'),
+    path('get_device_fee_options', views.get_device_fee_options, name='get_device_fee_options'),
 ]

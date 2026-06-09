@@ -5257,12 +5257,53 @@ async def GetNetboxDevices(request: Request):
 
         # site_id → region 매핑으로 각 device 에 region 필드 주입
         site_region_map = _get_netbox_site_region_map()
+
+        # additional_device_info + device_fee_schedule LEFT JOIN 결과 매핑
+        # (한 번에 모두 가져와 in-memory dict 로 lookup)
+        fee_map = {}
+        try:
+            with get_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute("""
+                        SELECT adi.device_id,
+                               adi.fee_code,
+                               dfs.id          AS fee_id,
+                               dfs.usage       AS fee_usage,
+                               dfs.phase       AS fee_phase,
+                               dfs.model       AS fee_model,
+                               dfs.description AS fee_description,
+                               dfs.price       AS fee_price
+                        FROM additional_device_info adi
+                        LEFT JOIN device_fee_schedule dfs ON dfs.fee_code = adi.fee_code
+                    """)
+                    for r in cur.fetchall():
+                        fee_map[r["device_id"]] = {
+                            "fee_code": r["fee_code"],
+                            "fee_info": {
+                                "id": r["fee_id"],
+                                "usage": r["fee_usage"],
+                                "phase": r["fee_phase"],
+                                "model": r["fee_model"],
+                                "description": r["fee_description"],
+                                "price": r["fee_price"],
+                            } if r["fee_id"] else None,
+                        }
+        except Exception as e:
+            logger.error(f"additional_device_info 조회 실패 (계속 진행): {e}")
+
         for dev in data.get("results", []) or []:
             site = dev.get("site") or {}
             site_id = site.get("id")
             dev["region"] = site_region_map.get(site_id) if site_id else None
 
-        logger.info(f"NetBox 디바이스 조회 완료: {data.get('count', 0)}건 (region enrich)")
+            adi = fee_map.get(dev.get("id"))
+            dev["fee_code"] = adi["fee_code"] if adi else None
+            dev["fee_info"] = adi["fee_info"] if adi else None
+
+        logger.info(
+            f"NetBox 디바이스 조회 완료: {data.get('count', 0)}건 "
+            f"(region/fee enrich, fee 매핑 {len(fee_map)}건)"
+        )
         return {"success": True, "data": data}
     except Exception as e:
         logger.error(f"NetBox 디바이스 조회 실패: {e}")
@@ -5455,6 +5496,50 @@ async def DeleteNetboxDevice(device_id: int):
     except Exception as e:
         logger.error(f"NetBox 디바이스 삭제 실패: {e}")
         raise HTTPException(status_code=502, detail=f"NetBox API error: {str(e)}")
+
+
+# ─── NetBox 디바이스 부가정보 (요금기준 등) Upsert/Delete ──────────────────
+
+
+@router.put("/netbox/devices/{device_id}/additional_info")
+async def UpsertNetboxAdditionalInfo(device_id: int, request: Request):
+    """NetBox 디바이스 부가정보(fee_code 등) upsert.
+
+    body: { "fee_code": "PR_ORD_P1_FW" }  (null 또는 빈문자열이면 fee_code 해제)
+    """
+    try:
+        data = await request.json()
+        fee_code = data.get("fee_code")
+        fee_code = fee_code.strip() if isinstance(fee_code, str) and fee_code.strip() else None
+
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO additional_device_info (device_id, fee_code)
+                    VALUES (%s, %s)
+                    ON CONFLICT (device_id) DO UPDATE
+                        SET fee_code = EXCLUDED.fee_code,
+                            updated_at = NOW()
+                """, (device_id, fee_code))
+            conn.commit()
+        return {"success": True, "device_id": device_id, "fee_code": fee_code}
+    except Exception as e:
+        logger.error(f"NetBox 디바이스 부가정보 저장 실패 (id={device_id}): {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.delete("/netbox/devices/{device_id}/additional_info")
+async def DeleteNetboxAdditionalInfo(device_id: int):
+    """NetBox 디바이스 부가정보 삭제 (fee_code 매핑 제거)"""
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM additional_device_info WHERE device_id = %s", (device_id,))
+            conn.commit()
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"NetBox 디바이스 부가정보 삭제 실패 (id={device_id}): {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
 # ==================== 통합검색 ====================

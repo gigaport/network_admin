@@ -95,14 +95,14 @@
                     text: '<i class="fa-solid fa-file-excel me-2"></i>Excel',
                     className: 'btn btn-success btn-sm',
                     title: 'NetBox_Devices_' + new Date().toISOString().slice(0, 10),
-                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10], modifier: { page: 'all' } }
+                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10,11,12], modifier: { page: 'all' } }
                 },
                 {
                     extend: 'csv',
                     text: '<i class="fa-solid fa-file-csv me-2"></i>CSV',
                     className: 'btn btn-info btn-sm',
                     title: 'NetBox_Devices_' + new Date().toISOString().slice(0, 10),
-                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10], modifier: { page: 'all' } }
+                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10,11,12], modifier: { page: 'all' } }
                 }
             ],
             ajax: {
@@ -121,26 +121,35 @@
                 }
             },
             columns: [
-                { data: 'name', defaultContent: '-' },
-                { data: 'status', defaultContent: '-' },
-                { data: 'role', defaultContent: '-' },
-                { data: 'device_type', defaultContent: '-' },
-                { data: 'device_type', defaultContent: '-' },
-                { data: 'region', defaultContent: '-' },
-                { data: 'site', defaultContent: '-' },
-                { data: 'location', defaultContent: '-' },
-                { data: 'rack', defaultContent: '-' },
-                { data: 'primary_ip', defaultContent: '-' },
-                { data: 'interface_count', defaultContent: '0' },
-                { data: null, defaultContent: '' }
+                { data: 'id', defaultContent: '-' },                  // 0: NetBox ID
+                { data: 'name', defaultContent: '-' },                // 1: 디바이스명
+                { data: 'status', defaultContent: '-' },              // 2: 상태
+                { data: 'role', defaultContent: '-' },                // 3: 역할
+                { data: 'device_type', defaultContent: '-' },         // 4: 제조사
+                { data: 'device_type', defaultContent: '-' },         // 5: 모델
+                { data: null, defaultContent: '-' },                  // 6: 요금기준 (fee_info)
+                { data: 'region', defaultContent: '-' },              // 7: 리전
+                { data: 'site', defaultContent: '-' },                // 8: 사이트
+                { data: 'location', defaultContent: '-' },            // 9: 위치
+                { data: 'rack', defaultContent: '-' },                // 10: 랙
+                { data: 'primary_ip', defaultContent: '-' },          // 11: Primary IP
+                { data: 'interface_count', defaultContent: '0' },     // 12: IF수
+                { data: null, defaultContent: '' }                    // 13: 관리
             ],
             columnDefs: [
                 {
-                    targets: 0, className: 'py-2 align-middle',
+                    targets: 0, className: 'text-center py-2 align-middle',
+                    render: function(data) {
+                        if (data == null) return '-';
+                        return '<span style="font-family:ui-monospace,monospace; font-size:0.78rem; color:#64748b;">' + esc(data) + '</span>';
+                    }
+                },
+                {
+                    targets: 1, className: 'py-2 align-middle',
                     render: function(data) { return data ? '<span class="fw-semibold">' + esc(data) + '</span>' : '-'; }
                 },
                 {
-                    targets: 1, className: 'text-center py-2 align-middle',
+                    targets: 2, className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data || !data.value) return '-';
                         var s = STATUS_COLORS[data.value] || { bg: '#f3f4f6', color: '#6b7280', label: data.label };
@@ -148,7 +157,7 @@
                     }
                 },
                 {
-                    targets: 2, className: 'text-center py-2 align-middle',
+                    targets: 3, className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data || !data.name) return '-';
                         var r = ROLE_COLORS[data.name] || { bg: '#f3f4f6', color: '#6b7280' };
@@ -156,28 +165,35 @@
                     }
                 },
                 {
-                    targets: 3, className: 'text-center py-2 align-middle',
+                    targets: 4, className: 'text-center py-2 align-middle',
                     render: function(data) { return (data && data.manufacturer && data.manufacturer.name) ? esc(data.manufacturer.name) : '-'; }
                 },
                 {
-                    targets: 4, className: 'text-center py-2 align-middle',
+                    targets: 5, className: 'text-center py-2 align-middle',
                     render: function(data) { return (data && data.model) ? esc(data.model) : '-'; }
                 },
                 {
-                    // 신규: 리전 (region.name, FastAPI 가 site.region 으로부터 enrich)
-                    targets: 5, className: 'text-center py-2 align-middle',
+                    // 요금기준 (fee_code + price 표시, fee_info 없으면 - )
+                    targets: 6, className: 'text-center py-2 align-middle',
+                    render: function(data, type, row) {
+                        if (!row.fee_code) return '<span class="text-muted">-</span>';
+                        var fi = row.fee_info || {};
+                        var label = row.fee_code;
+                        var sub = '';
+                        if (fi.price != null) sub = '<span style="font-size:0.7rem; color:#64748b;">' + Number(fi.price).toLocaleString() + '원</span>';
+                        return '<div style="display:flex; flex-direction:column; align-items:center; gap:2px;">'
+                            + '<span style="background:#fef3c7;color:#92400e;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:4px;font-family:ui-monospace,monospace;">' + esc(label) + '</span>'
+                            + sub
+                            + '</div>';
+                    }
+                },
+                {
+                    // 리전
+                    targets: 7, className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data || !data.name) return '-';
                         return '<span class="badge" style="background:#eef2ff;color:#4338ca;font-size:0.72rem;font-weight:600;">' + esc(data.name) + '</span>';
                     }
-                },
-                {
-                    targets: 6, className: 'text-center py-2 align-middle',
-                    render: function(data) { return (data && data.name) ? esc(data.name) : '-'; }
-                },
-                {
-                    targets: 7, className: 'text-center py-2 align-middle',
-                    render: function(data) { return (data && data.name) ? esc(data.name) : '-'; }
                 },
                 {
                     targets: 8, className: 'text-center py-2 align-middle',
@@ -185,17 +201,25 @@
                 },
                 {
                     targets: 9, className: 'text-center py-2 align-middle',
+                    render: function(data) { return (data && data.name) ? esc(data.name) : '-'; }
+                },
+                {
+                    targets: 10, className: 'text-center py-2 align-middle',
+                    render: function(data) { return (data && data.name) ? esc(data.name) : '-'; }
+                },
+                {
+                    targets: 11, className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data || !data.address) return '-';
                         return '<code style="font-size:0.78rem;">' + esc(data.address) + '</code>';
                     }
                 },
                 {
-                    targets: 10, className: 'text-center py-2 align-middle',
+                    targets: 12, className: 'text-center py-2 align-middle',
                     render: function(data) { return (data !== null && data !== undefined) ? data : '0'; }
                 },
                 {
-                    targets: 11, className: 'text-center py-2 align-middle', orderable: false, searchable: false,
+                    targets: 13, className: 'text-center py-2 align-middle', orderable: false, searchable: false,
                     render: function(data, type, row) {
                         return '<button class="btn-edit" title="수정" data-id="' + row.id + '" style="width:26px; height:26px; border:none; border-radius:6px; background:#f1f5f9; color:#64748b; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; margin-right:4px; transition:all 0.15s ease;" onmouseenter="this.style.background=\'#dbeafe\';this.style.color=\'#3b82f6\'" onmouseleave="this.style.background=\'#f1f5f9\';this.style.color=\'#64748b\'"><i class="fas fa-pen" style="font-size:0.6rem;"></i></button>' +
                                '<button class="btn-delete" title="삭제" data-id="' + row.id + '" style="width:26px; height:26px; border:none; border-radius:6px; background:#f1f5f9; color:#64748b; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; transition:all 0.15s ease;" onmouseenter="this.style.background=\'#fee2e2\';this.style.color=\'#ef4444\'" onmouseleave="this.style.background=\'#f1f5f9\';this.style.color=\'#64748b\'"><i class="fas fa-trash" style="font-size:0.6rem;"></i></button>';
@@ -424,11 +448,20 @@
         var html = '<div class="row g-4">';
         html += '<div class="col-md-6">';
         html += '<h6 class="fw-bold mb-3" style="font-size:0.85rem;"><i class="fas fa-info-circle me-2 text-primary"></i>기본 정보</h6>';
+        html += infoRow('NetBox ID', d.id);
         html += infoRow('디바이스명', d.name);
         html += infoRow('상태', statusBadge, true);
         html += infoRow('역할', d.role ? d.role.name : '-');
         html += infoRow('제조사', d.device_type ? (d.device_type.manufacturer ? d.device_type.manufacturer.name : '-') : '-');
         html += infoRow('모델', d.device_type ? d.device_type.model : '-');
+        var feeDisplay = '-';
+        if (d.fee_code) {
+            var fi = d.fee_info || {};
+            feeDisplay = '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-family:ui-monospace,monospace;font-size:0.78rem;">'
+                       + esc(d.fee_code) + '</span>';
+            if (fi.price != null) feeDisplay += ' <span style="font-size:0.78rem;color:#64748b;">(' + Number(fi.price).toLocaleString() + '원)</span>';
+        }
+        html += infoRow('요금기준', feeDisplay, true);
         html += infoRow('시리얼', d.serial || '-');
         html += infoRow('설명', d.description || '-');
         html += '</div>';
@@ -469,13 +502,37 @@
             '<span class="fw-semibold">' + (isHtml ? value : esc(String(value || '-'))) + '</span></div>';
     }
 
+    // ========== device_fee_schedule 옵션 캐시 ==========
+    var _feeOptions = null;
+    function loadFeeOptions(cb) {
+        if (_feeOptions) { if (cb) cb(_feeOptions); return; }
+        fetch('/netbox_devices/get_device_fee_options')
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                _feeOptions = (d && d.success && d.data) ? d.data : [];
+                if (cb) cb(_feeOptions);
+            }).catch(function() { _feeOptions = []; if (cb) cb([]); });
+    }
+    function renderFeeSelect(currentCode) {
+        var sel = $('#form_fee_code');
+        sel.empty().append('<option value="">선택 안 함</option>');
+        (_feeOptions || []).forEach(function(o) {
+            var label = o.fee_code + ' — ' + (o.usage || '') + ' / ' + (o.model || '-') + ' (' + Number(o.price || 0).toLocaleString() + '원)';
+            var opt = $('<option></option>').val(o.fee_code).text(label);
+            sel.append(opt);
+        });
+        if (currentCode) sel.val(currentCode);
+    }
+
     // ========== CRUD: Create ==========
     window.showCreateModal = function() {
         _formMode = 'create';
         $('#formModalTitle').text('디바이스 추가');
         $('#deviceForm')[0].reset();
         $('#form_device_id').val('');
+        $('#form_netbox_id').val('');
         $('#form_status').val('active');
+        loadFeeOptions(function() { renderFeeSelect(''); });
         loadFormDropdowns();
         new bootstrap.Modal(document.getElementById('deviceFormModal')).show();
     };
@@ -485,12 +542,16 @@
         _formMode = 'edit';
         $('#formModalTitle').text('디바이스 수정');
         $('#form_device_id').val(d.id);
+        $('#form_netbox_id').val(d.id);
         $('#form_name').val(d.name || '');
         $('#form_status').val(d.status ? d.status.value : 'active');
         $('#form_serial').val(d.serial || '');
         $('#form_description').val(d.description || '');
         $('#form_position').val(d.position || '');
         $('#form_face').val(d.face && d.face.value ? d.face.value : '');
+
+        // 요금기준 select 로드 + 현재값 세팅
+        loadFeeOptions(function() { renderFeeSelect(d.fee_code || ''); });
 
         loadFormDropdowns(function() {
             // Set role
@@ -567,9 +628,24 @@
         .then(function(resp) {
             $('#btnSaveDevice').prop('disabled', false).html('<i class="fas fa-save me-1"></i>저장');
             if (resp.body.success) {
-                showAlert(_formMode === 'edit' ? '수정 완료' : '등록 완료', 'success');
-                bootstrap.Modal.getInstance(document.getElementById('deviceFormModal')).hide();
-                refreshTable();
+                // NetBox 저장 성공 후 fee_code 도 별도 DB 에 upsert
+                var feeCode = $('#form_fee_code').val();
+                var savedId = (_formMode === 'edit')
+                    ? parseInt($('#form_device_id').val())
+                    : (resp.body.data ? resp.body.data.id : null);
+                var feeReq = (savedId)
+                    ? fetch('/netbox_devices/set_netbox_device_additional_info/' + savedId, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fee_code: feeCode || null })
+                      }).then(function(r){ return r.json(); }).catch(function(){ return null; })
+                    : Promise.resolve(null);
+
+                feeReq.then(function() {
+                    showAlert(_formMode === 'edit' ? '수정 완료' : '등록 완료', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('deviceFormModal')).hide();
+                    refreshTable();
+                });
             } else {
                 var errMsg = formatError(resp.body.detail || resp.body.error || '저장 실패');
                 showAlert(errMsg, 'danger');

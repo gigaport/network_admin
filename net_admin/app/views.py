@@ -122,6 +122,45 @@ def delete_netbox_device(request, device_id):
         logger.error(f"NetBox 디바이스 삭제 실패: {e}")
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def set_netbox_device_additional_info(request, device_id):
+    """NetBox 디바이스 부가정보(fee_code) upsert 프록시.
+
+    Django 측에서는 POST 만 받아 FastAPI 의 PUT 으로 전달 (XHR 호환).
+    body: { "fee_code": "..." }  또는 빈 dict 면 해제 의도로 fee_code=null
+    """
+    try:
+        body = json.loads(request.body or b"{}")
+        response = requests.put(
+            f"{FASTAPI_BASE_URL}/api/v1/network/netbox/devices/{device_id}/additional_info",
+            json=body, timeout=15,
+        )
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        try:
+            err = response.json()
+            return JsonResponse({"success": False, "error": err.get("detail", response.text)}, status=response.status_code)
+        except Exception:
+            return JsonResponse({"success": False, "error": response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"NetBox 디바이스 부가정보 저장 실패: {e}")
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+def get_device_fee_options(request):
+    """수정 모달의 fee_code select 옵션용 — device_fee_schedule 전체 조회 프록시"""
+    try:
+        response = requests.get(f"{FASTAPI_BASE_URL}/api/v1/network/device_fee_schedule", timeout=10)
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        return JsonResponse({"success": False, "error": response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"device_fee_schedule 조회 실패: {e}")
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
 def unified_search(request):
     try:
         q = request.GET.get('q', '')
