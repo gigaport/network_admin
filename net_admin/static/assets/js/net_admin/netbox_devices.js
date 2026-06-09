@@ -95,14 +95,14 @@
                     text: '<i class="fa-solid fa-file-excel me-2"></i>Excel',
                     className: 'btn btn-success btn-sm',
                     title: 'NetBox_Devices_' + new Date().toISOString().slice(0, 10),
-                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9], modifier: { page: 'all' } }
+                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10], modifier: { page: 'all' } }
                 },
                 {
                     extend: 'csv',
                     text: '<i class="fa-solid fa-file-csv me-2"></i>CSV',
                     className: 'btn btn-info btn-sm',
                     title: 'NetBox_Devices_' + new Date().toISOString().slice(0, 10),
-                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9], modifier: { page: 'all' } }
+                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10], modifier: { page: 'all' } }
                 }
             ],
             ajax: {
@@ -126,6 +126,7 @@
                 { data: 'role', defaultContent: '-' },
                 { data: 'device_type', defaultContent: '-' },
                 { data: 'device_type', defaultContent: '-' },
+                { data: 'region', defaultContent: '-' },
                 { data: 'site', defaultContent: '-' },
                 { data: 'location', defaultContent: '-' },
                 { data: 'rack', defaultContent: '-' },
@@ -163,8 +164,12 @@
                     render: function(data) { return (data && data.model) ? esc(data.model) : '-'; }
                 },
                 {
+                    // 신규: 리전 (region.name, FastAPI 가 site.region 으로부터 enrich)
                     targets: 5, className: 'text-center py-2 align-middle',
-                    render: function(data) { return (data && data.name) ? esc(data.name) : '-'; }
+                    render: function(data) {
+                        if (!data || !data.name) return '-';
+                        return '<span class="badge" style="background:#eef2ff;color:#4338ca;font-size:0.72rem;font-weight:600;">' + esc(data.name) + '</span>';
+                    }
                 },
                 {
                     targets: 6, className: 'text-center py-2 align-middle',
@@ -176,17 +181,21 @@
                 },
                 {
                     targets: 8, className: 'text-center py-2 align-middle',
+                    render: function(data) { return (data && data.name) ? esc(data.name) : '-'; }
+                },
+                {
+                    targets: 9, className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data || !data.address) return '-';
                         return '<code style="font-size:0.78rem;">' + esc(data.address) + '</code>';
                     }
                 },
                 {
-                    targets: 9, className: 'text-center py-2 align-middle',
+                    targets: 10, className: 'text-center py-2 align-middle',
                     render: function(data) { return (data !== null && data !== undefined) ? data : '0'; }
                 },
                 {
-                    targets: 10, className: 'text-center py-2 align-middle', orderable: false, searchable: false,
+                    targets: 11, className: 'text-center py-2 align-middle', orderable: false, searchable: false,
                     render: function(data, type, row) {
                         return '<button class="btn-edit" title="수정" data-id="' + row.id + '" style="width:26px; height:26px; border:none; border-radius:6px; background:#f1f5f9; color:#64748b; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; margin-right:4px; transition:all 0.15s ease;" onmouseenter="this.style.background=\'#dbeafe\';this.style.color=\'#3b82f6\'" onmouseleave="this.style.background=\'#f1f5f9\';this.style.color=\'#64748b\'"><i class="fas fa-pen" style="font-size:0.6rem;"></i></button>' +
                                '<button class="btn-delete" title="삭제" data-id="' + row.id + '" style="width:26px; height:26px; border:none; border-radius:6px; background:#f1f5f9; color:#64748b; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; transition:all 0.15s ease;" onmouseenter="this.style.background=\'#fee2e2\';this.style.color=\'#ef4444\'" onmouseleave="this.style.background=\'#f1f5f9\';this.style.color=\'#64748b\'"><i class="fas fa-trash" style="font-size:0.6rem;"></i></button>';
@@ -425,6 +434,7 @@
         html += '</div>';
         html += '<div class="col-md-6">';
         html += '<h6 class="fw-bold mb-3" style="font-size:0.85rem;"><i class="fas fa-map-marker-alt me-2 text-success"></i>위치 정보</h6>';
+        html += infoRow('리전', d.region ? d.region.name : '-');
         html += infoRow('사이트', d.site ? (d.site.name + (d.site.description ? ' (' + d.site.description + ')' : '')) : '-');
         html += infoRow('위치', d.location ? d.location.name : '-');
         html += infoRow('랙', d.rack ? d.rack.display : '-');

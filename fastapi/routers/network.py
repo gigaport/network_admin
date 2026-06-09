@@ -5194,9 +5194,51 @@ NETBOX_TOKEN = os.environ.get('NETBOX_TOKEN', '')
 NETBOX_HEADERS = {"Authorization": f"Token {NETBOX_TOKEN}", "Accept": "application/json"}
 
 
+# ── site → region 매핑 캐시 (1시간 TTL) ───────────────────────────────────
+# NetBox /api/dcim/devices 응답에는 region 이 직접 없고 site 단위로만 region 이 매핑되어
+# 있어 매 호출마다 sites 전체를 조회해 site_id → region 매핑을 메모리에 캐시한다.
+_NETBOX_SITE_REGION_CACHE = {"map": {}, "expires_at": 0}
+_NETBOX_SITE_REGION_TTL = 3600  # 1시간
+
+
+def _get_netbox_site_region_map():
+    """NetBox 의 모든 site 를 가져와 {site_id: region_dict} 매핑 반환. 1시간 캐시."""
+    import time as _time
+    now = _time.time()
+    if _NETBOX_SITE_REGION_CACHE["expires_at"] > now and _NETBOX_SITE_REGION_CACHE["map"]:
+        return _NETBOX_SITE_REGION_CACHE["map"]
+
+    mapping = {}
+    try:
+        url = f"{NETBOX_URL}/api/dcim/sites/?limit=500"
+        while url:
+            resp = http_requests.get(url, headers=NETBOX_HEADERS, timeout=10)
+            resp.raise_for_status()
+            payload = resp.json()
+            for s in payload.get("results", []):
+                region = s.get("region") or None
+                mapping[s["id"]] = {
+                    "id": region["id"] if region else None,
+                    "name": region["name"] if region else None,
+                    "slug": region["slug"] if region else None,
+                } if region else None
+            url = payload.get("next")  # NetBox pagination
+        _NETBOX_SITE_REGION_CACHE["map"] = mapping
+        _NETBOX_SITE_REGION_CACHE["expires_at"] = now + _NETBOX_SITE_REGION_TTL
+        logger.info(f"NetBox site→region 매핑 캐시 갱신: {len(mapping)}개 site")
+    except Exception as e:
+        logger.error(f"NetBox site→region 매핑 갱신 실패: {e}")
+        # 실패해도 이전 캐시 (있다면) 유지
+    return mapping
+
+
 @router.get("/netbox/devices")
 async def GetNetboxDevices(request: Request):
-    """NetBox 디바이스 목록 조회 (프록시)"""
+    """NetBox 디바이스 목록 조회 (프록시)
+
+    각 device.site 의 region 정보를 site→region 캐시로 매핑하여
+    device 응답의 최상위에 `region` 필드(id/name/slug) 를 추가한다.
+    """
     logger.info("NetBox 디바이스 목록 조회")
     try:
         params = list(request.query_params.multi_items())
@@ -5212,7 +5254,15 @@ async def GetNetboxDevices(request: Request):
         )
         resp.raise_for_status()
         data = resp.json()
-        logger.info(f"NetBox 디바이스 조회 완료: {data.get('count', 0)}건")
+
+        # site_id → region 매핑으로 각 device 에 region 필드 주입
+        site_region_map = _get_netbox_site_region_map()
+        for dev in data.get("results", []) or []:
+            site = dev.get("site") or {}
+            site_id = site.get("id")
+            dev["region"] = site_region_map.get(site_id) if site_id else None
+
+        logger.info(f"NetBox 디바이스 조회 완료: {data.get('count', 0)}건 (region enrich)")
         return {"success": True, "data": data}
     except Exception as e:
         logger.error(f"NetBox 디바이스 조회 실패: {e}")
