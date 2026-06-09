@@ -272,6 +272,23 @@
             var data = devicesTable.rows().data().toArray().find(function(r) { return r.id === id; });
             if (data) deleteDevice(data);
         });
+
+        // 상세 모달 → 수정 / 삭제 버튼
+        $(document).on('click', '#btnDetailToEdit', function() {
+            if (!_currentDetailDevice) return;
+            var d = _currentDetailDevice;
+            var detailModal = bootstrap.Modal.getInstance(document.getElementById('deviceDetailModal'));
+            if (detailModal) detailModal.hide();
+            // 상세 모달 닫힌 뒤(transition 종료) 수정 모달 열기
+            $('#deviceDetailModal').one('hidden.bs.modal', function() { showEditModal(d); });
+        });
+        $(document).on('click', '#btnDetailDelete', function() {
+            if (!_currentDetailDevice) return;
+            var d = _currentDetailDevice;
+            var detailModal = bootstrap.Modal.getInstance(document.getElementById('deviceDetailModal'));
+            if (detailModal) detailModal.hide();
+            $('#deviceDetailModal').one('hidden.bs.modal', function() { deleteDevice(d); });
+        });
     }
 
     // ========== Summary ==========
@@ -437,7 +454,9 @@
     }
 
     // ========== Detail Modal ==========
+    var _currentDetailDevice = null;  // 상세 모달에서 수정/삭제 버튼이 참조
     function showDetailModal(d) {
+        _currentDetailDevice = d;
         var title = d.name || '디바이스 상세';
         $('#modalTitle').text(title);
         var statusBadge = '-';
