@@ -95,14 +95,14 @@
                     text: '<i class="fa-solid fa-file-excel me-2"></i>Excel',
                     className: 'btn btn-success btn-sm',
                     title: 'NetBox_Devices_' + new Date().toISOString().slice(0, 10),
-                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10,11,12], modifier: { page: 'all' } }
+                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10,11,12,13], modifier: { page: 'all' } }
                 },
                 {
                     extend: 'csv',
                     text: '<i class="fa-solid fa-file-csv me-2"></i>CSV',
                     className: 'btn btn-info btn-sm',
                     title: 'NetBox_Devices_' + new Date().toISOString().slice(0, 10),
-                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10,11,12], modifier: { page: 'all' } }
+                    exportOptions: { columns: [0,1,2,3,4,5,6,7,8,9,10,11,12,13], modifier: { page: 'all' } }
                 }
             ],
             ajax: {
@@ -127,14 +127,15 @@
                 { data: 'role', defaultContent: '-' },                // 3: 역할
                 { data: 'device_type', defaultContent: '-' },         // 4: 제조사
                 { data: 'device_type', defaultContent: '-' },         // 5: 모델
-                { data: null, defaultContent: '-' },                  // 6: 요금기준 (fee_info)
-                { data: 'region', defaultContent: '-' },              // 7: 리전
-                { data: 'site', defaultContent: '-' },                // 8: 사이트
-                { data: 'location', defaultContent: '-' },            // 9: 위치
-                { data: 'rack', defaultContent: '-' },                // 10: 랙
-                { data: 'primary_ip', defaultContent: '-' },          // 11: Primary IP
-                { data: 'interface_count', defaultContent: '0' },     // 12: IF수
-                { data: null, defaultContent: '' }                    // 13: 관리
+                { data: null, defaultContent: '-' },                  // 6: 요금기준 (fee_code)
+                { data: null, defaultContent: '-' },                  // 7: 이용요금 (fee_info.price)
+                { data: 'region', defaultContent: '-' },              // 8: 리전
+                { data: 'site', defaultContent: '-' },                // 9: 사이트
+                { data: 'location', defaultContent: '-' },            // 10: 위치
+                { data: 'rack', defaultContent: '-' },                // 11: 랙
+                { data: 'primary_ip', defaultContent: '-' },          // 12: Primary IP
+                { data: 'interface_count', defaultContent: '0' },     // 13: IF수
+                { data: null, defaultContent: '' }                    // 14: 관리
             ],
             columnDefs: [
                 {
@@ -173,31 +174,33 @@
                     render: function(data) { return (data && data.model) ? esc(data.model) : '-'; }
                 },
                 {
-                    // 요금기준 (fee_code + price 표시, fee_info 없으면 - )
+                    // 요금기준 (fee_code 만)
                     targets: 6, className: 'text-center py-2 align-middle',
+                    type: 'string',
                     render: function(data, type, row) {
+                        if (type === 'sort' || type === 'type' || type === 'filter') return row.fee_code || '';
                         if (!row.fee_code) return '<span class="text-muted">-</span>';
-                        var fi = row.fee_info || {};
-                        var label = row.fee_code;
-                        var sub = '';
-                        if (fi.price != null) sub = '<span style="font-size:0.7rem; color:#64748b;">' + Number(fi.price).toLocaleString() + '원</span>';
-                        return '<div style="display:flex; flex-direction:column; align-items:center; gap:2px;">'
-                            + '<span style="background:#fef3c7;color:#92400e;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:4px;font-family:ui-monospace,monospace;">' + esc(label) + '</span>'
-                            + sub
-                            + '</div>';
+                        return '<span style="background:#fef3c7;color:#92400e;font-size:0.72rem;font-weight:600;padding:2px 10px;border-radius:4px;font-family:ui-monospace,monospace;">' + esc(row.fee_code) + '</span>';
+                    }
+                },
+                {
+                    // 이용요금 (fee_info.price)
+                    targets: 7, className: 'text-end py-2 align-middle pe-3',
+                    type: 'num',
+                    render: function(data, type, row) {
+                        var price = row.fee_info ? row.fee_info.price : null;
+                        if (type === 'sort' || type === 'type' || type === 'filter') return price == null ? 0 : price;
+                        if (price == null) return '<span class="text-muted">-</span>';
+                        return '<span style="font-weight:600; color:#0f172a; font-size:0.82rem;">' + Number(price).toLocaleString() + '<span style="font-weight:400; color:#94a3b8; font-size:0.7rem; margin-left:2px;">원</span></span>';
                     }
                 },
                 {
                     // 리전
-                    targets: 7, className: 'text-center py-2 align-middle',
+                    targets: 8, className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data || !data.name) return '-';
                         return '<span class="badge" style="background:#eef2ff;color:#4338ca;font-size:0.72rem;font-weight:600;">' + esc(data.name) + '</span>';
                     }
-                },
-                {
-                    targets: 8, className: 'text-center py-2 align-middle',
-                    render: function(data) { return (data && data.name) ? esc(data.name) : '-'; }
                 },
                 {
                     targets: 9, className: 'text-center py-2 align-middle',
@@ -209,17 +212,21 @@
                 },
                 {
                     targets: 11, className: 'text-center py-2 align-middle',
+                    render: function(data) { return (data && data.name) ? esc(data.name) : '-'; }
+                },
+                {
+                    targets: 12, className: 'text-center py-2 align-middle',
                     render: function(data) {
                         if (!data || !data.address) return '-';
                         return '<code style="font-size:0.78rem;">' + esc(data.address) + '</code>';
                     }
                 },
                 {
-                    targets: 12, className: 'text-center py-2 align-middle',
+                    targets: 13, className: 'text-center py-2 align-middle',
                     render: function(data) { return (data !== null && data !== undefined) ? data : '0'; }
                 },
                 {
-                    targets: 13, className: 'text-center py-2 align-middle', orderable: false, searchable: false,
+                    targets: 14, className: 'text-center py-2 align-middle', orderable: false, searchable: false,
                     render: function(data, type, row) {
                         return '<button class="btn-edit" title="수정" data-id="' + row.id + '" style="width:26px; height:26px; border:none; border-radius:6px; background:#f1f5f9; color:#64748b; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; margin-right:4px; transition:all 0.15s ease;" onmouseenter="this.style.background=\'#dbeafe\';this.style.color=\'#3b82f6\'" onmouseleave="this.style.background=\'#f1f5f9\';this.style.color=\'#64748b\'"><i class="fas fa-pen" style="font-size:0.6rem;"></i></button>' +
                                '<button class="btn-delete" title="삭제" data-id="' + row.id + '" style="width:26px; height:26px; border:none; border-radius:6px; background:#f1f5f9; color:#64748b; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; transition:all 0.15s ease;" onmouseenter="this.style.background=\'#fee2e2\';this.style.color=\'#ef4444\'" onmouseleave="this.style.background=\'#f1f5f9\';this.style.color=\'#64748b\'"><i class="fas fa-trash" style="font-size:0.6rem;"></i></button>';
@@ -475,12 +482,15 @@
         html += infoRow('모델', d.device_type ? d.device_type.model : '-');
         var feeDisplay = '-';
         if (d.fee_code) {
-            var fi = d.fee_info || {};
             feeDisplay = '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-family:ui-monospace,monospace;font-size:0.78rem;">'
                        + esc(d.fee_code) + '</span>';
-            if (fi.price != null) feeDisplay += ' <span style="font-size:0.78rem;color:#64748b;">(' + Number(fi.price).toLocaleString() + '원)</span>';
+        }
+        var priceDisplay = '-';
+        if (d.fee_info && d.fee_info.price != null) {
+            priceDisplay = '<span style="font-weight:600; color:#0f172a;">' + Number(d.fee_info.price).toLocaleString() + '<span style="font-weight:400; color:#94a3b8; font-size:0.78rem; margin-left:2px;">원</span></span>';
         }
         html += infoRow('요금기준', feeDisplay, true);
+        html += infoRow('이용요금', priceDisplay, true);
         html += infoRow('시리얼', d.serial || '-');
         html += infoRow('설명', d.description || '-');
         html += '</div>';
