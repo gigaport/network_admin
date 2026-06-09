@@ -394,96 +394,147 @@
 
     <!-- ============ 1행: 핵심 통계 + Top 5 회선 보유 + 매출 현황 ============ -->
     <div class="row g-3 mb-4">
-      <!-- 좌측: 핵심 KPI 카드 4개 (2x2, 심플 미니카드) -->
+      <!-- 좌측: 핵심 KPI 카드 4개 (2x2, 콤팩트 정보 밀도) -->
       <style>
-        .kpi-mini-card {
+        .kpi-card {
           position: relative;
           background: var(--phoenix-card-bg, #fff);
-          border: 1px solid var(--phoenix-border-color, #e5e7eb);
-          border-radius: 12px;
-          padding: 18px 20px;
+          border: 1px solid var(--phoenix-border-color, #eef0f3);
+          border-radius: 10px;
+          padding: 12px 14px 11px 14px;
           cursor: pointer;
           overflow: hidden;
-          transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+          transition: background 0.18s ease, border-color 0.18s ease;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
         }
-        .kpi-mini-card:hover {
-          box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-          border-color: #cbd5e1;
-          transform: translateY(-1px);
+        .kpi-card:hover {
+          background: var(--phoenix-bg-subtle, #fafbfc);
+          border-color: var(--phoenix-tertiary-color, #d1d5db);
         }
-        .kpi-mini-card::before {
-          content: "";
-          position: absolute;
-          left: 0; top: 0; bottom: 0;
-          width: 3px;
-          background: var(--kpi-accent, #10b981);
+        .kpi-card .kpi-head {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 4px;
         }
-        .kpi-mini-card .kpi-label {
+        .kpi-card .kpi-label {
           font-size: 0.78rem;
-          font-weight: 500;
-          color: var(--phoenix-tertiary-color, #64748b);
-          margin-bottom: 8px;
+          font-weight: 600;
+          color: var(--phoenix-body-color, #111827);
           letter-spacing: -0.01em;
         }
-        .kpi-mini-card .kpi-value {
-          font-size: 1.9rem;
+        .kpi-card .kpi-arrow {
+          margin-left: auto;
+          font-size: 0.7rem;
+          color: var(--phoenix-tertiary-color, #94a3b8);
+          opacity: 0;
+          transform: translateX(-3px);
+          transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+        .kpi-card:hover .kpi-arrow {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        .kpi-card .kpi-value-row {
+          display: flex;
+          align-items: baseline;
+          gap: 5px;
+          margin: 4px 0 6px 0;
+        }
+        .kpi-card .kpi-value {
+          font-size: 1.7rem;
           font-weight: 700;
-          color: var(--phoenix-body-color, #0f172a);
+          color: var(--phoenix-body-color, #111827);
           line-height: 1;
-          letter-spacing: -0.02em;
+          letter-spacing: -0.025em;
+          font-feature-settings: "tnum" 1;
         }
-        .kpi-mini-card .kpi-icon {
-          font-size: 1.4rem;
-          opacity: 0.35;
-          color: var(--kpi-accent, #10b981);
-          transition: opacity 0.18s ease;
+        .kpi-card .kpi-unit {
+          font-size: 0.72rem;
+          font-weight: 500;
+          color: var(--phoenix-tertiary-color, #6b7280);
         }
-        .kpi-mini-card:hover .kpi-icon { opacity: 0.7; }
+        .kpi-card .kpi-progress {
+          height: 3px;
+          background: var(--phoenix-bg-subtle, #f3f4f6);
+          border-radius: 99px;
+          overflow: hidden;
+        }
+        .kpi-card .kpi-progress-fill {
+          height: 100%;
+          width: var(--kpi-fill, 50%);
+          background: var(--kpi-color, #10b981);
+          border-radius: 99px;
+          opacity: 0.85;
+        }
       </style>
       <div class="col-lg-3 d-flex">
-        <div class="row g-3 flex-grow-1 align-content-stretch">
+        <div class="row g-2 flex-grow-1 align-content-stretch">
           <div class="col-6 d-flex">
-            <div class="flex-grow-1 kpi-mini-card" style="--kpi-accent:#10b981;" onclick="location.href='/circuits'">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <div class="kpi-label">총 회선</div>
-                  <div id="stat_total_circuits" class="kpi-value">-</div>
+            <div class="flex-grow-1 kpi-card" style="--kpi-color:#10b981; --kpi-fill:72%;" onclick="location.href='/circuits'">
+              <div>
+                <div class="kpi-head">
+                  <i class="fas fa-network-wired" style="color:#10b981; font-size:0.78rem;"></i>
+                  <span class="kpi-label">총 회선</span>
+                  <i class="fas fa-arrow-right kpi-arrow"></i>
                 </div>
-                <i class="fas fa-network-wired kpi-icon"></i>
+                <div class="kpi-value-row">
+                  <span id="stat_total_circuits" class="kpi-value">-</span>
+                  <span class="kpi-unit">개</span>
+                </div>
               </div>
+              <div class="kpi-progress"><div class="kpi-progress-fill"></div></div>
             </div>
           </div>
           <div class="col-6 d-flex">
-            <div class="flex-grow-1 kpi-mini-card" style="--kpi-accent:#ef4444;" onclick="location.href='/subscriber_codes'">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <div class="kpi-label">등록 회원사</div>
-                  <div id="stat_total_members" class="kpi-value">-</div>
+            <div class="flex-grow-1 kpi-card" style="--kpi-color:#ef4444; --kpi-fill:60%;" onclick="location.href='/subscriber_codes'">
+              <div>
+                <div class="kpi-head">
+                  <i class="fas fa-building" style="color:#ef4444; font-size:0.78rem;"></i>
+                  <span class="kpi-label">등록 회원사</span>
+                  <i class="fas fa-arrow-right kpi-arrow"></i>
                 </div>
-                <i class="fas fa-building kpi-icon"></i>
+                <div class="kpi-value-row">
+                  <span id="stat_total_members" class="kpi-value">-</span>
+                  <span class="kpi-unit">사</span>
+                </div>
               </div>
+              <div class="kpi-progress"><div class="kpi-progress-fill"></div></div>
             </div>
           </div>
           <div class="col-6 d-flex">
-            <div class="flex-grow-1 kpi-mini-card" style="--kpi-accent:#059669;" onclick="location.href='/sise_products'">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <div class="kpi-label">시세상품</div>
-                  <div id="stat_total_products" class="kpi-value">-</div>
+            <div class="flex-grow-1 kpi-card" style="--kpi-color:#059669; --kpi-fill:55%;" onclick="location.href='/sise_products'">
+              <div>
+                <div class="kpi-head">
+                  <i class="fas fa-box-open" style="color:#059669; font-size:0.78rem;"></i>
+                  <span class="kpi-label">시세상품</span>
+                  <i class="fas fa-arrow-right kpi-arrow"></i>
                 </div>
-                <i class="fas fa-box-open kpi-icon"></i>
+                <div class="kpi-value-row">
+                  <span id="stat_total_products" class="kpi-value">-</span>
+                  <span class="kpi-unit">개</span>
+                </div>
               </div>
+              <div class="kpi-progress"><div class="kpi-progress-fill"></div></div>
             </div>
           </div>
           <div class="col-6 d-flex">
-            <div class="flex-grow-1 kpi-mini-card" style="--kpi-accent:#dc2626;" onclick="location.href='/fee_schedule'">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <div class="kpi-label">요금기준</div>
-                  <div id="stat_total_fee" class="kpi-value">-</div>
+            <div class="flex-grow-1 kpi-card" style="--kpi-color:#dc2626; --kpi-fill:48%;" onclick="location.href='/fee_schedule'">
+              <div>
+                <div class="kpi-head">
+                  <i class="fas fa-won-sign" style="color:#dc2626; font-size:0.78rem;"></i>
+                  <span class="kpi-label">요금기준</span>
+                  <i class="fas fa-arrow-right kpi-arrow"></i>
                 </div>
-                <i class="fas fa-won-sign kpi-icon"></i>
+                <div class="kpi-value-row">
+                  <span id="stat_total_fee" class="kpi-value">-</span>
+                  <span class="kpi-unit">건</span>
+                </div>
               </div>
+              <div class="kpi-progress"><div class="kpi-progress-fill"></div></div>
             </div>
           </div>
         </div>
