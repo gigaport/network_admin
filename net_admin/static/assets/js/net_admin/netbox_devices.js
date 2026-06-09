@@ -254,16 +254,18 @@
             }
         });
 
-        // Footer column search (exclude last action column)
+        // Footer column search — 마지막 "관리"(14) 컬럼만 제외하고 모든 컬럼에 검색 입력란 부여
+        // 컬럼: 0=ID, 1=디바이스명, 2=상태, 3=역할, 4=제조사, 5=모델, 6=요금기준, 7=이용요금,
+        //       8=리전, 9=사이트, 10=위치, 11=랙, 12=Primary IP, 13=IF수, 14=관리
         $('#devicesTable tfoot th').each(function(idx) {
-            if (idx >= 10) return; // skip action column
+            if (idx >= 14) return; // skip action column
             var title = $(this).text();
             $(this).css({ 'font-size': '0.7rem', 'white-space': 'nowrap' });
             $(this).html('<input type="text" class="form-control form-control-sm" placeholder="' + title + ' 검색" style="font-size:0.7rem; padding:2px 4px;" />');
         });
 
         devicesTable.columns().every(function(idx) {
-            if (idx >= 10) return;
+            if (idx >= 14) return;
             var that = this;
             $('input', this.footer()).on('keyup change', function() {
                 if (that.search() !== this.value) {
