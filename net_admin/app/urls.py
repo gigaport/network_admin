@@ -8,6 +8,7 @@ urlpatterns = [
     path('search', views.unified_search, name='unified_search'),
     path('get_dashboard', views.get_dashboard, name='get_dashboard'),
     path('netbox_devices', views.netbox_devices, name='netbox_devices'),
+    path('security_devices', views.security_devices, name='security_devices'),
     path('get_system_metrics', views.get_system_metrics, name='get_system_metrics'),
     path('dr_training', views.dr_training, name='dr_training'),
     path('get_dr_training_status', views.get_dr_training_status, name='get_dr_training_status'),

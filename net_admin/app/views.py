@@ -17,6 +17,9 @@ def index(request):
 def netbox_devices(request):
     return render(request, 'netbox_devices.html', {'parent_menu': 'network_asset', 'sub_menu': 'netbox_devices'})
 
+def security_devices(request):
+    return render(request, 'security_devices.html', {'parent_menu': 'network_asset', 'sub_menu': 'security_devices'})
+
 def dr_training(request):
     return render(request, 'dr_training.html', {'parent_menu': 'network_monitoring', 'sub_menu': 'dr_training'})
 

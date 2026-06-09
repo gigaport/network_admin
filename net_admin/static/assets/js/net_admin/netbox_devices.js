@@ -46,14 +46,30 @@
         });
     }
 
+    // 페이지 진입 시점에 강제 제조사 필터 (예: 보안장비 페이지) 추출
+    function getForceManufacturers() {
+        var v = $('#back_data').data('force-manufacturer');
+        if (!v) return null;
+        var arr = String(v).split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        return arr.length ? arr : null;
+    }
+
     function buildAjaxUrl() {
         var params = [];
         var role = $('#filterRole').val();
         var mfr = $('#filterManufacturer').val();
         var site = $('#filterSite').val();
         var status = $('#filterStatus').val();
+
+        // 보안장비 페이지 등에서 force-manufacturer 가 지정되면 사용자 select 와 무관하게 강제 적용
+        var forced = getForceManufacturers();
+
         if (role) params.push('role=' + encodeURIComponent(role));
-        if (mfr) {
+        if (forced) {
+            forced.forEach(function(m) {
+                params.push('manufacturer=' + encodeURIComponent(m));
+            });
+        } else if (mfr) {
             params.push('manufacturer=' + encodeURIComponent(mfr));
         } else {
             DEFAULT_MANUFACTURERS.forEach(function(m) {
@@ -893,6 +909,21 @@
     $(document).ready(function() {
         initFilters();
         initTable();
+
+        // 보안장비 페이지 등 강제 제조사 필터가 지정된 경우 → select 비활성화 + 라벨 표시
+        var forced = getForceManufacturers();
+        if (forced) {
+            $('#filterManufacturer').prop('disabled', true)
+                .css({ background: '#f1f5f9', color: '#94a3b8', cursor: 'not-allowed' });
+            // select 위에 안내 텍스트 추가 (한 번만)
+            if (!$('#mfrForcedNote').length) {
+                $('#filterManufacturer').after(
+                    '<div id="mfrForcedNote" class="form-text" style="font-size:0.7rem; color:#0ea5e9;">' +
+                    '<i class="fas fa-lock me-1"></i>고정: ' + forced.join(', ') +
+                    '</div>'
+                );
+            }
+        }
     });
 
 })();
