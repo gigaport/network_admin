@@ -41,6 +41,7 @@ urlpatterns = [
     path('sise_product_detail/', include('setting.urls')),
     path('fee_schedule/', include('setting.urls')),
     path('info_fee_schedule/', include('setting.urls')),
+    path('device_fee_schedule/', include('setting.urls')),
     path('circuits/', include('setting.urls')),
     path('info_company_circuits/', include('setting.urls')),
     path('revenue_summary/', include('setting.urls')),

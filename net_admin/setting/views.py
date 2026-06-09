@@ -676,6 +676,83 @@ def delete_info_fee_schedule(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
+# ==================== 장비이용요금 (Device Fee Schedule) 관리 ====================
+
+def get_device_fee_schedule(request):
+    """장비이용요금 목록 조회 (FastAPI 호출)"""
+    try:
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/device_fee_schedule"
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_device_fee_schedule(request):
+    """장비이용요금 추가"""
+    try:
+        data = json.loads(request.body)
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/device_fee_schedule"
+        response = requests.post(api_url, json=data)
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        try:
+            err = response.json()
+            return JsonResponse({'success': False, 'error': err.get('detail', response.text)}, status=response.status_code)
+        except Exception:
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_device_fee_schedule(request):
+    """장비이용요금 수정"""
+    try:
+        data = json.loads(request.body)
+        fee_id = data.get('id')
+        if not fee_id:
+            return JsonResponse({'success': False, 'error': 'ID가 필요합니다.'}, status=400)
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/device_fee_schedule/{fee_id}"
+        response = requests.put(api_url, json=data)
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        try:
+            err = response.json()
+            return JsonResponse({'success': False, 'error': err.get('detail', response.text)}, status=response.status_code)
+        except Exception:
+            return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def delete_device_fee_schedule(request):
+    """장비이용요금 삭제"""
+    try:
+        data = json.loads(request.body)
+        fee_id = data.get('id')
+        if not fee_id:
+            return JsonResponse({'success': False, 'error': 'ID가 필요합니다.'}, status=400)
+        api_url = f"{FASTAPI_BASE_URL}/api/v1/network/device_fee_schedule/{fee_id}"
+        response = requests.delete(api_url)
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        return JsonResponse({'success': False, 'error': response.text}, status=response.status_code)
+    except Exception as e:
+        logger.error(f"Error calling FastAPI: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
 # ==================== 회선내역 (Circuit) 관리 ====================
 
 def get_circuits(request):

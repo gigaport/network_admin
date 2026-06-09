@@ -2026,6 +2026,108 @@ async def DeleteInfoFeeSchedule(fee_id: int):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
+# ─── 장비이용요금 CRUD (device_fee_schedule) ────────────────────────────────
+
+
+@router.get("/device_fee_schedule")
+async def GetDeviceFeeSchedule():
+    """장비이용요금 목록 조회"""
+    try:
+        with get_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur.execute("""
+                SELECT id, fee_code, usage, phase, model, description, price
+                FROM device_fee_schedule
+                ORDER BY phase, usage, fee_code
+            """)
+            results = cur.fetchall()
+            cur.close()
+        return {"success": True, "data": results}
+    except Exception as e:
+        logger.error(f"장비이용요금 목록 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.post("/device_fee_schedule")
+async def CreateDeviceFeeSchedule(request: Request):
+    """장비이용요금 추가"""
+    try:
+        data = await request.json()
+        with get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO device_fee_schedule (fee_code, usage, phase, model, description, price)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                (data.get('fee_code') or '').strip(),
+                (data.get('usage') or '').strip(),
+                int(data.get('phase') or 1),
+                (data.get('model') or '').strip(),
+                (data.get('description') or '').strip(),
+                int(data.get('price') or 0),
+            ))
+            cur.close()
+        return {"success": True, "message": "장비이용요금이 추가되었습니다."}
+    except psycopg2.errors.UniqueViolation:
+        raise HTTPException(status_code=409, detail="이미 존재하는 fee_code 입니다.")
+    except Exception as e:
+        logger.error(f"장비이용요금 추가 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.put("/device_fee_schedule/{fee_id}")
+async def UpdateDeviceFeeSchedule(fee_id: int, request: Request):
+    """장비이용요금 수정"""
+    try:
+        data = await request.json()
+        with get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                UPDATE device_fee_schedule SET
+                    fee_code = %s, usage = %s, phase = %s,
+                    model = %s, description = %s, price = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (
+                (data.get('fee_code') or '').strip(),
+                (data.get('usage') or '').strip(),
+                int(data.get('phase') or 1),
+                (data.get('model') or '').strip(),
+                (data.get('description') or '').strip(),
+                int(data.get('price') or 0),
+                fee_id,
+            ))
+            if cur.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Device fee schedule not found")
+            cur.close()
+        return {"success": True, "message": "장비이용요금이 수정되었습니다."}
+    except HTTPException:
+        raise
+    except psycopg2.errors.UniqueViolation:
+        raise HTTPException(status_code=409, detail="이미 존재하는 fee_code 입니다.")
+    except Exception as e:
+        logger.error(f"장비이용요금 수정 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.delete("/device_fee_schedule/{fee_id}")
+async def DeleteDeviceFeeSchedule(fee_id: int):
+    """장비이용요금 삭제"""
+    try:
+        with get_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM device_fee_schedule WHERE id = %s", (fee_id,))
+            if cur.rowcount == 0:
+                raise HTTPException(status_code=404, detail="Device fee schedule not found")
+            cur.close()
+        return {"success": True, "message": "장비이용요금이 삭제되었습니다."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"장비이용요금 삭제 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
 # ==================== 대시보드 집계 API ====================
 
 @router.get("/dashboard")
