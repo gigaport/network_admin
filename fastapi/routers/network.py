@@ -5310,6 +5310,177 @@ async def GetNetboxDevices(request: Request):
         raise HTTPException(status_code=502, detail=f"NetBox API error: {str(e)}")
 
 
+def _map_location_to_datacenter(member_code: str, location_name: str) -> str:
+    """NetBox location 명 → customer_addresses.datacenter_code 매핑.
+
+    규칙:
+      - {MEMBER}-MAIN<N> → DC<N>
+      - {MEMBER}-DR      → DR
+      - {MEMBER}-DR-PB   → PB_DR
+      - 회원사가 PB(NEXTRADE 자체) 면 MAIN<N>→PB_메인, DR→PB_DR 로 override.
+    매칭 안 되면 location 원문 반환.
+    """
+    if not location_name:
+        return ""
+    name_u = str(location_name).upper()
+    mc_u = (str(member_code) or "").upper()
+    suffix = name_u
+    if mc_u and name_u.startswith(f"{mc_u}-"):
+        suffix = name_u[len(mc_u) + 1:]
+    # PB(코스콤) 자체 회원사 특수 매핑
+    if mc_u == "PB":
+        if suffix.startswith("MAIN"):
+            return "PB_메인"
+        if suffix == "DR":
+            return "PB_DR"
+    if suffix.startswith("MAIN"):
+        n = suffix[4:].strip() or "1"
+        return f"DC{n}"
+    if suffix == "DR-PB":
+        return "PB_DR"
+    if suffix == "DR":
+        return "DR"
+    return location_name
+
+
+@router.get("/device_revenue")
+async def GetDeviceRevenue():
+    """장비 매출내역 — NetBox 자산내역 중 요금기준이 지정된 장비 + customer_addresses 조인.
+
+    응답 row 구조:
+      member_code, site_name, location_name, datacenter_code, address_summary, post_code,
+      device_id, device_name, role, manufacturer, model, status, region, fee_code,
+      fee_usage, fee_phase, fee_description, fee_price
+    """
+    logger.info("장비 매출내역 조회 시작")
+    try:
+        # 1) 요금기준이 지정된 장비 + fee_schedule 정보 일괄 조회
+        fee_map = {}
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    """
+                    SELECT adi.device_id,
+                           adi.fee_code,
+                           dfs.usage       AS fee_usage,
+                           dfs.phase       AS fee_phase,
+                           dfs.model       AS fee_model,
+                           dfs.description AS fee_description,
+                           dfs.price       AS fee_price
+                    FROM additional_device_info adi
+                    LEFT JOIN device_fee_schedule dfs ON dfs.fee_code = adi.fee_code
+                    WHERE adi.fee_code IS NOT NULL
+                    """
+                )
+                for r in cur.fetchall():
+                    fee_map[r["device_id"]] = r
+
+        if not fee_map:
+            return {"success": True, "data": []}
+
+        # 2) NetBox 디바이스 일괄 조회 (id 필터 사용)
+        device_ids = list(fee_map.keys())
+        # NetBox device 조회 — id 가 많으면 청크 단위로
+        chunk_size = 200
+        nb_devices = {}
+        for i in range(0, len(device_ids), chunk_size):
+            chunk = device_ids[i:i+chunk_size]
+            params = [("id", str(did)) for did in chunk] + [("limit", str(chunk_size))]
+            resp = http_requests.get(
+                f"{NETBOX_URL}/api/dcim/devices/",
+                headers=NETBOX_HEADERS, params=params, timeout=20,
+            )
+            resp.raise_for_status()
+            for d in (resp.json().get("results") or []):
+                nb_devices[d["id"]] = d
+
+        # 3) site→region 캐시
+        site_region_map = _get_netbox_site_region_map()
+
+        # 4) customer_addresses 일괄 조회 → dict 인덱싱
+        cust_addr_map = {}
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    "SELECT member_code, datacenter_code, post_code, "
+                    "       main_address, detailed_address, summary_address "
+                    "FROM customer_addresses"
+                )
+                for r in cur.fetchall():
+                    key = (str(r["member_code"]).upper(), str(r["datacenter_code"]))
+                    cust_addr_map[key] = r
+
+        # 5) row 조립
+        rows = []
+        for did, fee in fee_map.items():
+            dev = nb_devices.get(did)
+            if not dev:
+                # NetBox 에서 사라진 device — fee_code 만 남아있는 stale row 는 표시는 함
+                rows.append({
+                    "device_id": did,
+                    "device_name": "[NetBox 미존재]",
+                    "member_code": None,
+                    "site_name": None,
+                    "location_name": None,
+                    "datacenter_code": None,
+                    "address_summary": None,
+                    "post_code": None,
+                    "role": None,
+                    "manufacturer": None,
+                    "model": None,
+                    "status": None,
+                    "region": None,
+                    "fee_code": fee["fee_code"],
+                    "fee_usage": fee["fee_usage"],
+                    "fee_phase": fee["fee_phase"],
+                    "fee_description": fee["fee_description"],
+                    "fee_price": fee["fee_price"],
+                })
+                continue
+
+            site = dev.get("site") or {}
+            location = dev.get("location") or {}
+            role = dev.get("role") or dev.get("device_role") or {}
+            dt = dev.get("device_type") or {}
+            manu = (dt.get("manufacturer") or {}).get("name") if isinstance(dt.get("manufacturer"), dict) else None
+            model = dt.get("model") or dt.get("display") or ""
+            status_obj = dev.get("status") or {}
+            status_name = status_obj.get("label") if isinstance(status_obj, dict) else str(status_obj)
+
+            member_code = site.get("name") or ""
+            location_name = location.get("name") or ""
+            datacenter_code = _map_location_to_datacenter(member_code, location_name)
+
+            addr = cust_addr_map.get((str(member_code).upper(), datacenter_code))
+            region = site_region_map.get(site.get("id")) if site.get("id") else None
+            rows.append({
+                "device_id": did,
+                "device_name": dev.get("name"),
+                "member_code": member_code,
+                "site_name": site.get("display") or site.get("name"),
+                "location_name": location_name,
+                "datacenter_code": datacenter_code,
+                "address_summary": addr["summary_address"] if addr else None,
+                "post_code": addr["post_code"] if addr else None,
+                "role": role.get("name") if isinstance(role, dict) else None,
+                "manufacturer": manu,
+                "model": model,
+                "status": status_name,
+                "region": (region or {}).get("name") if region else None,
+                "fee_code": fee["fee_code"],
+                "fee_usage": fee["fee_usage"],
+                "fee_phase": fee["fee_phase"],
+                "fee_description": fee["fee_description"],
+                "fee_price": fee["fee_price"],
+            })
+
+        logger.info(f"장비 매출내역 조회 완료: {len(rows)}건 (요금 매핑 {len(fee_map)}건)")
+        return {"success": True, "data": rows}
+    except Exception as e:
+        logger.error(f"장비 매출내역 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/netbox/devices/{device_id}")
 async def GetNetboxDeviceDetail(device_id: int):
     """NetBox 디바이스 상세 조회 (프록시)"""

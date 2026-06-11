@@ -67,4 +67,5 @@ urlpatterns = [
     path('download_profit_pdf', views.download_profit_pdf, name='download_profit_pdf'),
     path('get_info_profit_summary', views.get_info_profit_summary, name='get_info_profit_summary'),
     path('get_info_profit_monthly', views.get_info_profit_monthly, name='get_info_profit_monthly'),
+    path('get_device_revenue', views.get_device_revenue, name='get_device_revenue'),
 ]
