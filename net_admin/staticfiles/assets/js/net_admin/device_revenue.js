@@ -72,7 +72,7 @@
       searching: true,
       ordering: true,
       orderCellsTop: true,
-      order: [[0, 'asc'], [2, 'asc'], [5, 'asc']],
+      order: [[0, 'asc'], [3, 'asc'], [6, 'asc']],
       language: {
         search: '검색:',
         info: '전체 _TOTAL_건',
@@ -126,6 +126,7 @@
       },
       columns: [
         { data: 'member_code' },
+        { data: 'member_number' },
         { data: 'company_name' },
         { data: 'datacenter_code' },
         { data: 'address_summary' },
@@ -150,7 +151,16 @@
         },
         {
           targets: 1,
-          width: '12%',
+          width: '5%',
+          className: 'text-center py-2 align-middle',
+          render: function (data) {
+            if (data === null || data === undefined || data === '') return '-';
+            return escHtml(String(data));
+          },
+        },
+        {
+          targets: 2,
+          width: '11%',
           className: 'text-start py-2 align-middle fw-semibold',
           render: function (data) {
             if (!data) return '-';
@@ -158,7 +168,7 @@
           },
         },
         {
-          targets: 2,
+          targets: 3,
           width: '6%',
           className: 'text-center py-2 align-middle',
           render: function (data) {
@@ -167,7 +177,7 @@
           },
         },
         {
-          targets: 3,
+          targets: 4,
           width: '13%',
           className: 'text-center py-2 align-middle',
           render: function (data) {
@@ -176,7 +186,7 @@
           },
         },
         {
-          targets: 4,
+          targets: 5,
           width: '6%',
           className: 'text-center py-2 align-middle',
           render: function (data) {
@@ -186,13 +196,13 @@
           },
         },
         {
-          targets: 5,
-          width: '13%',
+          targets: 6,
+          width: '12%',
           className: 'text-center py-2 align-middle fw-semibold',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 6,
+          targets: 7,
           width: '5%',
           className: 'text-center py-2 align-middle',
           render: function (data) {
@@ -206,19 +216,19 @@
           },
         },
         {
-          targets: 7,
+          targets: 8,
           width: '6%',
           className: 'text-center py-2 align-middle',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 8,
+          targets: 9,
           width: '8%',
           className: 'text-center py-2 align-middle fw-semibold',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 9,
+          targets: 10,
           width: '8%',
           className: 'text-center py-2 align-middle',
           render: function (data) {
@@ -227,13 +237,13 @@
           },
         },
         {
-          targets: 10,
+          targets: 11,
           width: '13%',
           className: 'text-center py-2 align-middle',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 11,
+          targets: 12,
           width: '7%',
           className: 'text-end py-2 align-middle fw-semibold',
           render: function (data) {
