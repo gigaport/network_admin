@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from utils.slack_client import slack_client, send_alert, send_structured
 from utils.alarm_state import check_transition, get_alert_info
+from utils.librenms import GetLibrenmsLldp
 
 # 로깅 설정
 logger = logging.getLogger(__name__)
@@ -696,7 +697,12 @@ async def send_zabbix_webhook_to_slack(request: Request):
         # 메시지 구성 및 전송 (백그라운드 스레드로 처리)
         if not any(keyword in event_name for keyword in ZABBIX_MUTE_KEYWORDS):
             threading.Thread(target=send_zabbix_message, args=(channel, data), daemon=True).start()
-        
+
+            # 링크다운(장애 발생) 알람이면 LLDP 이웃 정보를 보조 메시지로 추가 전송
+            # (복구 event_value=='0' 는 제외, 이웃 정보 없으면 미전송)
+            if "link down" in event_name.lower() and str(event_value) != '0':
+                threading.Thread(target=_send_lldp_neighbor_message, args=(channel, data), daemon=True).start()
+
         return JSONResponse(
             content={
                 "result": True,
@@ -953,6 +959,110 @@ def _send_syslog_to_slack(channel: str, message_info: Dict):
     except Exception as e:
         logger.error(f"Syslog 메시지 전송 오류: {e}")
         # 전송 실패해도 웹훅은 성공으로 처리 (Slack 장애 시 서비스 중단 방지)
+
+
+def _normalize_ifname(name: str) -> str:
+    """인터페이스명 정규화 (대소문자/약어/공백 차이 흡수)."""
+    if not name:
+        return ""
+    s = str(name).strip().lower()
+    # Cisco 약어 확장 (Eth→Ethernet, Gi→GigabitEthernet, Po→port-channel 등)
+    s = re.sub(r'^eth(?!ernet)', 'ethernet', s)
+    s = re.sub(r'^gi(?!gabitethernet)', 'gigabitethernet', s)
+    s = re.sub(r'^te(?!ngige)', 'tengige', s)
+    s = re.sub(r'^po(?!rt)', 'port-channel', s)
+    return re.sub(r'\s+', '', s)
+
+
+def _extract_down_interface(event_name: str) -> Optional[str]:
+    """Zabbix event_name 에서 다운된 인터페이스명을 추출.
+
+    예) 'Cisco Nexus 9000: Interface Ethernet1/7(): Link down' -> 'Ethernet1/7'
+    """
+    if not event_name:
+        return None
+    m = re.search(r'Interface\s+(.+?)\s*\(', event_name)
+    if m:
+        return m.group(1).strip()
+    return None
+
+
+def _find_lldp_neighbors(host_ip: str, interface: str, hostname: str = "") -> List[Dict]:
+    """LibreNMS LLDP 정보에서 (장비IP, 인터페이스) 와 일치하는 이웃 링크를 조회.
+
+    1차로 장비IP(device_ip) 로 식별하며, IP 가 없을 때만 sysName(hostname) 으로 폴백한다.
+    """
+    try:
+        result = GetLibrenmsLldp() or {}
+        links = result.get("data", []) or []
+    except Exception as e:
+        logger.error(f"LLDP 조회 실패: {e}")
+        return []
+
+    ip_key = (host_ip or "").strip().lower()
+    host_key = (hostname or "").strip().lower()
+    if_norm = _normalize_ifname(interface)
+    matches = []
+    for link in links:
+        entry_ip = (link.get("device_ip") or "").strip().lower()
+        entry_sys = (link.get("hostname") or "").strip().lower()
+        # 장비 매칭: IP(device_ip) 우선, IP 미제공 시에만 sysName 폴백
+        if ip_key:
+            host_ok = (ip_key == entry_ip)
+        else:
+            host_ok = bool(host_key) and (
+                host_key == entry_sys
+                or (entry_sys and (host_key.startswith(entry_sys) or entry_sys.startswith(host_key)))
+            )
+        if not host_ok:
+            continue
+        # 인터페이스 매칭
+        local_if = _normalize_ifname(link.get("local_ifname"))
+        if if_norm and local_if and (local_if == if_norm or local_if in if_norm or if_norm in local_if):
+            matches.append(link)
+    return matches
+
+
+def _send_lldp_neighbor_message(channel: str, data: Dict):
+    """링크다운 알람에 대해 LLDP 이웃(원격호스트/원격포트) 정보를 보조 메시지로 전송.
+
+    조회 결과가 없으면 전송하지 않는다.
+    """
+    try:
+        hostname = data.get('hostname', '')
+        host_ip = data.get('host_ip', '')
+        event_name = data.get('event_name', '')
+        interface = _extract_down_interface(event_name)
+        if not interface:
+            logger.info(f"LLDP 보조 메시지: 인터페이스 파싱 실패 (event_name={event_name})")
+            return
+
+        neighbors = _find_lldp_neighbors(host_ip, interface, hostname)
+        if not neighbors:
+            logger.info(f"LLDP 보조 메시지: 이웃 정보 없음 (ip={host_ip} host={hostname} {interface}) — 미전송")
+            return
+
+        # 본문 구성 (이웃이 여러 개일 수 있으므로 모두 표기)
+        lines = []
+        for nb in neighbors:
+            remote_host = nb.get("remote_hostname") or "알 수 없음"
+            remote_port = nb.get("remote_port") or "알 수 없음"
+            local_if = nb.get("local_ifname") or interface
+            lines.append(f"• `{local_if}` → *{remote_host}* (`{remote_port}`)")
+
+        title = f":link: LLDP 연결정보 >> {hostname} {interface}"
+        message = "다운된 인터페이스의 원격 연결 대상입니다.\n" + "\n".join(lines)
+
+        send_alert(
+            channel=channel,
+            title=title,
+            message=message,
+            color="#e71c1c",
+        )
+        logger.info(f"LLDP 보조 메시지 전송 완료: {hostname} {interface} -> {len(neighbors)}건")
+
+    except Exception as e:
+        logger.error(f"LLDP 보조 메시지 전송 오류: {e}")
 
 
 def send_zabbix_message(channel: str, data: Dict):
