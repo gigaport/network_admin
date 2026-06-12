@@ -72,7 +72,7 @@
       searching: true,
       ordering: true,
       orderCellsTop: true,
-      order: [[0, 'asc'], [3, 'asc'], [6, 'asc']],
+      order: [[1, 'asc'], [3, 'asc'], [6, 'asc']],
       language: {
         search: '검색:',
         info: '전체 _TOTAL_건',
@@ -153,7 +153,11 @@
           targets: 1,
           width: '5%',
           className: 'text-center py-2 align-middle',
-          render: function (data) {
+          render: function (data, type) {
+            // 정렬/타입 판정 시에는 숫자값 사용 (null 은 맨 앞으로)
+            if (type === 'sort' || type === 'type') {
+              return (data === null || data === undefined || data === '') ? -1 : Number(data);
+            }
             if (data === null || data === undefined || data === '') return '-';
             return escHtml(String(data));
           },
