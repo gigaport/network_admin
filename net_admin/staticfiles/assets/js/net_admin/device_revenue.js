@@ -81,6 +81,7 @@
       paging: false,
       searching: true,
       ordering: true,
+      orderCellsTop: true,
       order: [[0, 'asc'], [2, 'asc'], [4, 'asc']],
       language: {
         search: '검색:',
@@ -249,21 +250,24 @@
       },
     });
 
-    // tfoot 의 각 열에 검색 입력 필드 추가
-    $('#deviceRevenueTable tfoot th').each(function () {
-      var title = $(this).text();
-      $(this).css({ 'font-size': '0.7rem', 'white-space': 'nowrap' });
-      $(this).html(
+    // 헤더 바로 아래에 검색 행(두 번째 thead row) 추가
+    var $filterRow = $('<tr class="filter-row"></tr>');
+    deviceRevenueTable.columns().every(function () {
+      var title = $(this.header()).text();
+      var $th = $('<th style="padding:4px 6px; background:#fff;"></th>');
+      $th.append(
         '<input type="text" class="form-control form-control-sm" placeholder="' +
           title +
-          ' 검색" style="font-size:0.65rem; padding:2px 4px;" />'
+          ' 검색" style="font-size:0.65rem; padding:2px 4px; font-weight:400;" />'
       );
+      $filterRow.append($th);
     });
+    $('#deviceRevenueTable thead').append($filterRow);
 
-    // 개별 열 검색 기능 적용
-    deviceRevenueTable.columns().every(function () {
+    // 개별 열 검색 기능 적용 (검색 행 입력칸 ↔ 컬럼 매핑)
+    deviceRevenueTable.columns().every(function (idx) {
       var that = this;
-      $('input', this.footer()).on('keyup change', function () {
+      $('input', $filterRow.find('th').eq(idx)).on('keyup change', function () {
         if (that.search() !== this.value) {
           that.search(this.value).draw();
         }
@@ -280,7 +284,7 @@
   };
 
   window.resetFilters = function () {
-    $('#deviceRevenueTable tfoot input').val('');
+    $('#deviceRevenueTable thead .filter-row input').val('');
     if (deviceRevenueTable) {
       deviceRevenueTable.search('').columns().search('').draw();
     }
