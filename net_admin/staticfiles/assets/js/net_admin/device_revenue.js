@@ -78,9 +78,7 @@
   function initTable() {
     deviceRevenueTable = $('#deviceRevenueTable').DataTable({
       responsive: true,
-      paging: true,
-      pageLength: 100,
-      lengthMenu: [50, 100, 200, 500],
+      paging: false,
       searching: true,
       ordering: true,
       order: [[0, 'asc'], [2, 'asc'], [4, 'asc']],
@@ -94,9 +92,9 @@
         loadingRecords: ' ',
       },
       dom:
-        '<"row align-items-center"<"col-sm-12 col-md-3"l><"col-sm-12 col-md-9 d-flex justify-content-end align-items-center gap-2"fB>>' +
+        '<"row align-items-center"<"col-sm-12 col-md-6"><"col-sm-12 col-md-6 d-flex justify-content-end align-items-center gap-2"fB>>' +
         '<"row"<"col-sm-12"tr>>' +
-        '<"row align-items-center"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        '<"row"<"col-sm-12"i>>',
       buttons: [
         {
           extend: 'excel',
