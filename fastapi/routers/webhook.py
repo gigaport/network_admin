@@ -700,8 +700,9 @@ async def send_zabbix_webhook_to_slack(request: Request):
 
             # 링크다운(장애 발생) 알람이면 LLDP 이웃 정보를 보조 메시지로 추가 전송
             # (복구 event_value=='0' 는 제외, 이웃 정보 없으면 미전송)
+            # LLDP 내역이 있으면 라우팅과 무관하게 항상 network-alert-critical 채널로 전송
             if "link down" in event_name.lower() and str(event_value) != '0':
-                threading.Thread(target=_send_lldp_neighbor_message, args=(channel, data), daemon=True).start()
+                threading.Thread(target=_send_lldp_neighbor_message, args=("network-alert-critical", data), daemon=True).start()
 
         return JSONResponse(
             content={
