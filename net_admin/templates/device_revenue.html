@@ -98,8 +98,29 @@
     </div>
   </div>
 
-  <script src="{% static 'assets/js/jszip.min.js' %}"></script>
-  <script src="{% static 'assets/js/dataTables.buttons.min.js' %}"></script>
-  <script src="{% static 'assets/js/buttons.html5.min.js' %}"></script>
-  <script src="{% static 'assets/js/net_admin/device_revenue.js' %}?v={% now "YmdHis" %}"></script>
+{% endblock %}
+
+{% block scripts %}
+<!-- ===============================================-->
+<!--    JavaScripts-->
+<!-- ===============================================-->
+<!-- jQuery 먼저 포함 (다른 스크립트들이 의존) -->
+<script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+<!-- DataTables JS -->
+<script src="{% static 'assets/js/datatables.min.js' %}"></script>
+<!-- JSZip (Excel export 필수) -->
+<script src="{% static 'assets/js/jszip.min.js' %}"></script>
+<!-- DataTables Buttons -->
+<script src="{% static 'assets/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'assets/js/buttons.html5.min.js' %}"></script>
+<script src="{% static 'vendors/popper/popper.min.js' %}"></script>
+<script src="{% static 'vendors/bootstrap/bootstrap.min.js' %}"></script>
+<script src="{% static 'vendors/anchorjs/anchor.min.js' %}"></script>
+<script src="{% static 'vendors/is/is.min.js' %}"></script>
+<script src="{% static 'vendors/fontawesome/all.min.js' %}"></script>
+<script src="{% static 'vendors/lodash/lodash.min.js' %}"></script>
+<script src="{% static 'vendors/feather-icons/feather.min.js' %}"></script>
+<script src="{% static 'vendors/dayjs/dayjs.min.js' %}"></script>
+<script src="{% static 'assets/js/phoenix.js' %}"></script>
+<script src="{% static 'assets/js/net_admin/device_revenue.js' %}?v={% now "YmdHis" %}"></script>
 {% endblock %}
