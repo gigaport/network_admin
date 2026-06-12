@@ -5348,8 +5348,8 @@ async def GetDeviceRevenue():
     """장비 매출내역 — NetBox 자산내역 중 요금기준이 지정된 장비 + customer_addresses 조인.
 
     응답 row 구조:
-      member_code, site_name, location_name, datacenter_code, address_summary, post_code,
-      device_id, device_name, role, manufacturer, model, status, region, fee_code,
+      member_code, company_name, site_name, location_name, datacenter_code, address_summary,
+      post_code, device_id, device_name, role, manufacturer, model, status, region, fee_code,
       fee_usage, fee_phase, fee_description, fee_price
     """
     logger.info("장비 매출내역 조회 시작")
@@ -5410,6 +5410,15 @@ async def GetDeviceRevenue():
                     key = (str(r["member_code"]).upper(), str(r["datacenter_code"]))
                     cust_addr_map[key] = r
 
+        # 4-1) subscriber_codes 일괄 조회 → member_code → company_name 매핑
+        company_map = {}
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT member_code, company_name FROM subscriber_codes")
+                for r in cur.fetchall():
+                    if r["member_code"] is not None:
+                        company_map[str(r["member_code"]).upper()] = r["company_name"]
+
         # 5) row 조립
         rows = []
         for did, fee in fee_map.items():
@@ -5420,6 +5429,7 @@ async def GetDeviceRevenue():
                     "device_id": did,
                     "device_name": "[NetBox 미존재]",
                     "member_code": None,
+                    "company_name": None,
                     "site_name": None,
                     "location_name": None,
                     "datacenter_code": None,
@@ -5457,6 +5467,7 @@ async def GetDeviceRevenue():
                 "device_id": did,
                 "device_name": dev.get("name"),
                 "member_code": member_code,
+                "company_name": company_map.get(str(member_code).upper()),
                 "site_name": site.get("display") or site.get("name"),
                 "location_name": location_name,
                 "datacenter_code": datacenter_code,

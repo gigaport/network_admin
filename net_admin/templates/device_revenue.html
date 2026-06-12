@@ -36,7 +36,7 @@
       </div>
 
       <!-- Stat bar -->
-      <div class="mb-3" id="summaryCards" style="display:flex; align-items:center; gap:28px; padding:14px 24px; background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0);">
+      <div class="mb-2" id="summaryCards" style="display:flex; align-items:center; flex-wrap:wrap; gap:20px 28px; padding:14px 24px; background:var(--phoenix-card-bg, #fff); border-radius:10px; border:1px solid var(--phoenix-border-color, #e2e8f0);">
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="width:8px; height:8px; border-radius:50%; background:rgba(99,102,241,0.6); display:inline-block;"></span>
           <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">대상 장비</span>
@@ -50,11 +50,28 @@
         </div>
         <div style="width:1px; height:24px; background:#e2e8f0;"></div>
         <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(59,130,246,0.7); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">스위치</span>
+          <span id="stat_switch_cnt" style="font-size:1.05rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
+          <span id="stat_switch_rev" style="font-size:0.85rem; font-weight:600; color:#3b82f6;">-</span>
+        </div>
+        <div style="width:1px; height:24px; background:#e2e8f0;"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:rgba(239,68,68,0.7); display:inline-block;"></span>
+          <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">방화벽</span>
+          <span id="stat_fw_cnt" style="font-size:1.05rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
+          <span id="stat_fw_rev" style="font-size:0.85rem; font-weight:600; color:#ef4444;">-</span>
+        </div>
+        <div style="width:1px; height:24px; background:#e2e8f0;"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
           <span style="width:8px; height:8px; border-radius:50%; background:rgba(16,185,129,0.7); display:inline-block;"></span>
           <span style="font-size:0.88rem; color:var(--phoenix-tertiary-color, #64748b);">월 매출 합계</span>
-          <span id="stat_grand_total" style="font-size:1.25rem; font-weight:700; color:var(--phoenix-body-color, #1e293b);">-</span>
+          <span id="stat_grand_total" style="font-size:1.25rem; font-weight:700; color:#10b981;">-</span>
         </div>
       </div>
+
+      <!-- 데이터센터별 매출 분해 -->
+      <div class="mb-3" id="summaryByDc" style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;"></div>
 
       <div class="card">
         <div class="card-body">
@@ -62,6 +79,7 @@
             <thead class="text-center" style="background:#f8fafc;">
               <tr>
                 <th>회원사</th>
+                <th>회사명</th>
                 <th>데이터센터</th>
                 <th>주소</th>
                 <th>장비명</th>
@@ -77,6 +95,7 @@
             <tfoot>
               <tr>
                 <th>회원사</th>
+                <th>회사명</th>
                 <th>데이터센터</th>
                 <th>주소</th>
                 <th>장비명</th>

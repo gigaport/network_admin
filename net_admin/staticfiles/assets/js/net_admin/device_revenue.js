@@ -16,12 +16,51 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  // 장비 유형 분류: fee_code 접미사(_SW/_FW) 또는 설명 키워드 기준
+  function deviceKind(r) {
+    const code = (r.fee_code || '').toUpperCase();
+    const desc = r.fee_description || '';
+    if (code.endsWith('_SW') || desc.indexOf('스위치') >= 0) return 'switch';
+    if (code.endsWith('_FW') || desc.indexOf('방화벽') >= 0) return 'firewall';
+    return 'other';
+  }
+
   function updateSummary(rows) {
     const members = new Set(rows.map(r => r.member_code).filter(Boolean));
     const total = rows.reduce((s, r) => s + (Number(r.fee_price) || 0), 0);
+
+    let swCnt = 0, swRev = 0, fwCnt = 0, fwRev = 0;
+    const dcRev = {};   // 데이터센터별 매출
+    rows.forEach(r => {
+      const price = Number(r.fee_price) || 0;
+      const kind = deviceKind(r);
+      if (kind === 'switch') { swCnt++; swRev += price; }
+      else if (kind === 'firewall') { fwCnt++; fwRev += price; }
+      const dc = r.datacenter_code || '미지정';
+      if (!dcRev[dc]) dcRev[dc] = { cnt: 0, rev: 0 };
+      dcRev[dc].cnt++;
+      dcRev[dc].rev += price;
+    });
+
     document.getElementById('stat_devices').textContent = fmtNumber(rows.length) + '대';
     document.getElementById('stat_members').textContent = fmtNumber(members.size) + '사';
     document.getElementById('stat_grand_total').textContent = fmtNumber(total) + '원';
+    document.getElementById('stat_switch_cnt').textContent = fmtNumber(swCnt) + '대';
+    document.getElementById('stat_switch_rev').textContent = fmtNumber(swRev) + '원';
+    document.getElementById('stat_fw_cnt').textContent = fmtNumber(fwCnt) + '대';
+    document.getElementById('stat_fw_rev').textContent = fmtNumber(fwRev) + '원';
+
+    // 데이터센터별 매출 칩 렌더링 (매출 큰 순)
+    const dcBox = document.getElementById('summaryByDc');
+    if (dcBox) {
+      const entries = Object.keys(dcRev).map(k => [k, dcRev[k]]).sort((a, b) => b[1].rev - a[1].rev);
+      dcBox.innerHTML = entries.map(function (e) {
+        const code = e[0], v = e[1];
+        return '<span class="badge badge-phoenix ' + dcBadgeClass(code) + '" ' +
+          'style="font-size:0.8rem; padding:6px 10px; font-weight:600;">' +
+          escHtml(code) + ' · ' + fmtNumber(v.cnt) + '대 · ' + fmtNumber(v.rev) + '원</span>';
+      }).join('');
+    }
   }
 
   function dcBadgeClass(code) {
@@ -39,13 +78,12 @@
   function initTable() {
     deviceRevenueTable = $('#deviceRevenueTable').DataTable({
       responsive: true,
-      paging: false,
+      paging: true,
+      pageLength: 100,
+      lengthMenu: [50, 100, 200, 500],
       searching: true,
       ordering: true,
-      order: [[0, 'asc'], [1, 'asc'], [3, 'asc']],
-      scrollX: true,
-      scrollY: '60vh',
-      scrollCollapse: true,
+      order: [[0, 'asc'], [2, 'asc'], [4, 'asc']],
       language: {
         search: '검색:',
         info: '전체 _TOTAL_건',
@@ -56,9 +94,9 @@
         loadingRecords: ' ',
       },
       dom:
-        '<"row align-items-center"<"col-sm-12 col-md-6"><"col-sm-12 col-md-6 d-flex justify-content-end align-items-center gap-2"fB>>' +
+        '<"row align-items-center"<"col-sm-12 col-md-3"l><"col-sm-12 col-md-9 d-flex justify-content-end align-items-center gap-2"fB>>' +
         '<"row"<"col-sm-12"tr>>' +
-        '<"row"<"col-sm-12"i>>',
+        '<"row align-items-center"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
       buttons: [
         {
           extend: 'excel',
@@ -99,6 +137,7 @@
       },
       columns: [
         { data: 'member_code' },
+        { data: 'company_name' },
         { data: 'datacenter_code' },
         { data: 'address_summary' },
         { data: 'device_name' },
@@ -121,6 +160,15 @@
         },
         {
           targets: 1,
+          width: '12%',
+          className: 'text-start py-2 align-middle fw-semibold',
+          render: function (data) {
+            if (!data) return '-';
+            return '<span title="' + escHtml(data) + '">' + escHtml(data) + '</span>';
+          },
+        },
+        {
+          targets: 2,
           width: '6%',
           className: 'text-center py-2 align-middle',
           render: function (data) {
@@ -129,8 +177,8 @@
           },
         },
         {
-          targets: 2,
-          width: '14%',
+          targets: 3,
+          width: '13%',
           className: 'text-center py-2 align-middle',
           render: function (data) {
             if (!data) return '-';
@@ -138,13 +186,13 @@
           },
         },
         {
-          targets: 3,
-          width: '15%',
+          targets: 4,
+          width: '14%',
           className: 'text-center py-2 align-middle fw-semibold',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 4,
+          targets: 5,
           width: '5%',
           className: 'text-center py-2 align-middle',
           render: function (data) {
@@ -158,19 +206,19 @@
           },
         },
         {
-          targets: 5,
+          targets: 6,
           width: '6%',
           className: 'text-center py-2 align-middle',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 6,
+          targets: 7,
           width: '8%',
           className: 'text-center py-2 align-middle fw-semibold',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 7,
+          targets: 8,
           width: '8%',
           className: 'text-center py-2 align-middle',
           render: function (data) {
@@ -179,13 +227,13 @@
           },
         },
         {
-          targets: 8,
-          width: '15%',
+          targets: 9,
+          width: '14%',
           className: 'text-center py-2 align-middle',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 9,
+          targets: 10,
           width: '7%',
           className: 'text-end py-2 align-middle fw-semibold',
           render: function (data) {
