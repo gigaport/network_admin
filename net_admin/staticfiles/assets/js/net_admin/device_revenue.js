@@ -16,15 +16,6 @@
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  // 장비 유형 분류: fee_code 접미사(_SW/_FW) 또는 설명 키워드 기준
-  function deviceKind(r) {
-    const code = (r.fee_code || '').toUpperCase();
-    const desc = r.fee_description || '';
-    if (code.endsWith('_SW') || desc.indexOf('스위치') >= 0) return 'switch';
-    if (code.endsWith('_FW') || desc.indexOf('방화벽') >= 0) return 'firewall';
-    return 'other';
-  }
-
   function updateSummary(rows) {
     const members = new Set(rows.map(r => r.member_code).filter(Boolean));
     const total = rows.reduce((s, r) => s + (Number(r.fee_price) || 0), 0);
@@ -33,9 +24,8 @@
     const dcRev = {};   // 데이터센터별 매출
     rows.forEach(r => {
       const price = Number(r.fee_price) || 0;
-      const kind = deviceKind(r);
-      if (kind === 'switch') { swCnt++; swRev += price; }
-      else if (kind === 'firewall') { fwCnt++; fwRev += price; }
+      if (r.device_kind === '스위치') { swCnt++; swRev += price; }
+      else if (r.device_kind === '방화벽') { fwCnt++; fwRev += price; }
       const dc = r.datacenter_code || '미지정';
       if (!dcRev[dc]) dcRev[dc] = { cnt: 0, rev: 0 };
       dcRev[dc].cnt++;
@@ -82,7 +72,7 @@
       searching: true,
       ordering: true,
       orderCellsTop: true,
-      order: [[0, 'asc'], [2, 'asc'], [4, 'asc']],
+      order: [[0, 'asc'], [2, 'asc'], [5, 'asc']],
       language: {
         search: '검색:',
         info: '전체 _TOTAL_건',
@@ -139,6 +129,7 @@
         { data: 'company_name' },
         { data: 'datacenter_code' },
         { data: 'address_summary' },
+        { data: 'device_kind' },
         { data: 'device_name' },
         { data: 'role' },
         { data: 'manufacturer' },
@@ -186,12 +177,22 @@
         },
         {
           targets: 4,
-          width: '14%',
+          width: '6%',
+          className: 'text-center py-2 align-middle',
+          render: function (data) {
+            if (!data) return '-';
+            var cls = data === '스위치' ? 'badge-phoenix-info' : (data === '방화벽' ? 'badge-phoenix-danger' : 'badge-phoenix-secondary');
+            return '<span class="badge badge-phoenix ' + cls + '">' + escHtml(data) + '</span>';
+          },
+        },
+        {
+          targets: 5,
+          width: '13%',
           className: 'text-center py-2 align-middle fw-semibold',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 5,
+          targets: 6,
           width: '5%',
           className: 'text-center py-2 align-middle',
           render: function (data) {
@@ -205,19 +206,19 @@
           },
         },
         {
-          targets: 6,
+          targets: 7,
           width: '6%',
           className: 'text-center py-2 align-middle',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 7,
+          targets: 8,
           width: '8%',
           className: 'text-center py-2 align-middle fw-semibold',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 8,
+          targets: 9,
           width: '8%',
           className: 'text-center py-2 align-middle',
           render: function (data) {
@@ -226,13 +227,13 @@
           },
         },
         {
-          targets: 9,
-          width: '14%',
+          targets: 10,
+          width: '13%',
           className: 'text-center py-2 align-middle',
           render: function (data) { return escHtml(data) || '-'; },
         },
         {
-          targets: 10,
+          targets: 11,
           width: '7%',
           className: 'text-end py-2 align-middle fw-semibold',
           render: function (data) {

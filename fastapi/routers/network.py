@@ -5343,14 +5343,25 @@ def _map_location_to_datacenter(member_code: str, location_name: str) -> str:
     return location_name
 
 
+def _classify_device_kind(fee_code, fee_description):
+    """요금코드 접미사(_SW/_FW) 또는 설명 키워드로 장비구분(스위치/방화벽) 판별."""
+    code = (fee_code or "").upper()
+    desc = fee_description or ""
+    if code.endswith("_SW") or "스위치" in desc:
+        return "스위치"
+    if code.endswith("_FW") or "방화벽" in desc:
+        return "방화벽"
+    return None
+
+
 @router.get("/device_revenue")
 async def GetDeviceRevenue():
     """장비 매출내역 — NetBox 자산내역 중 요금기준이 지정된 장비 + customer_addresses 조인.
 
     응답 row 구조:
       member_code, company_name, site_name, location_name, datacenter_code, address_summary,
-      post_code, device_id, device_name, role, manufacturer, model, status, region, fee_code,
-      fee_usage, fee_phase, fee_description, fee_price
+      device_kind, post_code, device_id, device_name, role, manufacturer, model, status, region,
+      fee_code, fee_usage, fee_phase, fee_description, fee_price
     """
     logger.info("장비 매출내역 조회 시작")
     try:
@@ -5434,6 +5445,7 @@ async def GetDeviceRevenue():
                     "location_name": None,
                     "datacenter_code": None,
                     "address_summary": None,
+                    "device_kind": _classify_device_kind(fee["fee_code"], fee["fee_description"]),
                     "post_code": None,
                     "role": None,
                     "manufacturer": None,
@@ -5472,6 +5484,7 @@ async def GetDeviceRevenue():
                 "location_name": location_name,
                 "datacenter_code": datacenter_code,
                 "address_summary": addr["summary_address"] if addr else None,
+                "device_kind": _classify_device_kind(fee["fee_code"], fee["fee_description"]),
                 "post_code": addr["post_code"] if addr else None,
                 "role": role.get("name") if isinstance(role, dict) else None,
                 "manufacturer": manu,
